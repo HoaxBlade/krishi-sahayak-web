@@ -1,3 +1,4 @@
 **/*Data
 **/*.zip
 **/*venv
+**/__pycache__
