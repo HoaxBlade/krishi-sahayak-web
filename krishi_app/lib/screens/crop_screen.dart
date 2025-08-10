@@ -8,6 +8,7 @@ import '../models/crop.dart';
 import '../widgets/add_crop_dialog.dart';
 import '../widgets/offline_indicator.dart';
 import '../widgets/error_dialogs.dart';
+import 'camera_screen.dart';
 
 class CropScreen extends StatefulWidget {
   const CropScreen({super.key});
@@ -123,6 +124,16 @@ class _CropScreenState extends State<CropScreen> {
         title: const Text('Crop Management'),
         actions: [
           const OfflineIndicator(),
+          IconButton(
+            icon: const Icon(Icons.camera_alt),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CameraScreen()),
+              );
+            },
+            tooltip: 'Analyze Crop Health',
+          ),
           IconButton(icon: const Icon(Icons.add), onPressed: _addNewCrop),
         ],
       ),
