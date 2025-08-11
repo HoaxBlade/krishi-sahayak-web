@@ -201,9 +201,10 @@ def load_or_train_model():
     
     # Try to load existing model from multiple locations
     model_paths = [
-        "model/mobilenetv2_model.h5",
-        "notebooks/model/mobilenetv2_model.h5",
-        "saved_models/mobilenetv2_model.h5"
+        "model/best_model.h5",   
+        # "model/mobilenetv2_model.h5",
+        # "notebooks/model/mobilenetv2_model.h5",
+        # "saved_models/mobilenetv2_model.h5"
     ]
     
     for model_path in model_paths:
