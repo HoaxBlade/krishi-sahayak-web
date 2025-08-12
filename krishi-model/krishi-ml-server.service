@@ -1,0 +1,15 @@
+[Unit]
+Description=Krishi ML Server
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/path/to/your/krishi-model
+Environment=PATH=/path/to/your/krishi-model/venv/bin
+ExecStart=/path/to/your/krishi-model/venv/bin/python main_production.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

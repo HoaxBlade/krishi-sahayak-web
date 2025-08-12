@@ -1,8 +1,8 @@
-from tensorflow.keras.applications import MobileNetV2
-from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Dropout, Lambda, BatchNormalization
-from tensorflow.keras.models import Model
-from tensorflow.keras.regularizers import l2
-import tensorflow as tf
+from tensorflow.keras.applications import MobileNetV2 # type: ignore
+from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Dropout, Lambda, BatchNormalization # type: ignore
+from tensorflow.keras.models import Model # type: ignore
+from tensorflow.keras.regularizers import l2 # type: ignore
+import tensorflow as tf # type: ignore
 
 def build_multitask_model(num_classes):
     base = MobileNetV2(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
