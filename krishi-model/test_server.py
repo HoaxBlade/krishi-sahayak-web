@@ -7,7 +7,7 @@ import requests # type: ignore
 import json
 
 def test_server():
-    base_url = "http://localhost:5001"
+    base_url = "https://krishi-ml-server.onrender.com"  # Deployed server
     
     print("Testing Flask ML Server...")
     

@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 
 class MLService {
   static const String baseUrl =
-      'http://10.5.171.78:5001'; // For physical device
+      'https://krishi-ml-server.onrender.com'; // Deployed server on Render
   // Use 'http://10.0.2.2:5001' for Android emulator
   // Use 'http://localhost:5001' for iOS simulator
 

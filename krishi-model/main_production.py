@@ -189,6 +189,19 @@ def get_labels():
     logger.info("Labels requested")
     return jsonify({'labels': labels})
 
+@app.route('/', methods=['GET'])
+def root():
+    """Root endpoint for health check"""
+    return jsonify({
+        'message': 'Krishi ML Server is running!',
+        'endpoints': {
+            'analyze_crop': 'POST /analyze_crop',
+            'health': 'GET /health',
+            'train': 'POST /train',
+            'labels': 'GET /labels'
+        }
+    })
+
 def load_or_train_model():
     """Load existing model or train new one"""
     global model, labels
@@ -248,13 +261,19 @@ if __name__ == '__main__':
     # Load or train the model when starting the server
     if load_or_train_model():
         logger.info("✅ Model ready for inference")
-        logger.info("Starting Flask server on http://0.0.0.0:5001")
+        
+        # Get port from environment variable (for cloud hosting)
+        port = int(os.environ.get('PORT', 5001))
+        
+        logger.info(f"Starting Flask server on port {port}")
         logger.info("Available endpoints:")
+        logger.info("  - GET  / - Root endpoint")
         logger.info("  - POST /analyze_crop - Analyze crop image")
         logger.info("  - GET  /health - Check server health")
         logger.info("  - POST /train - Retrain model")
         logger.info("  - GET  /labels - Get available labels")
         
-        app.run(host='0.0.0.0', port=5001, debug=True)
+        # Use 0.0.0.0 for cloud hosting compatibility
+        app.run(host='0.0.0.0', port=port, debug=False)
     else:
         logger.error("❌ Failed to load/train model. Server not started.")
