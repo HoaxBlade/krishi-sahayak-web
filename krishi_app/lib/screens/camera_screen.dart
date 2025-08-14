@@ -17,6 +17,7 @@ class _CameraScreenState extends State<CameraScreen> {
   Map<String, dynamic>? _analysisResult;
 
   Future<void> _takePhoto() async {
+    debugPrint('📸 [CameraScreen] User requested to take a photo...');
     try {
       final XFile? photo = await _picker.pickImage(
         source: ImageSource.camera,
@@ -26,14 +27,23 @@ class _CameraScreenState extends State<CameraScreen> {
       );
 
       if (photo != null) {
+        debugPrint(
+          '✅ [CameraScreen] Photo captured successfully: ${photo.path}',
+        );
         _analyzeImage(photo);
+      } else {
+        debugPrint('❌ [CameraScreen] No photo was captured');
       }
     } catch (e) {
+      debugPrint('💥 [CameraScreen] Error taking photo: $e');
       _showError('Error taking photo: $e');
     }
   }
 
   Future<void> _pickFromGallery() async {
+    debugPrint(
+      '🖼️ [CameraScreen] User requested to pick image from gallery...',
+    );
     try {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
@@ -43,14 +53,25 @@ class _CameraScreenState extends State<CameraScreen> {
       );
 
       if (image != null) {
+        debugPrint(
+          '✅ [CameraScreen] Image selected from gallery: ${image.path}',
+        );
         _analyzeImage(image);
+      } else {
+        debugPrint('❌ [CameraScreen] No image was selected from gallery');
       }
     } catch (e) {
-      _showError('Error picking image: $e');
+      debugPrint('💥 [CameraScreen] Error picking image from gallery: $e');
+      _showError('Error picking image from gallery: $e');
     }
   }
 
   Future<void> _analyzeImage(XFile imageFile) async {
+    final overallStopwatch = Stopwatch()..start();
+    debugPrint('📸 [CameraScreen] Starting image analysis process...');
+    debugPrint('📊 [CameraScreen] Image file path: ${imageFile.path}');
+    debugPrint('📊 [CameraScreen] Image file name: ${imageFile.name}');
+
     setState(() {
       _isAnalyzing = true;
       _analysisResult = null;
@@ -58,19 +79,51 @@ class _CameraScreenState extends State<CameraScreen> {
 
     try {
       // Check server health first
+      debugPrint('🏥 [CameraScreen] Checking server health before analysis...');
+      final healthCheckStart = Stopwatch()..start();
       bool serverHealthy = await _mlService.checkServerHealth();
+      healthCheckStart.stop();
+      debugPrint(
+        '✅ [CameraScreen] Server health check completed in ${healthCheckStart.elapsedMilliseconds}ms',
+      );
+
       if (!serverHealthy) {
+        overallStopwatch.stop();
+        debugPrint(
+          '❌ [CameraScreen] Server health check failed after ${overallStopwatch.elapsedMilliseconds}ms',
+        );
         throw Exception(
           'ML server is not available. Please check if the Python server is running.',
         );
       }
 
+      debugPrint(
+        '🚀 [CameraScreen] Server is healthy, starting ML analysis...',
+      );
+      final mlAnalysisStart = Stopwatch()..start();
       final result = await _mlService.analyzeCropHealth(imageFile);
+      mlAnalysisStart.stop();
+      debugPrint(
+        '✅ [CameraScreen] ML analysis completed in ${mlAnalysisStart.elapsedMilliseconds}ms',
+      );
+
       setState(() {
         _analysisResult = result;
         _isAnalyzing = false;
       });
+
+      overallStopwatch.stop();
+      debugPrint(
+        '🎉 [CameraScreen] Complete analysis process finished in ${overallStopwatch.elapsedMilliseconds}ms',
+      );
+      debugPrint(
+        '📊 [CameraScreen] Analysis result received: ${result.keys.toList()}',
+      );
     } catch (e) {
+      overallStopwatch.stop();
+      debugPrint(
+        '💥 [CameraScreen] Analysis failed after ${overallStopwatch.elapsedMilliseconds}ms: $e',
+      );
       setState(() {
         _isAnalyzing = false;
       });
