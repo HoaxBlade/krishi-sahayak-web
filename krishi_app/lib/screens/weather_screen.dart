@@ -19,18 +19,26 @@ class _WeatherScreenState extends State<WeatherScreen> {
   Map<String, dynamic> _stats = {};
   bool _isLoading = true;
   bool _isConnected = true;
+  bool _isRefreshing = false;
   StreamSubscription<bool>? _connectivitySubscription;
 
   @override
   void initState() {
     super.initState();
-    _loadWeatherData();
+    _initializeWeather();
     _setupConnectivityListener();
+  }
+
+  Future<void> _initializeWeather() async {
+    debugPrint('🌤️ [WeatherScreen] Initializing weather...');
+    await _weatherService.initialize();
+    await _loadWeatherData();
   }
 
   Future<void> _loadWeatherData() async {
     setState(() => _isLoading = true);
     try {
+      debugPrint('📱 [WeatherScreen] Loading weather data...');
       final weather = await _weatherService.getLatestWeather();
       final forecast = await _weatherService.getWeatherForecast();
       final stats = await _weatherService.getWeatherStats();
@@ -43,8 +51,27 @@ class _WeatherScreenState extends State<WeatherScreen> {
         _isConnected = isConnected;
         _isLoading = false;
       });
+
+      debugPrint('✅ [WeatherScreen] Weather data loaded successfully');
     } catch (e) {
+      debugPrint('❌ [WeatherScreen] Error loading weather data: $e');
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _refreshWeather() async {
+    if (_isRefreshing) return;
+
+    setState(() => _isRefreshing = true);
+    try {
+      debugPrint('🔄 [WeatherScreen] Refreshing weather data...');
+      await _weatherService.refresh();
+      await _loadWeatherData();
+      debugPrint('✅ [WeatherScreen] Weather data refreshed successfully');
+    } catch (e) {
+      debugPrint('❌ [WeatherScreen] Error refreshing weather: $e');
+    } finally {
+      setState(() => _isRefreshing = false);
     }
   }
 
@@ -54,6 +81,12 @@ class _WeatherScreenState extends State<WeatherScreen> {
     ) {
       if (mounted) {
         setState(() => _isConnected = isConnected);
+        if (isConnected) {
+          debugPrint(
+            '📡 [WeatherScreen] Connection restored, refreshing weather...',
+          );
+          _refreshWeather();
+        }
       }
     });
   }
@@ -61,6 +94,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
   @override
   void dispose() {
     _connectivitySubscription?.cancel();
+    _weatherService.dispose();
     super.dispose();
   }
 
@@ -72,12 +106,22 @@ class _WeatherScreenState extends State<WeatherScreen> {
         title: const Text('Weather'),
         actions: [
           if (!_isConnected) const Icon(Icons.wifi_off, color: Colors.red),
+          IconButton(
+            icon: _isRefreshing
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.refresh),
+            onPressed: _isRefreshing ? null : _refreshWeather,
+          ),
         ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-              onRefresh: _loadWeatherData,
+              onRefresh: _refreshWeather,
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -88,6 +132,8 @@ class _WeatherScreenState extends State<WeatherScreen> {
                     _buildWeatherStats(),
                     const SizedBox(height: 16),
                     _buildForecast(),
+                    const SizedBox(height: 16),
+                    _buildLocationInfo(),
                   ],
                 ),
               ),
@@ -161,6 +207,14 @@ class _WeatherScreenState extends State<WeatherScreen> {
                 ),
               ],
             ),
+            if (_currentWeather!.description != null) ...[
+              const SizedBox(height: 16),
+              Text(
+                _currentWeather!.description!,
+                style: Theme.of(context).textTheme.bodyMedium,
+                textAlign: TextAlign.center,
+              ),
+            ],
           ],
         ),
       ),
@@ -271,6 +325,54 @@ class _WeatherScreenState extends State<WeatherScreen> {
                     ),
                   ),
                 ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocationInfo() {
+    final position = _weatherService.currentPosition;
+    if (position == null) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Location',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 8),
+              Text('Location not available'),
+              Text(
+                'Please enable location permissions in app settings',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Location', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 8),
+            Text('Latitude: ${position.latitude.toStringAsFixed(4)}'),
+            Text('Longitude: ${position.longitude.toStringAsFixed(4)}'),
+            if (position.accuracy > 0)
+              Text('Accuracy: ${position.accuracy.toStringAsFixed(1)} meters'),
+            if (position.accuracy == 0)
+              Text(
+                'Using default location (New Delhi, India)',
+                style: TextStyle(fontSize: 12, color: Colors.orange),
+              ),
           ],
         ),
       ),

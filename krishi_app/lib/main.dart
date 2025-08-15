@@ -12,6 +12,8 @@ import 'services/offline_maps_service.dart';
 import 'services/image_storage_service.dart';
 import 'services/background_sync_service.dart';
 import 'services/push_notification_service.dart';
+import 'services/config_service.dart';
+import 'services/weather_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/crop_screen.dart';
 import 'screens/weather_screen.dart';
@@ -32,6 +34,18 @@ void main() async {
   await ImageStorageService().initialize();
   await BackgroundSyncService().initialize();
   await PushNotificationService().initialize();
+
+  // Initialize configuration service first
+  await ConfigService().initialize();
+
+  // Initialize weather service (depends on config) - handle errors gracefully
+  try {
+    await WeatherService().initialize();
+    print('✅ [Main] Weather service initialized successfully');
+  } catch (e) {
+    print('⚠️ [Main] Weather service initialization failed: $e');
+    print('📱 [Main] App will continue without weather functionality');
+  }
 
   // Initialize error handler (no async initialization needed)
   ErrorHandlerService();

@@ -1,6 +1,12 @@
 // ignore_for_file: avoid_print
 
+import 'dart:async';
+import 'package:flutter/foundation.dart';
+import 'package:weather/weather.dart';
+import 'package:geolocator/geolocator.dart';
 import 'database_helper.dart';
+import 'config_service.dart';
+import 'dart:io'; // Added for Directory.current
 
 class WeatherData {
   final int? id;
@@ -11,6 +17,8 @@ class WeatherData {
   final double? windSpeed;
   final String? description;
   final DateTime createdAt;
+  final double? latitude;
+  final double? longitude;
 
   WeatherData({
     this.id,
@@ -20,6 +28,8 @@ class WeatherData {
     this.rainfall,
     this.windSpeed,
     this.description,
+    this.latitude,
+    this.longitude,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -32,6 +42,8 @@ class WeatherData {
       'rainfall': rainfall,
       'wind_speed': windSpeed,
       'description': description,
+      'latitude': latitude,
+      'longitude': longitude,
       'created_at': createdAt.toIso8601String(),
     };
   }
@@ -46,6 +58,25 @@ class WeatherData {
       windSpeed: map['wind_speed'] as double?,
       description: map['description'] as String?,
       createdAt: DateTime.parse(map['created_at'] as String),
+      latitude: map['latitude'] as double?,
+      longitude: map['longitude'] as double?,
+    );
+  }
+
+  factory WeatherData.fromWeather(
+    Weather weather, {
+    double? latitude,
+    double? longitude,
+  }) {
+    return WeatherData(
+      date: DateTime.now(),
+      temperature: weather.temperature?.celsius,
+      humidity: weather.humidity?.toDouble(),
+      rainfall: weather.rainLastHour,
+      windSpeed: weather.windSpeed,
+      latitude: latitude,
+      longitude: longitude,
+      description: weather.weatherDescription,
     );
   }
 }
@@ -56,6 +87,271 @@ class WeatherService {
   WeatherService._internal();
 
   final DatabaseHelper _dbHelper = DatabaseHelper();
+  WeatherFactory? _weatherFactory;
+  final ConfigService _configService = ConfigService();
+
+  Position? _currentPosition;
+  Timer? _refreshTimer;
+  static const Duration _refreshInterval = Duration(minutes: 10);
+
+  // Initialize weather service
+  Future<void> initialize() async {
+    debugPrint('🌤️ [WeatherService] Initializing weather service...');
+
+    // Check if already initialized
+    if (_weatherFactory != null) {
+      debugPrint('✅ [WeatherService] Already initialized, skipping...');
+      return;
+    }
+
+    // Initialize config service first
+    await _configService.initialize();
+
+    // Initialize weather factory with API key from config
+    final apiKey = _configService.openWeatherMapApiKey;
+    if (apiKey == null || apiKey.isEmpty) {
+      debugPrint(
+        '❌ [WeatherService] OpenWeatherMap API key not found in environment variables',
+      );
+      debugPrint(
+        '📝 [WeatherService] Please create a .env file with OPENWEATHERMAP_API_KEY=your_api_key',
+      );
+      debugPrint(
+        '📁 [WeatherService] Expected location: ${Directory.current.path}/.env',
+      );
+      throw Exception(
+        'OpenWeatherMap API key not found. Please create a .env file with OPENWEATHERMAP_API_KEY=your_api_key',
+      );
+    }
+
+    if (apiKey == 'DEMO_KEY' || apiKey.length < 10) {
+      debugPrint('❌ [WeatherService] Invalid API key detected: $apiKey');
+      debugPrint(
+        '📝 [WeatherService] Please use a valid OpenWeatherMap API key',
+      );
+      throw Exception(
+        'Invalid API key. Please use a valid OpenWeatherMap API key from openweathermap.org',
+      );
+    }
+
+    _weatherFactory = WeatherFactory(apiKey);
+    debugPrint(
+      '🔑 [WeatherService] Weather API initialized with key: ${apiKey.substring(0, 8)}...',
+    );
+
+    await _checkLocationPermission();
+    await _getCurrentLocation();
+    _startAutoRefresh();
+  }
+
+  // Check and request location permission
+  Future<bool> _checkLocationPermission() async {
+    debugPrint('📍 [WeatherService] Checking location permission...');
+
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      debugPrint('📍 [WeatherService] Current permission status: $permission');
+
+      if (permission == LocationPermission.denied) {
+        debugPrint(
+          '📍 [WeatherService] Location permission denied, requesting...',
+        );
+        permission = await Geolocator.requestPermission();
+        debugPrint(
+          '📍 [WeatherService] Permission request result: $permission',
+        );
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        debugPrint('❌ [WeatherService] Location permission permanently denied');
+        return false;
+      }
+
+      if (permission == LocationPermission.whileInUse ||
+          permission == LocationPermission.always) {
+        debugPrint('✅ [WeatherService] Location permission granted');
+        return true;
+      }
+
+      debugPrint(
+        '❌ [WeatherService] Location permission not granted: $permission',
+      );
+      return false;
+    } catch (e) {
+      debugPrint('❌ [WeatherService] Error checking location permission: $e');
+      return false;
+    }
+  }
+
+  // Get current Location
+  Future<Position?> _getCurrentLocation() async {
+    try {
+      debugPrint('📍 [WeatherService] Getting current location...');
+      _currentPosition = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10),
+      );
+      debugPrint(
+        '✅ [WeatherService] Location obtained: ${_currentPosition!.latitude}, ${_currentPosition!.longitude}',
+      );
+      return _currentPosition;
+    } catch (e) {
+      debugPrint('❌ [WeatherService] Error getting current location: $e');
+      debugPrint(
+        '📍 [WeatherService] Using default location (New Delhi, India)',
+      );
+
+      // Fallback to a default location (New Delhi, India)
+      _currentPosition = Position(
+        latitude: 28.7041,
+        longitude: 77.1025,
+        timestamp: DateTime.now(),
+        accuracy: 0,
+        altitude: 0,
+        heading: 0,
+        speed: 0,
+        speedAccuracy: 0,
+        altitudeAccuracy: 0,
+        headingAccuracy: 0,
+      );
+
+      return _currentPosition;
+    }
+  }
+
+  // Start automatic refresh timer
+  void _startAutoRefresh() {
+    _refreshTimer?.cancel();
+    _refreshTimer = Timer.periodic(_refreshInterval, (timer) {
+      debugPrint('🔄 [WeatherService] Auto-refreshing weather data...');
+      fetchCurrentWeather();
+    });
+    debugPrint(
+      '⏰ [WeatherService] Auto-refresh timer started (${_refreshInterval.inMinutes} minutes)',
+    );
+  }
+
+  // Check if weather service is ready
+  bool get isReady => _weatherFactory != null && _currentPosition != null;
+
+  // Ensure service is initialized
+  Future<void> _ensureInitialized() async {
+    if (!isReady) {
+      debugPrint(
+        '⚠️ [WeatherService] Service not initialized, initializing now...',
+      );
+      await initialize();
+    }
+  }
+
+  // Fetch current weather API
+  Future<WeatherData?> fetchCurrentWeather() async {
+    try {
+      await _ensureInitialized();
+
+      if (_currentPosition == null) {
+        await _getCurrentLocation();
+        if (_currentPosition == null) {
+          debugPrint(
+            '❌ [WeatherService] No location available for weather fetch',
+          );
+          return null;
+        }
+      }
+
+      debugPrint('🌤️ [WeatherService] Fetching current weather from API...');
+      final stopwatch = Stopwatch()..start();
+
+      Weather weather = await _weatherFactory!.currentWeatherByLocation(
+        _currentPosition!.latitude,
+        _currentPosition!.longitude,
+      );
+
+      stopwatch.stop();
+      debugPrint(
+        '✅ [WeatherService] Weather API call completed in ${stopwatch.elapsedMilliseconds}ms',
+      );
+
+      final weatherData = WeatherData.fromWeather(
+        weather,
+        latitude: _currentPosition!.latitude,
+        longitude: _currentPosition!.longitude,
+      );
+
+      // Cache the weather data
+      debugPrint('💾 [WeatherService] Caching weather data...');
+      await cacheWeatherData(weatherData);
+      debugPrint('✅ [WeatherService] Weather data cached successfully');
+      return weatherData;
+    } catch (e) {
+      debugPrint('💥 [WeatherService] Error fetching current weather: $e');
+      return null;
+    }
+  }
+
+  // Fetch weather forecast from API
+  Future<List<WeatherData>> fetchWeatherForecast({int days = 7}) async {
+    try {
+      await _ensureInitialized();
+
+      if (_currentPosition == null) {
+        await _getCurrentLocation();
+        if (_currentPosition == null) {
+          debugPrint(
+            '❌ [WeatherService] No location available for forecast fetch',
+          );
+          return [];
+        }
+      }
+
+      debugPrint('🌤️ [WeatherService] Fetching weather forecast from API...');
+      final stopwatch = Stopwatch()..start();
+
+      List<Weather> forecast = await _weatherFactory!.fiveDayForecastByLocation(
+        _currentPosition!.latitude,
+        _currentPosition!.longitude,
+      );
+
+      stopwatch.stop();
+      debugPrint(
+        '✅ [WeatherService] Forecast API call completed in ${stopwatch.elapsedMilliseconds}ms',
+      );
+
+      List<WeatherData> forecastData = [];
+      for (int i = 0; i < days && i < forecast.length; i++) {
+        final weather = forecast[i];
+        final weatherData = WeatherData.fromWeather(
+          weather,
+          latitude: _currentPosition!.latitude,
+          longitude: _currentPosition!.longitude,
+        );
+        forecastData.add(weatherData);
+
+        // Cache each forecast data point
+        await cacheWeatherData(weatherData);
+      }
+
+      debugPrint('💾 [WeatherService] Forecast data cached successfully');
+      return forecastData;
+    } catch (e) {
+      debugPrint('💥 [WeatherService] Error fetching forecast: $e');
+      return [];
+    }
+  }
+
+  // Update all weather data (current + forecast)
+  Future<void> updateWeatherData() async {
+    debugPrint('🔄 [WeatherService] Updating all weather data...');
+    final stopwatch = Stopwatch()..start();
+
+    await fetchCurrentWeather();
+    await fetchWeatherForecast();
+
+    stopwatch.stop();
+    debugPrint(
+      '✅ [WeatherService] All weather data updated in ${stopwatch.elapsedMilliseconds}ms',
+    );
+  }
 
   // Cache weather data
   Future<bool> cacheWeatherData(WeatherData weatherData) async {
@@ -63,18 +359,26 @@ class WeatherService {
       final id = await _dbHelper.insertWeatherData(weatherData.toMap());
       return id > 0;
     } catch (e) {
-      print('Error caching weather data: $e');
+      debugPrint('❌ [WeatherService] Error caching weather data: $e');
       return false;
     }
   }
 
-  // Get latest weather data
+  // Get latest weather data (try API first, fallback to cache)
   Future<WeatherData?> getLatestWeather() async {
     try {
+      // First try to get fresh data from API
+      final freshWeather = await fetchCurrentWeather();
+      if (freshWeather != null) {
+        return freshWeather;
+      }
+
+      // Fallback to cached data
+      debugPrint('📱 [WeatherService] Using cached weather data');
       final weatherData = await _dbHelper.getLatestWeather();
       return weatherData != null ? WeatherData.fromMap(weatherData) : null;
     } catch (e) {
-      print('Error getting latest weather: $e');
+      debugPrint('❌ [WeatherService] Error getting latest weather: $e');
       return null;
     }
   }
@@ -99,18 +403,26 @@ class WeatherService {
       }
       return null;
     } catch (e) {
-      print('Error getting weather for date: $e');
+      debugPrint('❌ [WeatherService] Error getting weather for date: $e');
       return null;
     }
   }
 
-  // Get weather forecast (cached data for next few days)
+  // Get weather forecast (try API first, fallback to cache)
   Future<List<WeatherData>> getWeatherForecast({int days = 7}) async {
     try {
+      // First try to get fresh data from API
+      final freshForecast = await fetchWeatherForecast(days: days);
+      if (freshForecast.isNotEmpty) {
+        return freshForecast;
+      }
+
+      // Fallback to cached data
+      debugPrint('📱 [WeatherService] Using cached forecast data');
       final weatherDataList = await _dbHelper.getWeatherData(limit: days);
       return weatherDataList.map((data) => WeatherData.fromMap(data)).toList();
     } catch (e) {
-      print('Error getting weather forecast: $e');
+      debugPrint('❌ [WeatherService] Error getting forecast: $e');
       return [];
     }
   }
@@ -121,12 +433,12 @@ class WeatherService {
       final weatherDataList = await _dbHelper.getWeatherData(limit: days);
       return weatherDataList.map((data) => WeatherData.fromMap(data)).toList();
     } catch (e) {
-      print('Error getting weather history: $e');
+      debugPrint('❌ [WeatherService] Error getting weather history: $e');
       return [];
     }
   }
 
-  // Check if weather data is fresh (less than 1 hour old)
+  // Check if weather data is fresh (less than 15 minutes old)
   Future<bool> isWeatherDataFresh() async {
     try {
       final latestWeather = await getLatestWeather();
@@ -134,9 +446,11 @@ class WeatherService {
 
       final now = DateTime.now();
       final timeDifference = now.difference(latestWeather.createdAt);
-      return timeDifference.inHours < 1;
+      return timeDifference.inMinutes < 15;
     } catch (e) {
-      print('Error checking weather data freshness: $e');
+      debugPrint(
+        '❌ [WeatherService] Error checking weather data freshness: $e',
+      );
       return false;
     }
   }
@@ -152,11 +466,11 @@ class WeatherService {
         if (weatherDate.isBefore(thirtyDaysAgo)) {
           // Note: We'll need to add a delete method to DatabaseHelper for this
           // For now, we'll just log it
-          print('Would delete old weather data: ${data['date']}');
+          debugPrint('Would delete old weather data: ${data['date']}');
         }
       }
     } catch (e) {
-      print('Error clearing old weather data: $e');
+      debugPrint('❌ [WeatherService] Error clearing old weather data: $e');
     }
   }
 
@@ -207,7 +521,7 @@ class WeatherService {
         'avgWindSpeed': windCount > 0 ? totalWindSpeed / windCount : 0.0,
       };
     } catch (e) {
-      print('Error getting weather stats: $e');
+      debugPrint('❌ [WeatherService] Error getting weather stats: $e');
       return {
         'avgTemperature': 0.0,
         'avgHumidity': 0.0,
@@ -215,5 +529,32 @@ class WeatherService {
         'avgWindSpeed': 0.0,
       };
     }
+  }
+
+  // Get current location coordinates
+  Position? get currentPosition => _currentPosition;
+
+  // Manual refresh
+  Future<void> refresh() async {
+    debugPrint('🔄 [WeatherService] Manual refresh requested...');
+    await updateWeatherData();
+  }
+
+  // Reset the service (useful for testing or reinitialization)
+  Future<void> reset() async {
+    debugPrint('🔄 [WeatherService] Resetting weather service...');
+    _refreshTimer?.cancel();
+    _refreshTimer = null;
+    _currentPosition = null;
+    _weatherFactory = null;
+    // _isInitialized = false; // This field doesn't exist in the original file
+  }
+
+  // Dispose resources
+  void dispose() {
+    debugPrint('🧹 [WeatherService] Disposing weather service...');
+    _refreshTimer?.cancel();
+    _refreshTimer = null;
+    // Don't reset other fields as this is a singleton
   }
 }
