@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Script to create .env file for Krishi App
+# Template script to create .env file for Krishi App
+# IMPORTANT: Replace YOUR_API_KEY_HERE with your actual OpenWeatherMap API key
 
 echo "🔧 Creating .env file for Krishi App..."
 echo ""
@@ -19,10 +20,20 @@ if [ -f ".env" ]; then
     fi
 fi
 
+# Get API key from user
+echo "🔑 Please enter your OpenWeatherMap API key:"
+echo "   (Get it from: https://openweathermap.org/api)"
+read -p "API Key: " api_key
+
+if [ -z "$api_key" ]; then
+    echo "❌ API key cannot be empty!"
+    exit 1
+fi
+
 # Create .env file
-cat > .env << 'EOF'
+cat > .env << EOF
 # Weather API Configuration
-OPENWEATHERMAP_API_KEY=bf5945787401f51daf7ce7f1fe7a2779
+OPENWEATHERMAP_API_KEY=$api_key
 
 # App Configuration (optional)
 APP_NAME=Krishi Sahayak
@@ -38,3 +49,6 @@ cat .env
 echo ""
 echo "🎉 You can now run your Flutter app!"
 echo "💡 The weather service will use your real API key."
+echo ""
+echo "⚠️  IMPORTANT: Never commit this .env file to git!"
+echo "   It's already added to .gitignore for safety."

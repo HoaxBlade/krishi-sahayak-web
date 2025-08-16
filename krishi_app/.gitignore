@@ -5,11 +5,9 @@
 *.swp
 .DS_Store
 .atom/
-.build/
 .buildlog/
 .history
 .svn/
-.swiftpm/
 migrate_working_dir/
 
 # IntelliJ related
@@ -18,10 +16,11 @@ migrate_working_dir/
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# Visual Studio Code related
+.classpath
+.project
+.settings/
+.vscode/
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -29,6 +28,7 @@ migrate_working_dir/
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
+.packages
 .pub-cache/
 .pub/
 /build/
@@ -44,11 +44,9 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Environment variables and secrets
+# Environment variables and sensitive files
 .env
 .env.local
 .env.production
 .env.staging
-*.key
-*.pem
-secrets/
+create_env.sh
