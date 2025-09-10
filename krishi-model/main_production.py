@@ -5,6 +5,7 @@ Optimized for Kubernetes deployment with proper logging and monitoring
 """
 
 import os
+import sys
 import time
 import logging
 import threading
@@ -24,8 +25,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('/app/logs/ml_server.log')
+        logging.StreamHandler()
     ]
 )
 logger = logging.getLogger(__name__)
@@ -246,31 +246,62 @@ def analyze_crop():
                 'status': 'error'
             }), 429
         
-        # Get image data
-        if 'image' not in request.files:
+        # Get image data (handle both file upload and base64)
+        image_data = None
+        
+        # Check if image is sent as file upload
+        if 'image' in request.files:
+            image_file = request.files['image']
+            if image_file.filename != '':
+                try:
+                    image = Image.open(image_file.stream)
+                    image_data = image
+                except Exception as e:
+                    logger.error(f"File upload processing error: {e}")
+                    return jsonify({
+                        'error': 'Invalid image file',
+                        'message': 'Could not process the uploaded image file',
+                        'status': 'error'
+                    }), 400
+        
+        # Check if image is sent as base64 in JSON
+        elif request.is_json and 'image' in request.get_json():
+            try:
+                base64_data = request.get_json()['image']
+                # Remove data URL prefix if present
+                if base64_data.startswith('data:image'):
+                    base64_data = base64_data.split(',')[1]
+                
+                # Decode base64 image
+                image_bytes = base64.b64decode(base64_data)
+                image = Image.open(io.BytesIO(image_bytes))
+                image_data = image
+                logger.info(f"Base64 image decoded successfully: {image.size}")
+            except Exception as e:
+                logger.error(f"Base64 processing error: {e}")
+                return jsonify({
+                    'error': 'Invalid base64 image',
+                    'message': 'Could not process the base64 image data',
+                    'status': 'error'
+                }), 400
+        
+        # If no image data found
+        if image_data is None:
             return jsonify({
                 'error': 'No image provided',
-                'message': 'Please provide an image file',
-                'status': 'error'
-            }), 400
-        
-        image_file = request.files['image']
-        if image_file.filename == '':
-            return jsonify({
-                'error': 'No image selected',
-                'message': 'Please select an image file',
+                'message': 'Please provide an image file or base64 image data',
                 'status': 'error'
             }), 400
         
         # Process image
         try:
-            image = Image.open(image_file.stream)
-            image = image.convert('RGB')
+            image = image_data.convert('RGB')
             image = image.resize((224, 224))  # Resize for model input
             
             # Convert to numpy array
             img_array = np.array(image) / 255.0
             img_array = np.expand_dims(img_array, axis=0)
+            logger.info(f"Image processed successfully: {img_array.shape}")
             
         except Exception as e:
             logger.error(f"Image processing error: {e}")
@@ -375,17 +406,27 @@ ml_server_requests_total {sum(len(requests) for requests in user_requests.values
         return f"# ERROR: {e}", 500, {'Content-Type': 'text/plain'}
 
 if __name__ == '__main__':
-    # Create logs directory
-    os.makedirs('/app/logs', exist_ok=True)
+    # Get port from environment variable (Render sets this)
+    port = int(os.getenv('PORT', 5000))
     
     # Start server
     logger.info("🚀 Starting Krishi Sahayak ML Server...")
     logger.info(f"📊 Rate limit: {RATE_LIMIT_REQUESTS} requests per {RATE_LIMIT_WINDOW} seconds")
     logger.info(f"📁 Max file size: {MAX_FILE_SIZE / 1024 / 1024:.1f}MB")
+    logger.info(f"🌐 Starting server on port {port}")
     
-    app.run(
-        host='0.0.0.0',
-        port=5000,
-        debug=False,
-        threaded=True
-    )
+    # Use production WSGI server for Render
+    try:
+        import gunicorn.app.wsgiapp as wsgi
+        logger.info("🚀 Starting with Gunicorn WSGI server...")
+        sys.argv = ['gunicorn', '--bind', f'0.0.0.0:{port}', '--workers', '2', '--timeout', '120', '--keep-alive', '2', '--max-requests', '1000', '--max-requests-jitter', '100', 'main_production:app']
+        wsgi.run()
+    except ImportError:
+        logger.warning("⚠️ Gunicorn not available, falling back to Flask development server")
+        logger.warning("⚠️ This is not recommended for production!")
+        app.run(
+            host='0.0.0.0',
+            port=port,
+            debug=False,
+            threaded=True
+        )
