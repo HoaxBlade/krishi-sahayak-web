@@ -374,14 +374,18 @@ ml_server_requests_total {sum(len(requests) for requests in user_requests.values
         return f"# ERROR: {e}", 500, {'Content-Type': 'text/plain'}
 
 if __name__ == '__main__':
+    # Get port from environment variable (Render sets this)
+    port = int(os.getenv('PORT', 5000))
+    
     # Start server
     logger.info("🚀 Starting Krishi Sahayak ML Server...")
     logger.info(f"📊 Rate limit: {RATE_LIMIT_REQUESTS} requests per {RATE_LIMIT_WINDOW} seconds")
     logger.info(f"📁 Max file size: {MAX_FILE_SIZE / 1024 / 1024:.1f}MB")
+    logger.info(f"🌐 Starting server on port {port}")
     
     app.run(
         host='0.0.0.0',
-        port=5000,
+        port=port,
         debug=False,
         threaded=True
     )
