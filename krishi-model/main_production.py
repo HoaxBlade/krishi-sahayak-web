@@ -305,10 +305,10 @@ def analyze_crop():
             
             predicted_disease = disease_names[prediction_class]
             health_status = 'healthy' if prediction_class == 16 else 'diseased'
-        
-    except Exception as e:
+            
+        except Exception as e:
             logger.error(f"ML prediction error: {e}")
-    return jsonify({
+            return jsonify({
                 'error': 'Prediction failed',
                 'message': 'Could not analyze the image',
                 'status': 'error'
@@ -337,7 +337,7 @@ def analyze_crop():
         
     except Exception as e:
         logger.error(f"Unexpected error in analyze_crop: {e}")
-    return jsonify({
+        return jsonify({
             'error': 'Internal server error',
             'message': 'An unexpected error occurred',
             'status': 'error'
