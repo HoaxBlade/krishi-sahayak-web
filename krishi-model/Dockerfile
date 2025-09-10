@@ -1,13 +1,13 @@
 # Use Python 3.11 slim image for smaller size
 FROM python:3.11-slim
 
-# Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system deps (add curl for HEALTHCHECK)
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
+    curl \
     libgl1-mesa-glx \
     libglib2.0-0 \
     libsm6 \
@@ -16,25 +16,26 @@ RUN apt-get update && apt-get install -y \
     libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
-COPY requirements.txt .
+# Environment: quieter TF logs; ensure unbuffered py
+ENV PYTHONUNBUFFERED=1 \
+    TENSORFLOW_CPP_MIN_LOG_LEVEL=2
 
-# Install Python dependencies
+# Copy and install deps (pin)
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy app
 COPY . .
 
-# Create non-root user for security
+# Create non-root user
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
-# Expose port
 EXPOSE 5000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:5000/health || exit 1
+# Healthcheck (uses curl)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+  CMD curl -fsS http://localhost:5000/health || exit 1
 
-# Run the application
-CMD ["python", "main.py"]
+# Use gunicorn for production
+CMD ["gunicorn", "-w", "1", "-k", "gthread", "--threads", "4", "-t", "120", "-b", "0.0.0.0:5000", "main:app"]
