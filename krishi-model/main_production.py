@@ -20,15 +20,11 @@ import base64
 import json
 
 # Configure logging
-# Create logs directory if it doesn't exist
-os.makedirs('/app/logs', exist_ok=True)
-
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('/app/logs/ml_server.log')
+        logging.StreamHandler()
     ]
 )
 logger = logging.getLogger(__name__)
