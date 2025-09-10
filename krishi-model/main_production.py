@@ -5,6 +5,7 @@ Optimized for Kubernetes deployment with proper logging and monitoring
 """
 
 import os
+import sys
 import time
 import logging
 import threading
@@ -414,9 +415,18 @@ if __name__ == '__main__':
     logger.info(f"📁 Max file size: {MAX_FILE_SIZE / 1024 / 1024:.1f}MB")
     logger.info(f"🌐 Starting server on port {port}")
     
-    app.run(
-        host='0.0.0.0',
-        port=port,
-        debug=False,
-        threaded=True
-    )
+    # Use production WSGI server for Render
+    try:
+        import gunicorn.app.wsgiapp as wsgi
+        logger.info("🚀 Starting with Gunicorn WSGI server...")
+        sys.argv = ['gunicorn', '--bind', f'0.0.0.0:{port}', '--workers', '2', '--timeout', '120', '--keep-alive', '2', '--max-requests', '1000', '--max-requests-jitter', '100', 'main_production:app']
+        wsgi.run()
+    except ImportError:
+        logger.warning("⚠️ Gunicorn not available, falling back to Flask development server")
+        logger.warning("⚠️ This is not recommended for production!")
+        app.run(
+            host='0.0.0.0',
+            port=port,
+            debug=False,
+            threaded=True
+        )
