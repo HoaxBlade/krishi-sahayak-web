@@ -20,6 +20,9 @@ import base64
 import json
 
 # Configure logging
+# Create logs directory if it doesn't exist
+os.makedirs('/app/logs', exist_ok=True)
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -302,10 +305,10 @@ def analyze_crop():
             
             predicted_disease = disease_names[prediction_class]
             health_status = 'healthy' if prediction_class == 16 else 'diseased'
-            
-        except Exception as e:
+        
+    except Exception as e:
             logger.error(f"ML prediction error: {e}")
-            return jsonify({
+    return jsonify({
                 'error': 'Prediction failed',
                 'message': 'Could not analyze the image',
                 'status': 'error'
@@ -334,7 +337,7 @@ def analyze_crop():
         
     except Exception as e:
         logger.error(f"Unexpected error in analyze_crop: {e}")
-        return jsonify({
+    return jsonify({
             'error': 'Internal server error',
             'message': 'An unexpected error occurred',
             'status': 'error'
@@ -375,9 +378,6 @@ ml_server_requests_total {sum(len(requests) for requests in user_requests.values
         return f"# ERROR: {e}", 500, {'Content-Type': 'text/plain'}
 
 if __name__ == '__main__':
-    # Create logs directory
-    os.makedirs('/app/logs', exist_ok=True)
-    
     # Start server
     logger.info("🚀 Starting Krishi Sahayak ML Server...")
     logger.info(f"📊 Rate limit: {RATE_LIMIT_REQUESTS} requests per {RATE_LIMIT_WINDOW} seconds")
