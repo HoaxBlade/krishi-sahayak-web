@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 
 abstract class VersionedData {
   final String id;
@@ -257,7 +258,7 @@ class ConflictResolutionService {
         resolved.add(resolvedData);
       } catch (e) {
         // Skip conflicts that can't be auto-resolved
-        print('Could not auto-resolve conflict: ${conflict.description}');
+        debugPrint('Could not auto-resolve conflict: ${conflict.description}');
       }
     }
 

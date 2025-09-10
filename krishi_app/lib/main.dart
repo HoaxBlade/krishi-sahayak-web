@@ -1,12 +1,14 @@
 // ignore_for_file: avoid_print, unused_field
 
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'services/database_helper.dart';
 import 'services/connectivity_service.dart';
 import 'services/preferences_service.dart';
 import 'services/sync_service.dart';
 import 'services/error_handler_service.dart';
 import 'services/analytics_service.dart';
+import 'services/firebase_analytics_service.dart';
 import 'services/cache_service.dart';
 import 'services/offline_maps_service.dart';
 import 'services/image_storage_service.dart';
@@ -24,6 +26,9 @@ import 'widgets/advanced_features_demo.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize Firebase
+  await Firebase.initializeApp();
+
   // Initialize core services
   await DatabaseHelper().database;
   await ConnectivityService().initialize();
@@ -39,22 +44,25 @@ void main() async {
   // Initialize configuration service first
   await ConfigService().initialize();
 
+  // Initialize Firebase Analytics
+  await FirebaseAnalyticsService().initialize();
+
   // Initialize weather service (depends on config) - handle errors gracefully
   try {
     await WeatherService().initialize();
-    print('✅ [Main] Weather service initialized successfully');
+    debugPrint('✅ [Main] Weather service initialized successfully');
   } catch (e) {
-    print('⚠️ [Main] Weather service initialization failed: $e');
-    print('📱 [Main] App will continue without weather functionality');
+    debugPrint('⚠️ [Main] Weather service initialization failed: $e');
+    debugPrint('📱 [Main] App will continue without weather functionality');
   }
 
   // Initialize ML service (depends on config) - handle errors gracefully
   try {
     await MLService().initialize();
-    print('✅ [Main] ML service initialized successfully');
+    debugPrint('✅ [Main] ML service initialized successfully');
   } catch (e) {
-    print('⚠️ [Main] ML service initialization failed: $e');
-    print('📱 [Main] App will continue without offline ML functionality');
+    debugPrint('⚠️ [Main] ML service initialization failed: $e');
+    debugPrint('📱 [Main] App will continue without offline ML functionality');
   }
 
   // Initialize error handler (no async initialization needed)
@@ -107,7 +115,7 @@ class _ErrorHandlerWrapperState extends State<ErrorHandlerWrapper> {
   void _setupErrorListener() {
     _errorHandler.errorStream.listen((error) {
       // Log error for debugging
-      print('Global error caught: ${error.message}');
+      debugPrint('Global error caught: ${error.message}');
 
       // You can add global error handling here, like showing a snackbar
       // or sending error reports to analytics

@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-server
+  namespace: krishi-sahayak
+  labels:
+    app: ml-server
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ml-server
+  template:
+    metadata:
+      labels:
+        app: ml-server
+        version: v1
+    spec:
+      containers:
+      - name: ml-server
+        image: krishi-sahayak/ml-server:latest
+        ports:
+        - containerPort: 5000
+          name: http
+        env:
+        - name: RATE_LIMIT_REQUESTS
+          valueFrom:
+            configMapKeyRef:
+              name: ml-server-config
+              key: RATE_LIMIT_REQUESTS
+        - name: RATE_LIMIT_WINDOW
+          valueFrom:
+            configMapKeyRef:
+              name: ml-server-config
+              key: RATE_LIMIT_WINDOW
+        - name: MAX_FILE_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: ml-server-config
+              key: MAX_FILE_SIZE
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: ml-server-config
+              key: LOG_LEVEL
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: logs
+          mountPath: /app/logs
+      volumes:
+      - name: logs
+        emptyDir: {}
+      restartPolicy: Always

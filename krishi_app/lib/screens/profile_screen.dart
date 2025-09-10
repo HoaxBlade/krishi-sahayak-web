@@ -4,6 +4,7 @@ import '../services/user_service.dart';
 import '../services/connectivity_service.dart';
 import '../widgets/edit_profile_dialog.dart';
 import '../widgets/analytics_dashboard.dart';
+import 'settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -51,8 +52,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _connectivitySubscription = _connectivityService.connectionStatus.listen((
       isConnected,
     ) {
-      if (mounted) {
-      }
+      if (mounted) {}
     });
   }
 
@@ -95,6 +95,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 MaterialPageRoute(
                   builder: (context) => const AnalyticsDashboard(),
                 ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
               );
             },
           ),

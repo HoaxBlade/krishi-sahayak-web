@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import '../services/connectivity_service.dart';
 import '../services/preferences_service.dart';
 import '../services/database_helper.dart';
@@ -199,7 +200,7 @@ class SyncService {
       );
 
       if (conflicts.isNotEmpty) {
-        print('Found ${conflicts.length} conflicts during sync');
+        debugPrint('Found ${conflicts.length} conflicts during sync');
 
         // Auto-resolve conflicts based on default strategy
         final resolvedData = _conflictResolver.autoResolveConflicts(conflicts);
@@ -213,7 +214,7 @@ class SyncService {
 
         // Log conflict statistics
         final stats = _conflictResolver.getConflictStats(conflicts);
-        print('Conflict resolution stats: $stats');
+        debugPrint('Conflict resolution stats: $stats');
       }
     } catch (e) {
       _errorHandler.handleException(e, operationId: 'conflict_resolution');
@@ -246,38 +247,38 @@ class SyncService {
         await _syncCacheWeather(operation.data);
         break;
       default:
-        print('Unknown sync operation type: ${operation.type}');
+        debugPrint('Unknown sync operation type: ${operation.type}');
     }
   }
 
   Future<void> _syncAddCrop(Map<String, dynamic> data) async {
     // Simulate API call
     await Future.delayed(const Duration(milliseconds: 500));
-    print('Synced add crop: ${data['name']}');
+    debugPrint('Synced add crop: ${data['name']}');
   }
 
   Future<void> _syncUpdateCrop(Map<String, dynamic> data) async {
     // Simulate API call
     await Future.delayed(const Duration(milliseconds: 500));
-    print('Synced update crop: ${data['id']}');
+    debugPrint('Synced update crop: ${data['id']}');
   }
 
   Future<void> _syncDeleteCrop(Map<String, dynamic> data) async {
     // Simulate API call
     await Future.delayed(const Duration(milliseconds: 500));
-    print('Synced delete crop: ${data['id']}');
+    debugPrint('Synced delete crop: ${data['id']}');
   }
 
   Future<void> _syncUpdateProfile(Map<String, dynamic> data) async {
     // Simulate API call
     await Future.delayed(const Duration(milliseconds: 500));
-    print('Synced update profile: ${data['name']}');
+    debugPrint('Synced update profile: ${data['name']}');
   }
 
   Future<void> _syncCacheWeather(Map<String, dynamic> data) async {
     // Simulate API call
     await Future.delayed(const Duration(milliseconds: 500));
-    print('Synced weather data: ${data['date']}');
+    debugPrint('Synced weather data: ${data['date']}');
   }
 
   void _setStatus(SyncStatus status) {

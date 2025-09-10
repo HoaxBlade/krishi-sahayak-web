@@ -19,5 +19,6 @@
         "titleBar.inactiveForeground": "#e7e7e799"
     },
     "peacock.color": "#215732",
-    "cmake.sourceDirectory": "E:/Krishi-Sahayak/krishi_app/linux"
+    "cmake.sourceDirectory": "E:/Krishi-Sahayak/krishi_app/linux",
+    "java.configuration.updateBuildConfiguration": "disabled"
 }

@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_print
 
+import 'package:flutter/foundation.dart';
 import 'database_helper.dart';
 
 class UserProfile {
@@ -92,7 +93,7 @@ class UserService {
       final profileData = await _dbHelper.getUserProfile();
       return profileData != null ? UserProfile.fromMap(profileData) : null;
     } catch (e) {
-      print('Error getting user profile: $e');
+      debugPrint('Error getting user profile: $e');
       return null;
     }
   }
@@ -115,7 +116,7 @@ class UserService {
         return id > 0;
       }
     } catch (e) {
-      print('Error saving user profile: $e');
+      debugPrint('Error saving user profile: $e');
       return false;
     }
   }
@@ -133,7 +134,7 @@ class UserService {
       final rowsAffected = await _dbHelper.updateUserProfile(updateData);
       return rowsAffected > 0;
     } catch (e) {
-      print('Error updating profile field: $e');
+      debugPrint('Error updating profile field: $e');
       return false;
     }
   }
@@ -144,7 +145,7 @@ class UserService {
       final profile = await getUserProfile();
       return profile != null;
     } catch (e) {
-      print('Error checking user profile: $e');
+      debugPrint('Error checking user profile: $e');
       return false;
     }
   }
@@ -203,7 +204,7 @@ class UserService {
 
       return ((completedFields / totalFields) * 100).round();
     } catch (e) {
-      print('Error calculating profile completion: $e');
+      debugPrint('Error calculating profile completion: $e');
       return 0;
     }
   }
@@ -232,7 +233,7 @@ class UserService {
             : 'Not set',
       };
     } catch (e) {
-      print('Error getting profile summary: $e');
+      debugPrint('Error getting profile summary: $e');
       return {
         'name': 'Error',
         'location': 'Error',

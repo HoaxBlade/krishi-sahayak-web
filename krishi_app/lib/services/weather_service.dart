@@ -6,6 +6,8 @@ import 'package:weather/weather.dart';
 import 'package:geolocator/geolocator.dart';
 import 'database_helper.dart';
 import 'config_service.dart';
+import 'cache_service.dart';
+import 'firebase_analytics_service.dart';
 import 'dart:io'; // Added for Directory.current
 
 class WeatherData {
@@ -89,6 +91,8 @@ class WeatherService {
   final DatabaseHelper _dbHelper = DatabaseHelper();
   WeatherFactory? _weatherFactory;
   final ConfigService _configService = ConfigService();
+  final CacheService _cacheService = CacheService();
+  final FirebaseAnalyticsService _analytics = FirebaseAnalyticsService();
 
   Position? _currentPosition;
   Timer? _refreshTimer;
@@ -282,6 +286,16 @@ class WeatherService {
       debugPrint('💾 [WeatherService] Caching weather data...');
       await cacheWeatherData(weatherData);
       debugPrint('✅ [WeatherService] Weather data cached successfully');
+
+      // Track analytics
+      await _analytics.logWeatherCheck(
+        location:
+            '${_currentPosition!.latitude},${_currentPosition!.longitude}',
+        temperature: weatherData.temperature ?? 0.0,
+        humidity: weatherData.humidity ?? 0.0,
+        description: weatherData.description ?? 'unknown',
+      );
+
       return weatherData;
     } catch (e) {
       debugPrint('💥 [WeatherService] Error fetching current weather: $e');
@@ -364,17 +378,42 @@ class WeatherService {
     }
   }
 
-  // Get latest weather data (try API first, fallback to cache)
+  // Get latest weather data with smart caching
   Future<WeatherData?> getLatestWeather() async {
     try {
-      // First try to get fresh data from API
+      // Check cache first for recent data
+      final cacheKey =
+          'current_weather_${_currentPosition?.latitude}_${_currentPosition?.longitude}';
+      final cachedWeather = _cacheService.get(cacheKey);
+
+      if (cachedWeather != null) {
+        debugPrint('⚡ [WeatherService] Using cached weather data (fast)');
+        return WeatherData.fromMap(cachedWeather);
+      }
+
+      // Check if we have fresh data in database
+      if (await isWeatherDataFresh()) {
+        debugPrint('📱 [WeatherService] Using fresh database weather data');
+        final weatherData = await _dbHelper.getLatestWeather();
+        if (weatherData != null) {
+          final weather = WeatherData.fromMap(weatherData);
+          // Cache for quick access
+          await _cacheService.set(cacheKey, weatherData, 'weather');
+          return weather;
+        }
+      }
+
+      // Fetch fresh data from API
+      debugPrint('🌐 [WeatherService] Fetching fresh weather data from API');
       final freshWeather = await fetchCurrentWeather();
       if (freshWeather != null) {
+        // Cache the fresh data
+        await _cacheService.set(cacheKey, freshWeather.toMap(), 'weather');
         return freshWeather;
       }
 
-      // Fallback to cached data
-      debugPrint('📱 [WeatherService] Using cached weather data');
+      // Final fallback to any cached data
+      debugPrint('📱 [WeatherService] Using any available cached weather data');
       final weatherData = await _dbHelper.getLatestWeather();
       return weatherData != null ? WeatherData.fromMap(weatherData) : null;
     } catch (e) {
@@ -408,19 +447,51 @@ class WeatherService {
     }
   }
 
-  // Get weather forecast (try API first, fallback to cache)
+  // Get weather forecast with smart caching
   Future<List<WeatherData>> getWeatherForecast({int days = 7}) async {
     try {
-      // First try to get fresh data from API
+      // Check cache first for recent forecast
+      final cacheKey =
+          'weather_forecast_${days}d_${_currentPosition?.latitude}_${_currentPosition?.longitude}';
+      final cachedForecast = _cacheService.get(cacheKey);
+
+      if (cachedForecast != null) {
+        debugPrint('⚡ [WeatherService] Using cached forecast data (fast)');
+        return (cachedForecast as List)
+            .map((data) => WeatherData.fromMap(data))
+            .toList();
+      }
+
+      // Check if we have recent forecast in database
+      final dbForecast = await _dbHelper.getWeatherData(limit: days);
+      if (dbForecast.isNotEmpty) {
+        final latestDbEntry = DateTime.parse(dbForecast.first['created_at']);
+        final timeSinceUpdate = DateTime.now().difference(latestDbEntry);
+
+        if (timeSinceUpdate.inMinutes < 30) {
+          debugPrint('📱 [WeatherService] Using recent database forecast');
+          final forecast = dbForecast
+              .map((data) => WeatherData.fromMap(data))
+              .toList();
+          // Cache for quick access
+          await _cacheService.set(cacheKey, dbForecast, 'weather');
+          return forecast;
+        }
+      }
+
+      // Fetch fresh forecast from API
+      debugPrint('🌐 [WeatherService] Fetching fresh forecast from API');
       final freshForecast = await fetchWeatherForecast(days: days);
       if (freshForecast.isNotEmpty) {
+        // Cache the fresh forecast
+        final forecastMaps = freshForecast.map((w) => w.toMap()).toList();
+        await _cacheService.set(cacheKey, forecastMaps, 'weather');
         return freshForecast;
       }
 
-      // Fallback to cached data
-      debugPrint('📱 [WeatherService] Using cached forecast data');
-      final weatherDataList = await _dbHelper.getWeatherData(limit: days);
-      return weatherDataList.map((data) => WeatherData.fromMap(data)).toList();
+      // Fallback to any available cached data
+      debugPrint('📱 [WeatherService] Using any available forecast data');
+      return dbForecast.map((data) => WeatherData.fromMap(data)).toList();
     } catch (e) {
       debugPrint('❌ [WeatherService] Error getting forecast: $e');
       return [];
@@ -441,11 +512,14 @@ class WeatherService {
   // Check if weather data is fresh (less than 15 minutes old)
   Future<bool> isWeatherDataFresh() async {
     try {
-      final latestWeather = await getLatestWeather();
+      // Directly check database without going through getLatestWeather to avoid recursion
+      final latestWeather = await _dbHelper.getLatestWeather();
       if (latestWeather == null) return false;
 
       final now = DateTime.now();
-      final timeDifference = now.difference(latestWeather.createdAt);
+      final timeDifference = now.difference(
+        DateTime.parse(latestWeather['created_at']),
+      );
       return timeDifference.inMinutes < 15;
     } catch (e) {
       debugPrint(

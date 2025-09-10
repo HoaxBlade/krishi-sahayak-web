@@ -1,6 +1,7 @@
 // ignore_for_file: unused_local_variable, await_only_futures, avoid_print
 
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import '../services/preferences_service.dart';
 import '../services/connectivity_service.dart';
 
@@ -298,7 +299,7 @@ class CacheService {
         }
       }
     } catch (e) {
-      print('Error loading persistent cache: $e');
+      debugPrint('Error loading persistent cache: $e');
     }
   }
 
@@ -317,7 +318,7 @@ class CacheService {
         jsonEncode(cacheMap),
       );
     } catch (e) {
-      print('Error adding to persistent cache: $e');
+      debugPrint('Error adding to persistent cache: $e');
     }
   }
 
@@ -341,7 +342,7 @@ class CacheService {
         );
       }
     } catch (e) {
-      print('Error removing from persistent cache: $e');
+      debugPrint('Error removing from persistent cache: $e');
     }
   }
 
@@ -373,7 +374,7 @@ class CacheService {
         );
       }
     } catch (e) {
-      print('Error cleaning persistent cache: $e');
+      debugPrint('Error cleaning persistent cache: $e');
     }
   }
 

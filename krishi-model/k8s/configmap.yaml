@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ml-server-config
+  namespace: krishi-sahayak
+data:
+  RATE_LIMIT_REQUESTS: "100"
+  RATE_LIMIT_WINDOW: "3600"
+  MAX_FILE_SIZE: "10485760"
+  LOG_LEVEL: "INFO"

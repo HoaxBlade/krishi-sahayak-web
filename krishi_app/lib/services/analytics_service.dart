@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print, await_only_futures
 
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import '../services/preferences_service.dart';
 import '../services/connectivity_service.dart';
 
@@ -208,7 +209,7 @@ class AnalyticsService {
       final eventsJson = jsonEncode(_events.map((e) => e.toMap()).toList());
       await _preferencesService.setSetting('analytics_events', eventsJson);
     } catch (e) {
-      print('Error saving analytics events: $e');
+      debugPrint('Error saving analytics events: $e');
     }
   }
 
@@ -223,7 +224,7 @@ class AnalyticsService {
         _events.addAll(eventsList.map((e) => UsageEvent.fromMap(e)));
       }
     } catch (e) {
-      print('Error loading analytics events: $e');
+      debugPrint('Error loading analytics events: $e');
     }
   }
 

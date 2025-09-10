@@ -21,9 +21,9 @@ class _CameraScreenState extends State<CameraScreen> {
     try {
       final XFile? photo = await _picker.pickImage(
         source: ImageSource.camera,
-        maxWidth: 1024,
-        maxHeight: 1024,
-        imageQuality: 80,
+        maxWidth: 1920,
+        maxHeight: 1920,
+        imageQuality: 90,
       );
 
       if (photo != null) {
@@ -36,7 +36,9 @@ class _CameraScreenState extends State<CameraScreen> {
       }
     } catch (e) {
       debugPrint('💥 [CameraScreen] Error taking photo: $e');
-      _showError('Error taking photo: $e');
+      _showError(
+        'Unable to take photo. Please check camera permissions and try again.',
+      );
     }
   }
 
@@ -47,9 +49,9 @@ class _CameraScreenState extends State<CameraScreen> {
     try {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
-        maxWidth: 1024,
-        maxHeight: 1024,
-        imageQuality: 80,
+        maxWidth: 1920,
+        maxHeight: 1920,
+        imageQuality: 90,
       );
 
       if (image != null) {
@@ -62,7 +64,9 @@ class _CameraScreenState extends State<CameraScreen> {
       }
     } catch (e) {
       debugPrint('💥 [CameraScreen] Error picking image from gallery: $e');
-      _showError('Error picking image from gallery: $e');
+      _showError(
+        'Unable to access gallery. Please check permissions and try again.',
+      );
     }
   }
 
@@ -109,7 +113,9 @@ class _CameraScreenState extends State<CameraScreen> {
       setState(() {
         _isAnalyzing = false;
       });
-      _showError('Analysis failed: $e');
+      _showError(
+        'Crop analysis failed. Please check your internet connection and try again.',
+      );
     }
   }
 
@@ -426,7 +432,27 @@ class _CameraScreenState extends State<CameraScreen> {
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(message, style: const TextStyle(fontSize: 14)),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.red[600],
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: 'Dismiss',
+          textColor: Colors.white,
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
+        ),
+      ),
     );
   }
 
@@ -503,11 +529,18 @@ class _CameraScreenState extends State<CameraScreen> {
             if (_isAnalyzing)
               const Column(
                 children: [
-                  CircularProgressIndicator(),
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                  ),
                   SizedBox(height: 16),
                   Text(
                     'Analyzing crop health...',
-                    style: TextStyle(fontSize: 16),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'This may take a few seconds',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
               ),

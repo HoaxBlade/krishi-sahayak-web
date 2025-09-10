@@ -9,8 +9,28 @@ class CropAnalysisResult extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isHealthy = result['is_healthy'] ?? false;
     final String cropType = result['crop_type'] ?? 'Unknown';
-    final double confidence = (result['confidence'] ?? 0.0) * 100;
-    final int predictionClass = result['prediction_class'] ?? 0;
+
+    // Safely convert confidence to double
+    double confidence = 0.0;
+    if (result['confidence'] != null) {
+      if (result['confidence'] is String) {
+        confidence = double.tryParse(result['confidence'] as String) ?? 0.0;
+      } else if (result['confidence'] is num) {
+        confidence = (result['confidence'] as num).toDouble();
+      }
+    }
+    confidence = confidence * 100;
+
+    // Safely convert prediction class to int
+    int predictionClass = 0;
+    if (result['prediction_class'] != null) {
+      if (result['prediction_class'] is String) {
+        predictionClass =
+            int.tryParse(result['prediction_class'] as String) ?? 0;
+      } else if (result['prediction_class'] is num) {
+        predictionClass = (result['prediction_class'] as num).toInt();
+      }
+    }
 
     return Card(
       elevation: 4,
@@ -95,7 +115,16 @@ class CropAnalysisResult extends StatelessWidget {
                 ...List.generate((result['all_predictions'] as List).length, (
                   index,
                 ) {
-                  double pred = (result['all_predictions'] as List)[index];
+                  // Safely convert prediction to double
+                  double pred = 0.0;
+                  final predictionValue =
+                      (result['all_predictions'] as List)[index];
+                  if (predictionValue is String) {
+                    pred = double.tryParse(predictionValue) ?? 0.0;
+                  } else if (predictionValue is num) {
+                    pred = (predictionValue).toDouble();
+                  }
+
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 2),
                     child: Row(

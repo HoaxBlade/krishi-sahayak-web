@@ -7,6 +7,8 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'connectivity_service.dart';
 import 'local_ml_service.dart';
+import 'image_compression_service.dart';
+import 'firebase_analytics_service.dart';
 
 class MLService {
   static const String baseUrl =
@@ -17,6 +19,8 @@ class MLService {
   final http.Client _client = http.Client();
   final ConnectivityService _connectivityService = ConnectivityService();
   final LocalMLService _localML = LocalMLService();
+  final ImageCompressionService _compressionService = ImageCompressionService();
+  final FirebaseAnalyticsService _analytics = FirebaseAnalyticsService();
   bool _isLocalModelReady = false;
 
   Future<void> initialize() async {
@@ -76,6 +80,27 @@ class MLService {
           result['processing_time'] = '${stopwatch.elapsedMilliseconds}ms';
           result['analysis_mode'] = 'online';
           stopwatch.stop();
+
+          // Track analytics
+          // Safely convert confidence to double
+          double confidence = 0.0;
+          if (result['confidence'] != null) {
+            if (result['confidence'] is String) {
+              confidence =
+                  double.tryParse(result['confidence'] as String) ?? 0.0;
+            } else if (result['confidence'] is num) {
+              confidence = (result['confidence'] as num).toDouble();
+            }
+          }
+
+          await _analytics.logCropAnalysis(
+            analysisType: 'server',
+            healthStatus: result['health_status'] ?? 'unknown',
+            confidence: confidence,
+            processingTimeMs: stopwatch.elapsedMilliseconds,
+            modelType: 'server',
+          );
+
           debugPrint(
             '🎉 [MLService] Server analysis completed in ${stopwatch.elapsedMilliseconds}ms total',
           );
@@ -108,6 +133,26 @@ class MLService {
       result['processing_time'] = '${stopwatch.elapsedMilliseconds}ms';
       result['analysis_mode'] = 'offline';
       stopwatch.stop();
+
+      // Track analytics
+      // Safely convert confidence to double
+      double confidence = 0.0;
+      if (result['confidence'] != null) {
+        if (result['confidence'] is String) {
+          confidence = double.tryParse(result['confidence'] as String) ?? 0.0;
+        } else if (result['confidence'] is num) {
+          confidence = (result['confidence'] as num).toDouble();
+        }
+      }
+
+      await _analytics.logCropAnalysis(
+        analysisType: 'local',
+        healthStatus: result['health_status'] ?? 'unknown',
+        confidence: confidence,
+        processingTimeMs: stopwatch.elapsedMilliseconds,
+        modelType: 'local',
+      );
+
       debugPrint(
         '🎉 [MLService] Local analysis completed in ${stopwatch.elapsedMilliseconds}ms total',
       );
@@ -154,16 +199,19 @@ class MLService {
   Future<Map<String, dynamic>> _analyzeWithServer(XFile imageFile) async {
     debugPrint('🌐 [MLService] Starting server analysis...');
 
-    // Track image reading
-    debugPrint('📖 [MLService] Reading image file...');
-    final imageReadStart = Stopwatch()..start();
-    Uint8List imageBytes = await imageFile.readAsBytes();
-    imageReadStart.stop();
+    // Track image compression
+    debugPrint('🗜️ [MLService] Compressing image for ML analysis...');
+    final compressionStart = Stopwatch()..start();
+    Uint8List imageBytes = await _compressionService.optimizeForModel(
+      imageFile,
+      modelType: 'crop_health',
+    );
+    compressionStart.stop();
     debugPrint(
-      '✅ [MLService] Image read completed in ${imageReadStart.elapsedMilliseconds}ms',
+      '✅ [MLService] Image compression completed in ${compressionStart.elapsedMilliseconds}ms',
     );
     debugPrint(
-      '📊 [MLService] Image size: ${imageBytes.length} bytes (${(imageBytes.length / 1024).toStringAsFixed(2)} KB)',
+      '📊 [MLService] Compressed size: ${imageBytes.length} bytes (${(imageBytes.length / 1024).toStringAsFixed(2)} KB)',
     );
 
     // Track base64 conversion
@@ -209,6 +257,15 @@ class MLService {
       final result = jsonDecode(response.body);
       debugPrint('✅ [MLService] Server analysis successful');
       debugPrint('📊 [MLService] Final result keys: ${result.keys.toList()}');
+      debugPrint(
+        '📊 [MLService] Confidence type: ${result['confidence'].runtimeType}',
+      );
+      debugPrint(
+        '📊 [MLService] Prediction class type: ${result['prediction_class'].runtimeType}',
+      );
+      debugPrint(
+        '📊 [MLService] All predictions type: ${result['all_predictions'].runtimeType}',
+      );
       return result;
     } else {
       debugPrint(

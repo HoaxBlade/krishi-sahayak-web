@@ -4,6 +4,7 @@ import '../services/crop_service.dart';
 import '../services/weather_service.dart';
 import '../services/user_service.dart';
 import '../services/connectivity_service.dart';
+import '../services/firebase_analytics_service.dart';
 import '../models/crop.dart';
 import '../widgets/offline_indicator.dart';
 
@@ -21,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final WeatherService _weatherService = WeatherService();
   final UserService _userService = UserService();
   final ConnectivityService _connectivityService = ConnectivityService();
+  final FirebaseAnalyticsService _analytics = FirebaseAnalyticsService();
 
   List<Crop> _crops = [];
   List<Crop> _upcomingHarvests = [];
@@ -34,6 +36,14 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _loadData();
     _setupConnectivityListener();
+    _trackScreenView();
+  }
+
+  Future<void> _trackScreenView() async {
+    await _analytics.logScreenView(
+      screenName: 'home_screen',
+      screenClass: 'HomeScreen',
+    );
   }
 
   Future<void> _loadData() async {
@@ -176,10 +186,56 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildUpcomingHarvests() {
     if (_upcomingHarvests.isEmpty) {
-      return const Card(
+      return Card(
         child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Text('No upcoming harvests'),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.agriculture, size: 24, color: Colors.green[600]),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Upcoming Harvests',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green[50],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.green[600]),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Add crops to track harvest dates and get reminders.',
+                        style: TextStyle(color: Colors.green),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: () {
+                  // Navigate to add crop
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('Add Your First Crop'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -214,10 +270,44 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildWeatherCard() {
     if (_currentWeather == null) {
-      return const Card(
+      return Card(
         child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Text('No weather data available'),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.wb_sunny, size: 24, color: Colors.orange[600]),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Current Weather',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange[50],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.cloud_off, color: Colors.orange[600]),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Weather data will appear here. Check your internet connection.',
+                        style: TextStyle(color: Colors.orange),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }

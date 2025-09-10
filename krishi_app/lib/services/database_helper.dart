@@ -27,7 +27,12 @@ class DatabaseHelper {
     }
 
     String path = join(await getDatabasesPath(), 'krishi_sahayak.db');
-    return await openDatabase(path, version: 1, onCreate: _onCreate);
+    return await openDatabase(
+      path,
+      version: 2,
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
+    );
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -59,6 +64,8 @@ class DatabaseHelper {
         rainfall REAL,
         wind_speed REAL,
         description TEXT,
+        latitude REAL,
+        longitude REAL,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP
       )
     ''');
@@ -86,6 +93,14 @@ class DatabaseHelper {
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP
       )
     ''');
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Add latitude and longitude columns to weather_data table
+      await db.execute('ALTER TABLE weather_data ADD COLUMN latitude REAL');
+      await db.execute('ALTER TABLE weather_data ADD COLUMN longitude REAL');
+    }
   }
 
   // Crop operations

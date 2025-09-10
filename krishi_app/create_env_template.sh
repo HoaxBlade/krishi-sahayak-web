@@ -30,10 +30,27 @@ if [ -z "$api_key" ]; then
     exit 1
 fi
 
+# Get Supabase configuration
+echo ""
+echo "🏗️ Please enter your Supabase configuration:"
+echo "   (Get it from: https://supabase.com/dashboard/project/YOUR_PROJECT/settings/api)"
+read -p "Supabase URL: " supabase_url
+read -p "Supabase Anon Key: " supabase_anon_key
+
+if [ -z "$supabase_url" ] || [ -z "$supabase_anon_key" ]; then
+    echo "⚠️ Supabase configuration is optional but recommended for production"
+    supabase_url="YOUR_SUPABASE_URL"
+    supabase_anon_key="YOUR_SUPABASE_ANON_KEY"
+fi
+
 # Create .env file
 cat > .env << EOF
 # Weather API Configuration
 OPENWEATHERMAP_API_KEY=$api_key
+
+# Supabase Configuration
+SUPABASE_URL=$supabase_url
+SUPABASE_ANON_KEY=$supabase_anon_key
 
 # App Configuration (optional)
 APP_NAME=Krishi Sahayak

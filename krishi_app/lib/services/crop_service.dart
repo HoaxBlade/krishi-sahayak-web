@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_print
 
+import 'package:flutter/foundation.dart';
 import '../models/crop.dart';
 import 'database_helper.dart';
 
@@ -16,7 +17,7 @@ class CropService {
       final cropsData = await _dbHelper.getAllCrops();
       return cropsData.map((data) => Crop.fromMap(data)).toList();
     } catch (e) {
-      print('Error getting crops: $e');
+      debugPrint('Error getting crops: $e');
       return [];
     }
   }
@@ -30,7 +31,7 @@ class CropService {
           .map((data) => Crop.fromMap(data))
           .toList();
     } catch (e) {
-      print('Error getting active crops: $e');
+      debugPrint('Error getting active crops: $e');
       return [];
     }
   }
@@ -41,7 +42,7 @@ class CropService {
       final id = await _dbHelper.insertCrop(crop.toMap());
       return id > 0;
     } catch (e) {
-      print('Error adding crop: $e');
+      debugPrint('Error adding crop: $e');
       return false;
     }
   }
@@ -52,7 +53,7 @@ class CropService {
       final rowsAffected = await _dbHelper.updateCrop(crop.toMap());
       return rowsAffected > 0;
     } catch (e) {
-      print('Error updating crop: $e');
+      debugPrint('Error updating crop: $e');
       return false;
     }
   }
@@ -63,7 +64,7 @@ class CropService {
       final rowsAffected = await _dbHelper.deleteCrop(id);
       return rowsAffected > 0;
     } catch (e) {
-      print('Error deleting crop: $e');
+      debugPrint('Error deleting crop: $e');
       return false;
     }
   }
@@ -75,7 +76,7 @@ class CropService {
       final cropData = cropsData.where((data) => data['id'] == id).firstOrNull;
       return cropData != null ? Crop.fromMap(cropData) : null;
     } catch (e) {
-      print('Error getting crop by ID: $e');
+      debugPrint('Error getting crop by ID: $e');
       return null;
     }
   }
@@ -98,7 +99,7 @@ class CropService {
           .map((data) => Crop.fromMap(data))
           .toList();
     } catch (e) {
-      print('Error searching crops: $e');
+      debugPrint('Error searching crops: $e');
       return [];
     }
   }
@@ -112,7 +113,7 @@ class CropService {
           .map((data) => Crop.fromMap(data))
           .toList();
     } catch (e) {
-      print('Error getting crops by status: $e');
+      debugPrint('Error getting crops by status: $e');
       return [];
     }
   }
@@ -130,7 +131,7 @@ class CropService {
           .map((data) => Crop.fromMap(data))
           .toList();
     } catch (e) {
-      print('Error getting crops by planting month: $e');
+      debugPrint('Error getting crops by planting month: $e');
       return [];
     }
   }
@@ -153,7 +154,7 @@ class CropService {
           .map((data) => Crop.fromMap(data))
           .toList();
     } catch (e) {
-      print('Error getting upcoming harvests: $e');
+      debugPrint('Error getting upcoming harvests: $e');
       return [];
     }
   }

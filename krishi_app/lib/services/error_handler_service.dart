@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print, unused_import
 
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'connectivity_service.dart';
 
@@ -134,9 +135,9 @@ class ErrorHandlerService {
     _errorController.add(error);
 
     // Log error for debugging
-    print('Error: ${error.message}');
+    debugPrint('Error: ${error.message}');
     if (error.details != null) {
-      print('Details: ${error.details}');
+      debugPrint('Details: ${error.details}');
     }
   }
 

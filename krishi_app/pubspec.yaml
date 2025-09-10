@@ -1,5 +1,5 @@
 name: krishi_app
-description: "A new Flutter project."
+description: "AI-powered crop health analysis & weather forecasting for farmers"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -67,6 +67,9 @@ dependencies:
 
   # Local notifications
   flutter_local_notifications: ^17.0.0
+
+  # Supabase Backend
+  supabase_flutter: ^2.5.6
 
   # Firebase (if needed)
   firebase_core: ^3.15.2

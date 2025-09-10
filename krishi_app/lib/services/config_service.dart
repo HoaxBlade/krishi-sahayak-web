@@ -2,6 +2,7 @@
 
 // ignore: unused_import
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 // Conditional import - this will work once flutter_dotenv is installed
 // ignore: unused_import
@@ -24,6 +25,24 @@ class ConfigService {
     } catch (e) {
       // Fallback to local config
       return _fallbackConfig['OPENWEATHERMAP_API_KEY'];
+    }
+  }
+
+  /// Get Supabase URL
+  String? get supabaseUrl {
+    try {
+      return dotenv.dotenv.env['SUPABASE_URL'];
+    } catch (e) {
+      return _fallbackConfig['SUPABASE_URL'];
+    }
+  }
+
+  /// Get Supabase Anonymous Key
+  String? get supabaseAnonKey {
+    try {
+      return dotenv.dotenv.env['SUPABASE_ANON_KEY'];
+    } catch (e) {
+      return _fallbackConfig['SUPABASE_ANON_KEY'];
     }
   }
 
@@ -61,11 +80,11 @@ class ConfigService {
   Future<void> initialize() async {
     if (_isInitialized) return;
 
-    print('🔍 [ConfigService] Starting initialization...');
-    print(
+    debugPrint('🔍 [ConfigService] Starting initialization...');
+    debugPrint(
       '📁 [ConfigService] Current working directory: ${Directory.current.path}',
     );
-    print('📁 [ConfigService] Looking for .env file...');
+    debugPrint('📁 [ConfigService] Looking for .env file...');
 
     try {
       // Try to load from .env file - use multiple possible paths
@@ -73,12 +92,16 @@ class ConfigService {
 
       // Try current directory first
       try {
-        print('📍 [ConfigService] Attempt 1: Loading from current directory');
+        debugPrint(
+          '📍 [ConfigService] Attempt 1: Loading from current directory',
+        );
         await dotenv.dotenv.load(fileName: _envFileName);
         loaded = true;
-        print('✅ [ConfigService] Environment variables loaded from .env file');
+        debugPrint(
+          '✅ [ConfigService] Environment variables loaded from .env file',
+        );
       } catch (e) {
-        print(
+        debugPrint(
           '⚠️ [ConfigService] Could not load .env from current directory: $e',
         );
       }
@@ -88,47 +111,53 @@ class ConfigService {
         try {
           final currentDir = Directory.current.path;
           final envPath = '$currentDir/$_envFileName';
-          print(
+          debugPrint(
             '📍 [ConfigService] Attempt 2: Loading from full path: $envPath',
           );
 
           if (await File(envPath).exists()) {
             await dotenv.dotenv.load(fileName: envPath);
             loaded = true;
-            print(
+            debugPrint(
               '✅ [ConfigService] Environment variables loaded from full path',
             );
           } else {
-            print('❌ [ConfigService] .env file not found at: $envPath');
+            debugPrint('❌ [ConfigService] .env file not found at: $envPath');
           }
         } catch (e) {
-          print('⚠️ [ConfigService] Could not load .env from full path: $e');
+          debugPrint(
+            '⚠️ [ConfigService] Could not load .env from full path: $e',
+          );
         }
       }
 
       // If still not loaded, try from assets
       if (!loaded) {
         try {
-          print('📍 [ConfigService] Attempt 3: Loading from assets');
+          debugPrint('📍 [ConfigService] Attempt 3: Loading from assets');
           await dotenv.dotenv.load(fileName: 'assets/.env');
           loaded = true;
-          print('✅ [ConfigService] Environment variables loaded from assets');
+          debugPrint(
+            '✅ [ConfigService] Environment variables loaded from assets',
+          );
         } catch (e) {
-          print('⚠️ [ConfigService] Could not load .env from assets: $e');
+          debugPrint('⚠️ [ConfigService] Could not load .env from assets: $e');
         }
       }
 
       if (loaded) {
         _isInitialized = true;
-        print('🎉 [ConfigService] Successfully loaded environment variables!');
+        debugPrint(
+          '🎉 [ConfigService] Successfully loaded environment variables!',
+        );
         // Validate required environment variables
         _validateRequiredEnvVars();
       } else {
         throw Exception('Could not load .env file from any location');
       }
     } catch (e) {
-      print('⚠️ [ConfigService] Could not load .env file: $e');
-      print('📝 [ConfigService] Using fallback configuration');
+      debugPrint('⚠️ [ConfigService] Could not load .env file: $e');
+      debugPrint('📝 [ConfigService] Using fallback configuration');
 
       // Set up fallback configuration
       _setupFallbackConfig();
@@ -144,11 +173,13 @@ class ConfigService {
     _fallbackConfig['APP_VERSION'] = '1.0.0';
     _fallbackConfig['ENVIRONMENT'] = 'development';
 
-    print('⚠️ [ConfigService] No .env file found or invalid configuration');
-    print(
+    debugPrint(
+      '⚠️ [ConfigService] No .env file found or invalid configuration',
+    );
+    debugPrint(
       '📝 [ConfigService] Please create a .env file with your real API keys',
     );
-    print(envFileInstructions);
+    debugPrint(envFileInstructions);
   }
 
   /// Validate that all required environment variables are present
@@ -168,12 +199,14 @@ class ConfigService {
     }
 
     if (missingVars.isNotEmpty) {
-      print(
+      debugPrint(
         '❌ [ConfigService] Missing required environment variables: ${missingVars.join(', ')}',
       );
-      print('📝 [ConfigService] Please check your .env file');
+      debugPrint('📝 [ConfigService] Please check your .env file');
     } else {
-      print('✅ [ConfigService] All required environment variables are present');
+      debugPrint(
+        '✅ [ConfigService] All required environment variables are present',
+      );
     }
   }
 
