@@ -12,7 +12,7 @@ import 'firebase_analytics_service.dart';
 
 class MLService {
   static const String baseUrl =
-      'https://krishi-ml-server.onrender.com'; // Deployed server on Render
+      'http://35.222.33.77'; // Kubernetes ML server on Google Cloud
   // Use 'http://10.0.2.2:5001' for Android emulator
   // Use 'http://localhost:5001' for iOS simulator
 
