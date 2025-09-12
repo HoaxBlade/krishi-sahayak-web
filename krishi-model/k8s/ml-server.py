@@ -4,10 +4,22 @@ import socketserver
 import json
 
 class HealthHandler(http.server.SimpleHTTPRequestHandler):
+    def _set_cors_headers(self):
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+        self.send_header('Access-Control-Max-Age', '3600')
+    
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self._set_cors_headers()
+        self.end_headers()
+    
     def do_GET(self):
         if self.path == '/health':
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
+            self._set_cors_headers()
             self.end_headers()
             response = {'status': 'healthy', 'message': 'ML Server is running'}
             self.wfile.write(json.dumps(response).encode())
@@ -18,6 +30,7 @@ class HealthHandler(http.server.SimpleHTTPRequestHandler):
         if self.path == '/analyze_crop':
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
+            self._set_cors_headers()
             self.end_headers()
             response = {
                 'health_status': 'healthy',
@@ -28,6 +41,7 @@ class HealthHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(response).encode())
         else:
             self.send_response(404)
+            self._set_cors_headers()
             self.end_headers()
 
 if __name__ == '__main__':
