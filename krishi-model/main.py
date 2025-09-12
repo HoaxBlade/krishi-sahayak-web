@@ -15,6 +15,7 @@ import psutil
 # Import existing training utilities
 from utils.dataloader import get_generators
 from utils.train import train_model
+from utils.helpers import *
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -374,7 +375,7 @@ def load_or_train_model():
     
     # Try to load existing model from multiple locations
     model_paths = [
-        "saved_models/best_model.h5",
+        "saved_models/best_modelV1.h5",
         "notebooks/model/best_model.h5",
         "notebooks/model/mobilenetv2_model.h5",
         "model/best_model.h5",   
