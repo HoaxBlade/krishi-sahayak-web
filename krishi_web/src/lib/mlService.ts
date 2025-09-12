@@ -1,6 +1,7 @@
 import axios from 'axios'
 
-const ML_SERVER_URL = process.env.NEXT_PUBLIC_ML_SERVER_URL!
+// ML Server URL - use environment variable or default
+const ML_SERVER_URL = process.env.NEXT_PUBLIC_ML_SERVER_URL || 'http://35.222.33.77'
 
 export interface MLAnalysisResult {
   health_status: string

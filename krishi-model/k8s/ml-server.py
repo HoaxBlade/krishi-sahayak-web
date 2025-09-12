@@ -47,5 +47,6 @@ class HealthHandler(http.server.SimpleHTTPRequestHandler):
 if __name__ == '__main__':
     handler = HealthHandler
     httpd = socketserver.TCPServer(('', 5000), handler)
-    print('ML Server running on port 5000 with health and analyze endpoints')
+    print('ML Server running on port 5000 with CORS support')
+    print('Endpoints: /health (GET), /analyze_crop (POST)')
     httpd.serve_forever()
