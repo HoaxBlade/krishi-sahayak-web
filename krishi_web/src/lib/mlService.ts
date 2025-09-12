@@ -1,7 +1,8 @@
 import axios from 'axios'
 
-// ML Server URL - use environment variable or default
+// Use API routes for server-side requests (better for Vercel)
 const ML_SERVER_URL = process.env.NEXT_PUBLIC_ML_SERVER_URL || 'http://35.222.33.77'
+const USE_API_ROUTES = process.env.NODE_ENV === 'production'
 
 export interface MLAnalysisResult {
   health_status: string
@@ -27,16 +28,26 @@ export class MLService {
 
   async checkServerHealth(): Promise<boolean> {
     try {
-      const response = await axios.get(`${this.baseUrl}/health`, {
-        timeout: 10000,
+      const url = USE_API_ROUTES ? '/api/ml/health' : `${this.baseUrl}/health`
+      console.log('Checking ML Server health at:', url)
+      
+      const response = await axios.get(url, {
+        timeout: 15000,
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'User-Agent': 'Krishi-Sahayak-Web/1.0.0'
         }
       })
+      console.log('ML Server health response:', response.status, response.data)
       return response.status === 200
     } catch (error) {
-      console.warn('ML Server health check failed:', error)
+      console.error('ML Server health check failed:', {
+        url: USE_API_ROUTES ? '/api/ml/health' : this.baseUrl,
+        error: error.message,
+        code: error.code,
+        response: error.response?.data
+      })
       return false
     }
   }
@@ -46,7 +57,10 @@ export class MLService {
       // Convert image to base64
       const base64Image = await this.convertToBase64(imageFile)
       
-      const response = await axios.post(`${this.baseUrl}/analyze_crop`, {
+      const url = USE_API_ROUTES ? '/api/ml/analyze' : `${this.baseUrl}/analyze_crop`
+      console.log('Analyzing crop health at:', url)
+      
+      const response = await axios.post(url, {
         image: base64Image
       }, {
         headers: {
