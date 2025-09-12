@@ -4,6 +4,15 @@ import axios from 'axios'
 const ML_SERVER_URL = process.env.NEXT_PUBLIC_ML_SERVER_URL || 'http://35.222.33.77'
 const USE_API_ROUTES = process.env.NODE_ENV === 'production'
 
+// Type for axios error
+interface AxiosError {
+  message: string
+  code?: string
+  response?: {
+    data?: unknown
+  }
+}
+
 export interface MLAnalysisResult {
   health_status: string
   confidence: string
@@ -42,11 +51,12 @@ export class MLService {
       console.log('ML Server health response:', response.status, response.data)
       return response.status === 200
     } catch (error) {
+      const axiosError = error as AxiosError
       console.error('ML Server health check failed:', {
         url: USE_API_ROUTES ? '/api/ml/health' : this.baseUrl,
-        error: error.message,
-        code: error.code,
-        response: error.response?.data
+        error: axiosError.message || String(error),
+        code: axiosError.code,
+        response: axiosError.response?.data
       })
       return false
     }

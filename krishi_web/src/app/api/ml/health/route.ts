@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
 const ML_SERVER_URL = process.env.NEXT_PUBLIC_ML_SERVER_URL || 'http://35.222.33.77'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     console.log('Proxying ML Server health check to:', ML_SERVER_URL)
     
