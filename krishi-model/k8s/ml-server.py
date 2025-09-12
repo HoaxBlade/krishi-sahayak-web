@@ -23,6 +23,13 @@ class HealthHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             response = {'status': 'healthy', 'message': 'ML Server is running'}
             self.wfile.write(json.dumps(response).encode())
+        elif self.path == '/test':
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self._set_cors_headers()
+            self.end_headers()
+            response = {'test': 'success', 'message': 'Test endpoint working'}
+            self.wfile.write(json.dumps(response).encode())
         else:
             super().do_GET()
     
