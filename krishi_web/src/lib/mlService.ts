@@ -1,8 +1,8 @@
 import axios from 'axios'
 
-// Use API routes for server-side requests (better for Vercel)
+// Use API routes for all environments (more reliable)
 const ML_SERVER_URL = process.env.NEXT_PUBLIC_ML_SERVER_URL || 'http://35.222.33.77'
-const USE_API_ROUTES = process.env.NODE_ENV === 'production'
+const USE_API_ROUTES = true // Always use API routes for consistency
 
 // Type for axios error
 interface AxiosError {

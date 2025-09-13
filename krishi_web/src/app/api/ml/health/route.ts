@@ -6,6 +6,10 @@ export async function GET() {
   try {
     console.log('Proxying ML Server health check to:', ML_SERVER_URL)
     
+    // Create a timeout controller
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 20000)
+    
     const response = await fetch(`${ML_SERVER_URL}/health`, {
       method: 'GET',
       headers: {
@@ -13,9 +17,10 @@ export async function GET() {
         'Content-Type': 'application/json',
         'User-Agent': 'Krishi-Sahayak-Web/1.0.0'
       },
-      // Increase timeout for serverless functions
-      signal: AbortSignal.timeout(20000)
+      signal: controller.signal
     })
+    
+    clearTimeout(timeoutId)
 
     if (!response.ok) {
       throw new Error(`ML Server responded with status: ${response.status}`)

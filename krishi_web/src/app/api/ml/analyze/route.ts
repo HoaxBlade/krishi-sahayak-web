@@ -9,6 +9,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     console.log('Request body:', { hasImage: !!body.image, imageLength: body.image?.length })
     
+    // Create a timeout controller
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 30000)
+    
     const response = await fetch(`${ML_SERVER_URL}/analyze_crop`, {
       method: 'POST',
       headers: {
@@ -17,9 +21,10 @@ export async function POST(request: NextRequest) {
         'User-Agent': 'Krishi-Sahayak-Web/1.0.0'
       },
       body: JSON.stringify(body),
-      // Increase timeout for serverless functions
-      signal: AbortSignal.timeout(30000)
+      signal: controller.signal
     })
+    
+    clearTimeout(timeoutId)
 
     if (!response.ok) {
       throw new Error(`ML Server responded with status: ${response.status}`)
