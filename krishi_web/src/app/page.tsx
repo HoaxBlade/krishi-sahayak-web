@@ -7,6 +7,7 @@ import {
 } from "lucide-react"
 import { MLService } from "@/lib/mlService"
 import { WeatherService } from "@/lib/weatherService"
+import React from "react" 
 
 type MLStatus = {
   healthy: boolean
@@ -124,16 +125,17 @@ export default function HomePage() {
       {weather && (
         <section className="py-12">
           <motion.div 
-            className="backdrop-blur-xl bg-white/70 border border-gray-200 rounded-2xl shadow-xl p-6 max-w-md mx-auto"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            className="backdrop-blur-2xl bg-white/50 border border-gray-200 rounded-3xl shadow-2xl p-8 max-w-md mx-auto hover:scale-105 transition-transform"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
           >
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">{weather.location}</h3>
+                <h3 className="text-2xl font-bold text-gray-900">{weather.location}</h3>
                 <p className="text-gray-600">{weather.description}</p>
               </div>
-              <div className="text-4xl animate-pulse">
+              <div className="text-6xl animate-pulse">
                 {WeatherService.getInstance().getWeatherIcon(weather.description)}
               </div>
             </div>
@@ -224,7 +226,7 @@ export default function HomePage() {
   )
 }
 
-function WeatherStat({ icon, label, value }: { icon: any; label: string; value: string }) {
+function WeatherStat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div className="flex items-center space-x-2">
       <span className="text-green-600">{icon}</span>
