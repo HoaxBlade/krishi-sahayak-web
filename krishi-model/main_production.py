@@ -16,6 +16,7 @@ from werkzeug.exceptions import RequestEntityTooLarge
 import psutil
 import numpy as np
 from PIL import Image
+import tensorflow as tf # type: ignore
 import io
 import base64
 import json
@@ -117,18 +118,34 @@ app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
 rate_limiter = RateLimiter()
 system_monitor = SystemMonitor()
 
-# Load ML model (placeholder - replace with actual model loading)
+# Load ML model (Keras .h5 preferred) and warm-up
+model = None  # global model instance
+
 def load_model():
-    """Load the ML model"""
-    try:
-        # This is a placeholder - replace with actual model loading
-        logger.info("Loading ML model...")
-        # model = load_your_actual_model()
-        logger.info("✅ ML model loaded successfully")
-        return True
-    except Exception as e:
-        logger.error(f"❌ Failed to load ML model: {e}")
-        return False
+    """Load the ML model from common paths and run warm-up inference."""
+    global model
+    model_paths = [
+        "saved_models/best_modelV1.h5",
+        "notebooks/model/best_model.h5",
+        "notebooks/model/mobilenetv2_model.h5",
+        "model/best_model.h5",
+        "model/mobilenetv2_model.h5"
+    ]
+    for model_path in model_paths:
+        if os.path.exists(model_path):
+            try:
+                logger.info(f"Attempting to load model from: {model_path}")
+                model = tf.keras.models.load_model(model_path)
+                # Warm-up for lower p95 latency
+                _ = model.predict(np.zeros((1, 224, 224, 3), dtype=np.float32))
+                logger.info(f"✅ Model loaded and warmed from {model_path}")
+                return True
+            except Exception as e:
+                logger.error(f"Error loading model from {model_path}: {e}")
+                model = None
+                continue
+    logger.error("❌ No valid model file found in known paths")
+    return False
 
 # Load model on startup
 model_loaded = load_model()
@@ -311,18 +328,13 @@ def analyze_crop():
                 'status': 'error'
             }), 400
         
-        # Mock ML prediction (replace with actual model prediction)
+        # Real ML prediction
         try:
-            # This is a placeholder - replace with actual model prediction
-            prediction_class = np.random.randint(0, 17)
-            confidence = np.random.random()
-            all_predictions = np.random.random(17).tolist()
-            
-            # Normalize predictions
-            all_predictions = [float(p) for p in all_predictions]
-            confidence = float(confidence)
-            
-            # Map prediction to disease name (placeholder)
+            preds = model.predict(img_array)[0]  # shape (17,)
+            all_predictions = [float(p) for p in preds.tolist()]
+            prediction_class = int(np.argmax(preds))
+            confidence = float(np.max(preds))
+
             disease_names = [
                 'Rice Blast', 'Rice Brown Spot', 'Rice Bacterial Blight', 'Rice Sheath Blight',
                 'Wheat Rust', 'Wheat Scab', 'Wheat Powdery Mildew', 'Wheat Septoria',
@@ -330,10 +342,10 @@ def analyze_crop():
                 'Sugarcane Mosaic', 'Sugarcane Rust', 'Sugarcane Red Rot', 'Sugarcane Smut',
                 'Healthy'
             ]
-            
+
             predicted_disease = disease_names[prediction_class]
             health_status = 'healthy' if prediction_class == 16 else 'diseased'
-            
+        
         except Exception as e:
             logger.error(f"ML prediction error: {e}")
             return jsonify({

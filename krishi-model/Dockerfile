@@ -38,4 +38,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
   CMD curl -fsS http://localhost:5000/health || exit 1
 
 # Use gunicorn for production
-CMD ["gunicorn", "-w", "1", "-k", "gthread", "--threads", "4", "-t", "120", "-b", "0.0.0.0:5000", "main:app"]
+CMD ["gunicorn", "-w", "1", "-k", "gthread", "--threads", "8", "-t", "60", "-b", "0.0.0.0:5000", "main_production:app"]
