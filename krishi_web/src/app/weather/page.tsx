@@ -120,11 +120,11 @@ export default function WeatherPage() {
                 value={customLocation}
                 onChange={(e) => setCustomLocation(e.target.value)}
                 placeholder="Enter city name..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
               <button
                 type="submit"
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
               >
                 Search
               </button>
@@ -141,7 +141,7 @@ export default function WeatherPage() {
                 }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   location === city
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-green-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -183,7 +183,7 @@ export default function WeatherPage() {
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 <div className="text-center">
-                  <div className="flex items-center justify-center w-12 h-12 bg-blue-100 text-blue-600 rounded-full mx-auto mb-2">
+                  <div className="flex items-center justify-center w-12 h-12 bg-green-100 text-green-600 rounded-full mx-auto mb-2">
                     <Thermometer className="w-6 h-6" />
                   </div>
                   <p className="text-2xl font-bold text-gray-900">{weather.temperature}°C</p>
@@ -191,7 +191,7 @@ export default function WeatherPage() {
                 </div>
 
                 <div className="text-center">
-                  <div className="flex items-center justify-center w-12 h-12 bg-blue-100 text-blue-600 rounded-full mx-auto mb-2">
+                  <div className="flex items-center justify-center w-12 h-12 bg-green-100 text-green-600 rounded-full mx-auto mb-2">
                     <Droplets className="w-6 h-6" />
                   </div>
                   <p className="text-2xl font-bold text-gray-900">{weather.humidity}%</p>
@@ -199,7 +199,7 @@ export default function WeatherPage() {
                 </div>
 
                 <div className="text-center">
-                  <div className="flex items-center justify-center w-12 h-12 bg-blue-100 text-blue-600 rounded-full mx-auto mb-2">
+                  <div className="flex items-center justify-center w-12 h-12 bg-green-100 text-green-600 rounded-full mx-auto mb-2">
                     <Wind className="w-6 h-6" />
                   </div>
                   <p className="text-2xl font-bold text-gray-900">{weather.windSpeed} m/s</p>
@@ -207,7 +207,7 @@ export default function WeatherPage() {
                 </div>
 
                 <div className="text-center">
-                  <div className="flex items-center justify-center w-12 h-12 bg-blue-100 text-blue-600 rounded-full mx-auto mb-2">
+                  <div className="flex items-center justify-center w-12 h-12 bg-green-100 text-green-600 rounded-full mx-auto mb-2">
                     <Cloud className="w-6 h-6" />
                   </div>
                   <p className="text-2xl font-bold text-gray-900">{weather.precipitation}mm</p>
@@ -229,9 +229,9 @@ export default function WeatherPage() {
               
               <div className="space-y-3">
                 {getWeatherAdvice(weather).map((advice, index) => (
-                  <div key={index} className="flex items-start space-x-3 p-3 bg-yellow-50 rounded-lg">
+                  <div key={index} className="flex items-start space-x-3 p-3 bg-green-50 rounded-lg">
                     <div className="text-lg">{advice.split(' ')[0]}</div>
-                    <p className="text-sm text-gray-700">{advice.substring(advice.indexOf(' ') + 1)}</p>
+                    <p className="text-sm text-green-700">{advice.substring(advice.indexOf(' ') + 1)}</p>
                   </div>
                 ))}
               </div>

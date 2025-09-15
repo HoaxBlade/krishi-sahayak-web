@@ -83,8 +83,116 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Krishi Sahayak',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
+        // Define a custom color scheme for a more refined look
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.green,
+          primary: const Color(0xFF16A34A), // A slightly darker green for primary actions
+          onPrimary: Colors.white,
+          secondary: const Color(0xFF3B82F6), // A blue for secondary actions/accents
+          onSecondary: Colors.white,
+          surface: Colors.white, // Clean white surfaces
+          onSurface: const Color(0xFF1F2937), // Dark gray for text on surfaces
+          background: const Color(0xFFF9FAFB), // Light gray background
+          onBackground: const Color(0xFF1F2937),
+          error: Colors.red.shade700,
+          onError: Colors.white,
+        ),
+        scaffoldBackgroundColor: const Color(0xFFF9FAFB), // Consistent light background
+        fontFamily: 'SF Pro Display', // Attempting an Apple-like font (might need to import custom font)
+
+        // AppBar Theme for a minimalistic, clean look
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: const Color(0xFF1F2937),
+          elevation: 0, // Flat app bar
+          centerTitle: false,
+          titleTextStyle: TextStyle(
+            color: const Color(0xFF1F2937),
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'SF Pro Display',
+          ),
+        ),
+
+        // Card Theme for subtle depth and rounded corners
+        cardTheme: CardThemeData( // Corrected to CardThemeData and removed const
+          elevation: 2, // Subtle shadow
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12), // Consistent rounded corners
+          ),
+          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 0), // Consistent margins
+        ),
+
+        // ElevatedButton Theme for premium buttons
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF16A34A), // Green primary button
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10), // Rounded corners
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            textStyle: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              fontFamily: 'SF Pro Display',
+            ),
+            elevation: 2, // Subtle shadow
+            shadowColor: Colors.green.shade200,
+          ),
+        ),
+
+        // TextButton Theme
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: const Color(0xFF16A34A), // Green text buttons
+            textStyle: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              fontFamily: 'SF Pro Display',
+            ),
+          ),
+        ),
+
+        // Bottom Navigation Bar Theme
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          backgroundColor: Colors.white,
+          selectedItemColor: const Color(0xFF16A34A), // Green for selected items
+          unselectedItemColor: Colors.grey.shade600, // Darker grey for unselected
+          elevation: 8, // Subtle shadow for the bar
+          type: BottomNavigationBarType.fixed,
+          selectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 12,
+            fontFamily: 'SF Pro Display',
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w500,
+            fontSize: 12,
+            fontFamily: 'SF Pro Display',
+          ),
+        ),
+
+        // Input Decoration Theme for text fields
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.grey.shade100,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide.none, // No border by default
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: const Color(0xFF16A34A), width: 2), // Green border on focus
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: Colors.grey.shade300, width: 1), // Subtle border when enabled
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          hintStyle: TextStyle(color: Colors.grey.shade500),
+        ),
       ),
       home: const MainScreen(),
       builder: (context, child) {

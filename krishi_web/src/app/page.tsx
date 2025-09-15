@@ -63,7 +63,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-br from-green-100 via-blue-50 to-white">
       
       {/* Hero with animated background */}
-      <section className="relative py-28 overflow-hidden text-center">
+      <section className="relative py-24 overflow-hidden text-center"> {/* Adjusted padding */}
         {/* Animated gradient waves */}
         <motion.div
           className="absolute inset-0 bg-gradient-to-br from-green-200 via-transparent to-blue-100"
@@ -72,22 +72,22 @@ export default function HomePage() {
           style={{ backgroundSize: "200% 200%" }}
         />
         <div className="relative">
-          <motion.h1 
-            className="text-6xl md:text-7xl font-extrabold text-gray-900 mb-6 leading-tight"
+          <motion.h1
+            className="text-5xl md:text-6xl font-extrabold text-gray-900 mb-8 leading-tight" /* Adjusted text size and margin */
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
             Smart Farming with{" "}
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-blue-600">AI</span>
           </motion.h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-600 mb-10 max-w-2xl mx-auto"> {/* Adjusted text size and margin */}
             Revolutionize your farming with AI-powered crop analysis, weather insights, and smart tools.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-gradient-to-r from-green-600 to-green-700 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-lg hover:scale-105 transition-all flex items-center justify-center">
+            <button className="bg-gradient-to-r from-green-600 to-green-700 text-white px-7 py-3.5 rounded-xl text-base font-medium hover:shadow-lg hover:scale-[1.02] transition-all flex items-center justify-center shadow-md"> {/* Refined button style */}
               Analyze Your Crops <ArrowRight className="ml-2 w-5 h-5" />
             </button>
-            <button className="border-2 border-green-600 text-green-700 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-green-50 hover:scale-105 transition-all">
+            <button className="border border-green-600 text-green-700 px-7 py-3.5 rounded-xl text-base font-medium hover:bg-green-50 hover:scale-[1.02] transition-all shadow-sm hover:shadow-md"> {/* Refined button style */}
               Learn More
             </button>
           </div>
@@ -96,23 +96,23 @@ export default function HomePage() {
 
       {/* Weather */}
       {weather && (
-        <section className="py-12">
-          <motion.div 
-            className="backdrop-blur-2xl bg-white/50 border border-gray-200 rounded-3xl shadow-2xl p-8 max-w-md mx-auto hover:scale-105 transition-transform"
+        <section className="py-10"> {/* Adjusted padding */}
+          <motion.div
+            className="backdrop-blur-xl bg-white/60 border border-gray-100 rounded-2xl shadow-subtle p-7 max-w-sm mx-auto hover:scale-[1.02] transition-transform" /* Refined card style */
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-5"> {/* Adjusted margin */}
               <div>
-                <h3 className="text-2xl font-bold text-gray-900">{weather.location}</h3>
-                <p className="text-gray-600">{weather.description}</p>
+                <h3 className="text-xl font-bold text-gray-900">{weather.location}</h3> {/* Adjusted text size */}
+                <p className="text-gray-500">{weather.description}</p> {/* Adjusted text color */}
               </div>
-              <div className="text-6xl animate-pulse">
+              <div className="text-5xl animate-pulse"> {/* Adjusted text size */}
                 {WeatherService.getInstance().getWeatherIcon(weather.description)}
               </div>
             </div>
-            <div className="mt-6 grid grid-cols-2 gap-6 text-sm">
+            <div className="mt-5 grid grid-cols-2 gap-5 text-xs"> {/* Adjusted margin, gap, and text size */}
               <WeatherStat icon={<Thermometer />} label="Temperature" value={`${weather.temperature}°C`} />
               <WeatherStat icon={<Droplet />} label="Humidity" value={`${weather.humidity}%`} />
               <WeatherStat icon={<Wind />} label="Wind" value={`${weather.windSpeed} m/s`} />
@@ -123,23 +123,23 @@ export default function HomePage() {
       )}
 
       {/* System Status Section */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-16 bg-gray-50"> {/* Adjusted padding */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">System Status</h2>
-            <p className="text-xl text-gray-600">Real-time monitoring of our AI services</p>
+          <div className="text-center mb-10"> {/* Adjusted margin */}
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">System Status</h2> {/* Adjusted text size and margin */}
+            <p className="text-lg text-gray-600">Real-time monitoring of our AI services</p> {/* Adjusted text size */}
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-7"> {/* Adjusted gap */}
             {/* ML Server */}
-            <StatusCard 
+            <StatusCard
               title="ML Server"
               status={mlStatus?.healthy ? "Healthy" : "Unhealthy"}
               extra={`Response Time: ${mlStatus?.responseTime || 0}ms`}
               healthy={!!mlStatus?.healthy}
             />
             {/* Weather API */}
-            <StatusCard 
+            <StatusCard
               title="Weather API"
               status={weather ? "Connected" : "Disconnected"}
               extra={`Location: ${weather?.location || "N/A"}`}
@@ -147,7 +147,7 @@ export default function HomePage() {
               delay={0.1}
             />
             {/* Database */}
-            <StatusCard 
+            <StatusCard
               title="Database"
               status="Connected"
               extra="Provider: Supabase"
@@ -159,24 +159,24 @@ export default function HomePage() {
       </section>
 
       {/* Features */}
-      <section className="py-24 bg-gradient-to-b from-white to-green-50">
+      <section className="py-20 bg-gradient-to-b from-white to-green-50"> {/* Adjusted padding */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Powerful Features for Modern Farming</h2>
-          <p className="text-lg text-gray-600 mb-16">Everything you need to optimize your agricultural operations</p>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10">
+          <h2 className="text-3xl font-extrabold text-gray-900 mb-3">Powerful Features for Modern Farming</h2> {/* Adjusted text size and margin */}
+          <p className="text-base text-gray-600 mb-14">Everything you need to optimize your agricultural operations</p> {/* Adjusted text size and margin */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8"> {/* Adjusted gap */}
             {features.map((f, i) => (
-              <motion.div 
+              <motion.div
                 key={i}
-                className="text-center p-8 rounded-2xl bg-white/80 backdrop-blur-lg shadow-md hover:shadow-xl hover:scale-105 transition-all"
+                className="text-center p-6 rounded-xl bg-white/70 backdrop-blur-md shadow-subtle hover:shadow-lg hover:scale-[1.02] transition-all" /* Refined card style and hover effect */
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.15 }}
               >
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-100 to-blue-100 text-green-600 rounded-full mb-4 shadow-inner">
+                <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-green-100 to-blue-100 text-green-600 rounded-full mb-3 shadow-inner"> {/* Adjusted size and margin */}
                   {f.icon}
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">{f.title}</h3>
-                <p className="text-gray-600">{f.desc}</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-1.5">{f.title}</h3> {/* Adjusted text size and weight */}
+                <p className="text-gray-600 text-sm">{f.desc}</p> {/* Adjusted text size */}
               </motion.div>
             ))}
           </div>
@@ -184,15 +184,15 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12 relative">
+      <footer className="bg-gray-900 text-white py-10 relative"> {/* Adjusted padding */}
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 via-blue-500 to-green-500" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="flex items-center justify-center space-x-2 mb-6">
-            <Leaf className="w-8 h-8 text-green-400" />
-            <span className="text-2xl font-bold">Krishi Sahayak</span>
+          <div className="flex items-center justify-center space-x-2 mb-5"> {/* Adjusted margin */}
+            <Leaf className="w-7 h-7 text-green-400" /> {/* Adjusted icon size */}
+            <span className="text-xl font-bold">Krishi Sahayak</span> {/* Adjusted text size */}
           </div>
-          <p className="text-gray-400 mb-4">Empowering farmers with AI-driven agricultural solutions</p>
-          <p className="text-gray-500 text-sm">© 2025 Krishi Sahayak. All rights reserved.</p>
+          <p className="text-gray-400 mb-3 text-sm">Empowering farmers with AI-driven agricultural solutions</p> {/* Adjusted margin and text size */}
+          <p className="text-gray-500 text-xs">© 2025 Krishi Sahayak. All rights reserved.</p> {/* Adjusted text size */}
         </div>
       </footer>
     </div>
@@ -204,8 +204,8 @@ function WeatherStat({ icon, label, value }: { icon: React.ReactNode; label: str
     <div className="flex items-center space-x-2">
       <span className="text-green-600">{icon}</span>
       <div>
-        <span className="text-gray-500">{label}</span>
-        <p className="font-bold text-gray-800">{value}</p>
+        <span className="text-gray-500 text-xs">{label}</span> {/* Adjusted text size */}
+        <p className="font-medium text-gray-700">{value}</p> {/* Adjusted font weight and color */}
       </div>
     </div>
   )
@@ -213,18 +213,18 @@ function WeatherStat({ icon, label, value }: { icon: React.ReactNode; label: str
 
 function StatusCard({ title, status, extra, healthy, delay = 0 }: { title: string; status: string; extra: string; healthy: boolean; delay?: number }) {
   return (
-    <motion.div 
-      className="bg-white rounded-xl shadow-lg p-6"
+    <motion.div
+      className="bg-white rounded-xl shadow-subtle p-5" /* Refined card style */
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay }}
     >
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-        <CheckCircle className={`w-6 h-6 ${healthy ? "text-green-500" : "text-red-500"}`} />
+      <div className="flex items-center justify-between mb-3"> {/* Adjusted margin */}
+        <h3 className="text-base font-medium text-gray-900">{title}</h3> {/* Adjusted text size and weight */}
+        <CheckCircle className={`w-5 h-5 ${healthy ? "text-green-500" : "text-red-500"}`} /> {/* Adjusted icon size */}
       </div>
-      <p className="text-gray-600 mb-2">Status: {status}</p>
-      <p className="text-gray-600">{extra}</p>
+      <p className="text-gray-500 mb-1.5 text-sm">Status: {status}</p> {/* Adjusted text color and size */}
+      <p className="text-gray-500 text-sm">{extra}</p> {/* Adjusted text color and size */}
     </motion.div>
   )
 }

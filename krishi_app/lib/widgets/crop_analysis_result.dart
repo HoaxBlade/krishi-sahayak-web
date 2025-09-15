@@ -33,9 +33,9 @@ class CropAnalysisResult extends StatelessWidget {
     }
 
     return Card(
-      elevation: 4,
+      // elevation is now handled by CardThemeData
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0), // More generous padding
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,26 +44,27 @@ class CropAnalysisResult extends StatelessWidget {
               Row(
                 children: [
                   Icon(
-                    isHealthy ? Icons.check_circle : Icons.error,
-                    color: isHealthy ? Colors.green : Colors.red,
-                    size: 32,
+                    isHealthy ? Icons.check_circle_outline : Icons.warning_amber_rounded, // More subtle icons
+                    color: isHealthy ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.error, // Themed colors
+                    size: 36, // Larger icon
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 14), // Increased spacing
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           isHealthy ? 'Healthy Crop' : 'Unhealthy Crop',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: isHealthy ? Colors.green : Colors.red,
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: isHealthy ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.error,
                           ),
                         ),
                         Text(
                           'Crop Type: $cropType',
-                          style: const TextStyle(fontSize: 16),
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                          ),
                         ),
                       ],
                     ),
@@ -71,47 +72,46 @@ class CropAnalysisResult extends StatelessWidget {
                 ],
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 24), // Increased spacing
 
               // Confidence
               Row(
                 children: [
-                  const Text(
+                  Text(
                     'Confidence: ',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   Text(
                     '${confidence.toStringAsFixed(1)}%',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
                       color: confidence > 80
-                          ? Colors.green
+                          ? Theme.of(context).colorScheme.primary
                           : confidence > 60
-                          ? Colors.orange
-                          : Colors.red,
+                          ? Colors.orange.shade700
+                          : Theme.of(context).colorScheme.error,
                     ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 16), // Increased spacing
 
               // Prediction class
               Text(
                 'Prediction Class: $predictionClass',
-                style: const TextStyle(fontSize: 14, color: Colors.grey),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 24), // Increased spacing
 
               // All predictions
               if (result['all_predictions'] != null) ...[
-                const Text(
+                Text(
                   'All Predictions:',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10), // Increased spacing
                 ...List.generate((result['all_predictions'] as List).length, (
                   index,
                 ) {
@@ -126,26 +126,27 @@ class CropAnalysisResult extends StatelessWidget {
                   }
 
                   return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    padding: const EdgeInsets.symmetric(vertical: 4), // Adjusted vertical padding
                     child: Row(
                       children: [
                         Text(
                           'Class $index: ',
-                          style: const TextStyle(fontSize: 14),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8)),
                         ),
                         Expanded(
                           child: LinearProgressIndicator(
                             value: pred,
-                            backgroundColor: Colors.grey[300],
+                            minHeight: 6, // Slightly thicker progress bar
+                            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest, // Themed background
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              pred > 0.5 ? Colors.green : Colors.grey,
+                              pred > 0.5 ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface.withOpacity(0.3), // Themed colors
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 10), // Increased spacing
                         Text(
                           '${(pred * 100).toStringAsFixed(1)}%',
-                          style: const TextStyle(fontSize: 12),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
                         ),
                       ],
                     ),

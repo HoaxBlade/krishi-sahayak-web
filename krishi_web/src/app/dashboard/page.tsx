@@ -126,143 +126,143 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10"> {/* Adjusted padding */}
+        <div className="mb-7"> {/* Adjusted margin */}
+          <h1 className="text-3xl font-bold text-gray-900 mb-3"> {/* Adjusted text size and margin */}
             Farming Dashboard
           </h1>
-          <p className="text-xl text-gray-600">
+          <p className="text-lg text-gray-600"> {/* Adjusted text size */}
             Monitor your agricultural operations and AI insights
           </p>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-7"> {/* Adjusted gap and margin */}
           {stats.map((stat, index) => (
             <motion.div
               key={stat.title}
-              className="bg-white rounded-xl shadow-lg p-6"
+              className="bg-white rounded-xl shadow-subtle p-5" /* Refined card style */
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                  <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                  <p className="text-xs font-medium text-gray-500">{stat.title}</p> {/* Adjusted text size and color */}
+                  <p className="text-2xl font-semibold text-gray-800">{stat.value}</p> {/* Adjusted text size and weight */}
                 </div>
-                <div className={`p-3 rounded-full ${
+                <div className={`p-2.5 rounded-full ${ /* Adjusted padding */
                   stat.changeType === 'positive' ? 'bg-green-100' : 'bg-red-100'
                 }`}>
-                  <stat.icon className={`w-6 h-6 ${
+                  <stat.icon className={`w-5 h-5 ${ /* Adjusted icon size */
                     stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
                   }`} />
                 </div>
               </div>
-              <div className="mt-4 flex items-center">
-                <span className={`text-sm font-medium ${
+              <div className="mt-3 flex items-center"> {/* Adjusted margin */}
+                <span className={`text-xs font-medium ${ /* Adjusted text size */
                   stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
                 }`}>
                   {stat.change}
                 </span>
-                <span className="text-sm text-gray-500 ml-2">from last month</span>
+                <span className="text-xs text-gray-400 ml-2">from last month</span> {/* Adjusted text size and color */}
               </div>
             </motion.div>
           ))}
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-7"> {/* Adjusted gap */}
           {/* Recent Analyses */}
-          <motion.div 
-            className="lg:col-span-2 bg-white rounded-xl shadow-lg p-6"
+          <motion.div
+            className="lg:col-span-2 bg-white rounded-xl shadow-subtle p-5" /* Refined card style */
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-5"> {/* Adjusted text size and margin */}
               Recent Crop Analyses
             </h2>
             
-            <div className="space-y-4">
+            <div className="space-y-3"> {/* Adjusted spacing */}
               {recentAnalyses.map((analysis) => (
-                <div key={analysis.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <div key={analysis.id} className="flex items-center justify-between p-3.5 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"> {/* Refined list item style */}
                   <div className="flex items-center space-x-4">
-                    <div className={`w-3 h-3 rounded-full ${
+                    <div className={`w-2.5 h-2.5 rounded-full ${ /* Adjusted size */
                       analysis.status === 'Healthy' ? 'bg-green-500' : 'bg-red-500'
                     }`} />
                     <div>
-                      <p className="font-medium text-gray-900">{analysis.crop}</p>
-                      <p className="text-sm text-gray-600">{analysis.location}</p>
+                      <p className="font-medium text-gray-800">{analysis.crop}</p> {/* Adjusted text color */}
+                      <p className="text-xs text-gray-500">{analysis.location}</p> {/* Adjusted text size and color */}
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium text-gray-900">{analysis.status}</p>
-                    <p className="text-sm text-gray-600">{analysis.confidence}% confidence</p>
+                    <p className="font-medium text-gray-800">{analysis.status}</p> {/* Adjusted text color */}
+                    <p className="text-xs text-gray-500">{analysis.confidence}% confidence</p> {/* Adjusted text size and color */}
                   </div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-xs text-gray-400"> {/* Adjusted text size and color */}
                     {analysis.date}
                   </div>
                 </div>
               ))}
             </div>
             
-            <div className="mt-6">
-              <Link 
+            <div className="mt-5"> {/* Adjusted margin */}
+              <Link
                 href="/analyze"
-                className="inline-flex items-center text-green-600 hover:text-green-700 font-medium"
+                className="inline-flex items-center text-green-600 hover:text-green-700 font-semibold text-sm" /* Adjusted font weight and size */
               >
                 Analyze New Crop
-                <BarChart3 className="w-4 h-4 ml-2" />
+                <BarChart3 className="w-3.5 h-3.5 ml-2" /> {/* Adjusted icon size */}
               </Link>
             </div>
           </motion.div>
 
           {/* System Status & Weather */}
-          <div className="space-y-6">
+          <div className="space-y-5"> {/* Adjusted spacing */}
             {/* System Status */}
-            <motion.div 
-              className="bg-white rounded-xl shadow-lg p-6"
+            <motion.div
+              className="bg-white rounded-xl shadow-subtle p-5" /* Refined card style */
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3"> {/* Adjusted text size and margin */}
                 System Status
               </h3>
               
-              <div className="space-y-4">
+              <div className="space-y-3"> {/* Adjusted spacing */}
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">ML Server</span>
+                  <span className="text-gray-500 text-sm">ML Server</span> {/* Adjusted text color and size */}
                   <div className="flex items-center space-x-2">
                     <div className={`w-2 h-2 rounded-full ${
                       mlStatus?.healthy ? 'bg-green-500' : 'bg-red-500'
                     }`} />
-                    <span className="text-sm font-medium">
+                    <span className="text-xs font-medium"> {/* Adjusted text size */}
                       {mlStatus?.healthy ? 'Online' : 'Offline'}
                     </span>
                   </div>
                 </div>
                 
                 {mlStatus?.error && (
-                  <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                  <div className="mt-1.5 p-1.5 bg-red-50 border border-red-200 rounded text-xs text-red-700"> {/* Adjusted padding and text size */}
                     {mlStatus.error}
                   </div>
                 )}
                 
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Response Time</span>
-                  <span className="text-sm font-medium">
+                  <span className="text-gray-500 text-sm">Response Time</span> {/* Adjusted text color and size */}
+                  <span className="text-xs font-medium"> {/* Adjusted text size */}
                     {mlStatus?.responseTime || 0}ms
                   </span>
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Weather API</span>
+                  <span className="text-gray-500 text-sm">Weather API</span> {/* Adjusted text color and size */}
                   <div className="flex items-center space-x-2">
                     <div className={`w-2 h-2 rounded-full ${
                       weather ? 'bg-green-500' : 'bg-red-500'
                     }`} />
-                    <span className="text-sm font-medium">
+                    <span className="text-xs font-medium"> {/* Adjusted text size */}
                       {weather ? 'Connected' : 'Disconnected'}
                     </span>
                   </div>
@@ -270,8 +270,8 @@ export default function DashboardPage() {
                 
                 {weather && (
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Location</span>
-                    <span className="text-sm font-medium">{weather.location}</span>
+                    <span className="text-gray-500 text-sm">Location</span> {/* Adjusted text color and size */}
+                    <span className="text-xs font-medium">{weather.location}</span> {/* Adjusted text size */}
                   </div>
                 )}
               </div>
@@ -279,33 +279,33 @@ export default function DashboardPage() {
 
             {/* Weather Summary */}
             {weather && (
-              <motion.div 
-                className="bg-white rounded-xl shadow-lg p-6"
+              <motion.div
+                className="bg-white rounded-xl shadow-subtle p-5" /* Refined card style */
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
               >
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3"> {/* Adjusted text size and margin */}
                   Current Weather
                 </h3>
                 
-                <div className="text-center mb-4">
-                  <div className="text-4xl mb-2">
+                <div className="text-center mb-3"> {/* Adjusted margin */}
+                  <div className="text-3xl mb-1.5"> {/* Adjusted text size and margin */}
                     {WeatherService.getInstance().getWeatherIcon(weather.description)}
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">{weather.temperature}°C</p>
-                  <p className="text-gray-600 capitalize">{weather.description}</p>
-                  <p className="text-sm text-gray-500">{weather.location}</p>
+                  <p className="text-xl font-bold text-gray-900">{weather.temperature}°C</p> {/* Adjusted text size */}
+                  <p className="text-gray-500 capitalize text-sm">{weather.description}</p> {/* Adjusted text color and size */}
+                  <p className="text-xs text-gray-400">{weather.location}</p> {/* Adjusted text size and color */}
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-2 gap-3 text-xs"> {/* Adjusted gap and text size */}
                   <div>
-                    <span className="text-gray-500">Humidity</span>
-                    <p className="font-medium">{weather.humidity}%</p>
+                    <span className="text-gray-400">Humidity</span> {/* Adjusted text color */}
+                    <p className="font-normal text-gray-700">{weather.humidity}%</p> {/* Adjusted font weight and color */}
                   </div>
                   <div>
-                    <span className="text-gray-500">Wind</span>
-                    <p className="font-medium">{weather.windSpeed} m/s</p>
+                    <span className="text-gray-400">Wind</span> {/* Adjusted text color */}
+                    <p className="font-normal text-gray-700">{weather.windSpeed} m/s</p> {/* Adjusted font weight and color */}
                   </div>
                 </div>
               </motion.div>

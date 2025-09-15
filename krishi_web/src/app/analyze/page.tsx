@@ -94,37 +94,37 @@ export default function AnalyzePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+        <div className="text-center mb-10"> {/* Adjusted margin */}
+          <h1 className="text-3xl font-bold text-gray-900 mb-3"> {/* Adjusted text size and margin */}
             AI Crop Health Analysis
           </h1>
-          <p className="text-xl text-gray-600">
+          <p className="text-lg text-gray-600"> {/* Adjusted text size */}
             Upload a photo of your crop to get instant health analysis and recommendations
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-2 gap-7"> {/* Adjusted gap */}
           {/* Upload Section */}
-          <motion.div 
-            className="bg-white rounded-xl shadow-lg p-8"
+          <motion.div
+            className="bg-white rounded-xl shadow-subtle p-7" /* Refined card style */
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-5"> {/* Adjusted text size and margin */}
               Upload Crop Image
             </h2>
             
             {!preview ? (
-              <div 
-                className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-green-400 transition-colors cursor-pointer"
+              <div
+                className="border border-dashed border-gray-200 rounded-xl p-10 text-center hover:border-green-500 transition-colors cursor-pointer" /* Refined border, rounded corners, and padding */
                 onClick={() => fileInputRef.current?.click()}
               >
-                <Camera className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-lg text-gray-600 mb-2">
+                <Camera className="w-14 h-14 text-gray-400 mx-auto mb-3" /> {/* Adjusted icon size and margin */}
+                <p className="text-base text-gray-500 mb-2"> {/* Adjusted text size and color */}
                   Click to upload or drag and drop
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-xs text-gray-400"> {/* Adjusted text size and color */}
                   PNG, JPG, JPEG up to 10MB
                 </p>
                 <input
@@ -141,7 +141,7 @@ export default function AnalyzePage() {
                   <img
                     src={preview}
                     alt="Crop preview"
-                    className="w-full h-64 object-cover rounded-lg"
+                    className="w-full h-56 object-cover rounded-lg" /* Adjusted height */
                   />
                   <button
                     onClick={() => {
@@ -149,7 +149,7 @@ export default function AnalyzePage() {
                       setPreview(null)
                       setAnalysis(null)
                     }}
-                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-colors"
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors" /* Adjusted padding */
                   >
                     ×
                   </button>
@@ -158,16 +158,16 @@ export default function AnalyzePage() {
                 <button
                   onClick={handleAnalyze}
                   disabled={loading}
-                  className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                  className="w-full bg-green-600 text-white py-2.5 px-5 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center shadow-md hover:shadow-lg" /* Refined button style */
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      <Loader2 className="w-4.5 h-4.5 mr-2 animate-spin" /> {/* Adjusted icon size */}
                       Analyzing...
                     </>
                   ) : (
                     <>
-                      <Upload className="w-5 h-5 mr-2" />
+                      <Upload className="w-4.5 h-4.5 mr-2" /> {/* Adjusted icon size */}
                       Analyze Crop Health
                     </>
                   )}
@@ -176,8 +176,8 @@ export default function AnalyzePage() {
             )}
 
             {error && (
-              <motion.div 
-                className="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg"
+              <motion.div
+                className="mt-3 p-3 bg-red-100 border border-red-300 text-red-600 rounded-lg" /* Adjusted padding, border, and text color */
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
               >
@@ -187,58 +187,58 @@ export default function AnalyzePage() {
           </motion.div>
 
           {/* Results Section */}
-          <motion.div 
-            className="bg-white rounded-xl shadow-lg p-8"
+          <motion.div
+            className="bg-white rounded-xl shadow-subtle p-7" /* Refined card style */
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-5"> {/* Adjusted text size and margin */}
               Analysis Results
             </h2>
             
             {!analysis ? (
-              <div className="text-center py-12">
-                <Leaf className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">
+              <div className="text-center py-10"> {/* Adjusted padding */}
+                <Leaf className="w-14 h-14 text-gray-300 mx-auto mb-3" /> {/* Adjusted icon size and margin */}
+                <p className="text-gray-400 text-sm"> {/* Adjusted text color and size */}
                   Upload an image to see analysis results
                 </p>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-5"> {/* Adjusted spacing */}
                 {/* Health Status */}
                 <div className="text-center">
-                  <div className={`inline-flex items-center space-x-2 px-4 py-2 rounded-full ${getHealthColor(analysis.health_status)}`}>
+                  <div className={`inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full ${getHealthColor(analysis.health_status)}`}> {/* Adjusted padding */}
                     {getHealthIcon(analysis.health_status)}
-                    <span className="font-semibold capitalize">
+                    <span className="font-medium capitalize text-sm"> {/* Adjusted font weight and size */}
                       {analysis.health_status}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 mt-2">
+                  <p className="text-xs text-gray-500 mt-1.5"> {/* Adjusted text size and margin */}
                     Confidence: {(parseFloat(analysis.confidence) * 100).toFixed(1)}%
                   </p>
                 </div>
 
                 {/* Prediction Details */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">
+                <div className="space-y-3"> {/* Adjusted spacing */}
+                  <h3 className="text-base font-semibold text-gray-900"> {/* Adjusted text size */}
                     Detailed Analysis
                   </h3>
                   
-                  <div className="space-y-3">
+                  <div className="space-y-2"> {/* Adjusted spacing */}
                     {Object.entries(analysis.all_predictions).map(([key, value]) => (
                       <div key={key} className="flex items-center justify-between">
-                        <span className="text-gray-700 capitalize">
+                        <span className="text-gray-600 capitalize text-sm"> {/* Adjusted text color and size */}
                           {key.replace('_', ' ')}
                         </span>
                         <div className="flex items-center space-x-2">
-                          <div className="w-32 bg-gray-200 rounded-full h-2">
-                            <div 
+                          <div className="w-28 bg-gray-200 rounded-full h-2"> {/* Adjusted width */}
+                            <div
                               className="bg-green-500 h-2 rounded-full transition-all duration-500"
                               style={{ width: `${value * 100}%` }}
                             />
                           </div>
-                          <span className="text-sm font-medium text-gray-600 w-12">
+                          <span className="text-xs font-medium text-gray-500 w-10"> {/* Adjusted text size and width */}
                             {(value * 100).toFixed(1)}%
                           </span>
                         </div>
@@ -248,11 +248,11 @@ export default function AnalyzePage() {
                 </div>
 
                 {/* Recommendations */}
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <h4 className="font-semibold text-blue-900 mb-2">
+                <div className="bg-green-50/70 rounded-xl p-3.5"> {/* Refined background, rounded corners, and padding */}
+                  <h4 className="font-medium text-green-800 mb-1.5 text-base"> {/* Adjusted font weight, color, and margin */}
                     Recommendations
                   </h4>
-                  <ul className="text-sm text-blue-800 space-y-1">
+                  <ul className="text-xs text-green-700 space-y-0.5"> {/* Adjusted text size, color, and spacing */}
                     {analysis.health_status.toLowerCase() === 'healthy' ? (
                       <>
                         <li>• Continue current care routine</li>
@@ -285,11 +285,11 @@ export default function AnalyzePage() {
                       setPreview(null)
                       setAnalysis(null)
                     }}
-                    className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors"
+                    className="flex-1 bg-gray-100 text-gray-600 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors shadow-sm hover:shadow-md" /* Refined button style */
                   >
                     Analyze Another
                   </button>
-                  <button className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
+                  <button className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors shadow-md hover:shadow-lg"> {/* Refined button style */}
                     Save Results
                   </button>
                 </div>
