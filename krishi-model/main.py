@@ -1,16 +1,13 @@
 import os
-import base64
-import io
 import time
-import threading
-from collections import defaultdict, deque
-import numpy as np # type: ignore
-from PIL import Image # type: ignore
-import tensorflow as tf # type: ignore
+import logging
 from flask import Flask, request, jsonify # type: ignore
 from flask_cors import CORS # type: ignore
-import logging
-import psutil
+
+# Import utilities from ml_utils and config
+import ml_utils
+from ml_utils import RateLimiter, SystemMonitor, load_labels, preprocess_image, analyze_crop_prediction, load_ml_model
+from config import RATE_LIMIT_REQUESTS, RATE_LIMIT_WINDOW, FLASK_PORT, FLASK_HOST, MEMORY_HEALTH_THRESHOLD, CPU_HEALTH_THRESHOLD
 
 # Import existing training utilities
 from utils.dataloader import get_generators
@@ -24,179 +21,21 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)
 
-# Global variable to store the trained model
+# Global variable to store the trained model and labels
 model = None
 labels = []
 
-# Rate limiting configuration
-RATE_LIMIT_REQUESTS = 10  # requests per minute
-RATE_LIMIT_WINDOW = 60    # seconds
-
-# Rate limiting storage
-user_requests = defaultdict(deque)
-rate_limit_lock = threading.Lock()
-
-# Request queue for ML processing
-request_queue = deque()
-queue_lock = threading.Lock()
-processing_lock = threading.Lock()
-
-class RateLimiter:
-    """Simple rate limiter for user requests"""
-    
-    @staticmethod
-    def is_allowed(user_id):
-        """Check if user is within rate limit"""
-        current_time = time.time()
-        
-        with rate_limit_lock:
-            # Clean old requests
-            while user_requests[user_id] and user_requests[user_id][0] < current_time - RATE_LIMIT_WINDOW:
-                user_requests[user_id].popleft()
-            
-            # Check if under limit
-            if len(user_requests[user_id]) >= RATE_LIMIT_REQUESTS:
-                return False
-            
-            # Add current request
-            user_requests[user_id].append(current_time)
-            return True
-    
-    @staticmethod
-    def get_remaining_requests(user_id):
-        """Get remaining requests for user"""
-        current_time = time.time()
-        
-        with rate_limit_lock:
-            # Clean old requests
-            while user_requests[user_id] and user_requests[user_id][0] < current_time - RATE_LIMIT_WINDOW:
-                user_requests[user_id].popleft()
-            
-            return max(0, RATE_LIMIT_REQUESTS - len(user_requests[user_id]))
-
-class SystemMonitor:
-    """Monitor system resources"""
-    
-    @staticmethod
-    def get_memory_usage():
-        """Get current memory usage percentage"""
-        return psutil.virtual_memory().percent
-    
-    @staticmethod
-    def get_cpu_usage():
-        """Get current CPU usage percentage"""
-        return psutil.cpu_percent(interval=1)
-    
-    @staticmethod
-    def is_system_healthy():
-        """Check if system resources are healthy"""
-        memory_usage = SystemMonitor.get_memory_usage()
-        cpu_usage = SystemMonitor.get_cpu_usage()
-        
-        # Consider unhealthy if memory > 90% or CPU > 95%
-        return memory_usage < 90 and cpu_usage < 95
-
-def load_labels():
-    """Load crop labels from file"""
-    try:
-        # Try multiple possible locations for labels.txt
-        label_paths = ["labels.txt", "notebooks/model/labels.txt", "model/labels.txt"]
-        for path in label_paths:
-            if os.path.exists(path):
-                with open(path, 'r') as f:
-                    return [line.strip() for line in f.readlines()]
-        logger.error("No labels.txt found in any expected location")
-        return []
-    except Exception as e:
-        logger.error(f"Error loading labels: {e}")
-        return []
-
-def preprocess_image(image_data):
-    """Preprocess image for model input"""
-    try:
-        # Remove data URL prefix if present
-        if image_data.startswith('data:image'):
-            image_data = image_data.split(',')[1]
-        
-        # Decode base64 image
-        image_bytes = base64.b64decode(image_data)
-        image = Image.open(io.BytesIO(image_bytes))
-        
-        logger.info(f"Image loaded: {image.size} {image.mode}")
-        
-        # Resize to model input size (224x224 for MobileNetV2)
-        image = image.resize((224, 224))
-        logger.info(f"Image resized to: {image.size}")
-        
-        # Convert to numpy array and normalize
-        image_array = np.array(image) / 255.0
-        
-        # Add batch dimension
-        image_array = np.expand_dims(image_array, axis=0)
-        
-        logger.info(f"Image preprocessed: shape={image_array.shape}, dtype={image_array.dtype}")
-        return image_array
-        
-    except Exception as e:
-        logger.error(f"Error preprocessing image: {e}")
-        raise
-
-def analyze_crop(image_data):
-    """Analyze crop health using the loaded model"""
-    try:
-        logger.info("Starting crop analysis...")
-        
-        # Preprocess the image
-        processed_image = preprocess_image(image_data)
-        logger.info("Image preprocessing completed")
-        
-        # Make prediction
-        logger.info("Making model prediction...")
-        predictions = model.predict(processed_image, verbose=0)
-        logger.info(f"Model prediction completed: shape={predictions.shape}")
-        
-        # Get the predicted class
-        predicted_class = np.argmax(predictions[0])
-        confidence = np.max(predictions[0])
-        
-        # Get the predicted label
-        predicted_label = labels[predicted_class] if predicted_class < len(labels) else "Unknown"
-        
-        # Determine if crop is healthy (assuming labels ending with "Healthy" are healthy)
-        is_healthy = predicted_label.endswith("Healthy")
-        
-        logger.info(f"Prediction results:")
-        logger.info(f"  - Predicted class: {predicted_class}")
-        logger.info(f"  - Predicted label: {predicted_label}")
-        logger.info(f"  - Confidence: {confidence:.4f}")
-        logger.info(f"  - Is healthy: {is_healthy}")
-        logger.info(f"  - All predictions: {predictions[0].tolist()}")
-        
-        return {
-            'prediction_class': int(predicted_class),
-            'crop_type': predicted_label,
-            'confidence': float(confidence),
-            'is_healthy': is_healthy,
-            'all_predictions': predictions[0].tolist()
-        }
-        
-    except Exception as e:
-        logger.error(f"Error in crop analysis: {e}")
-        raise
+# Record start time
+start_time = time.time()
 
 @app.route('/analyze_crop', methods=['POST'])
 def analyze_crop_endpoint():
     """Endpoint to analyze crop health from image"""
+    global model, labels
     try:
         logger.info("=== NEW CROP ANALYSIS REQUEST ===")
-        logger.info(f"Request method: {request.method}")
-        logger.info(f"Request headers: {dict(request.headers)}")
-        
-        # Get user ID from request (use IP as fallback)
         user_id = request.headers.get('X-User-ID', request.remote_addr)
-        logger.info(f"User ID: {user_id}")
         
-        # Check rate limiting
         if not RateLimiter.is_allowed(user_id):
             remaining = RateLimiter.get_remaining_requests(user_id)
             logger.warning(f"Rate limit exceeded for user {user_id}")
@@ -204,16 +43,15 @@ def analyze_crop_endpoint():
                 'error': 'Rate limit exceeded',
                 'message': f'Maximum {RATE_LIMIT_REQUESTS} requests per minute allowed',
                 'remaining_requests': remaining,
-                'retry_after': 60
+                'retry_after': RATE_LIMIT_WINDOW
             }), 429
         
-        # Check system health
         if not SystemMonitor.is_system_healthy():
             logger.warning("System resources unhealthy, rejecting request")
             return jsonify({
                 'error': 'Server overloaded',
                 'message': 'Please try again later',
-                'memory_usage': SystemMonitor.get_memory_usage(),
+                'memory_usage': SystemMonitor.get_memory_usage()['used_percent'],
                 'cpu_usage': SystemMonitor.get_cpu_usage()
             }), 503
         
@@ -222,30 +60,22 @@ def analyze_crop_endpoint():
             return jsonify({'error': 'Request must be JSON'}), 400
         
         data = request.get_json()
-        logger.info(f"Request data keys: {list(data.keys()) if data else 'None'}")
-        
         if 'image' not in data:
             logger.error("No image data in request")
             return jsonify({'error': 'No image data provided'}), 400
         
         image_data = data['image']
-        logger.info(f"Image data received: {len(image_data)} characters")
-        logger.info(f"Image data starts with: {image_data[:50]}...")
         
-        if not model:
+        if model is None:
             logger.error("Model not loaded")
             return jsonify({'error': 'Model not available'}), 500
         
-        # Process with queue system
-        with processing_lock:
-            # Analyze the crop
-            result = analyze_crop(image_data)
+        with ml_utils.processing_lock: # Access from ml_utils module
+            result = analyze_crop_prediction(model, image_data, labels)
             logger.info("=== CROP ANALYSIS COMPLETED ===")
-            logger.info(f"Returning result: {result}")
             
-            # Add system info to response
             result['system_info'] = {
-                'memory_usage': SystemMonitor.get_memory_usage(),
+                'memory_usage': SystemMonitor.get_memory_usage()['used_percent'],
                 'cpu_usage': SystemMonitor.get_cpu_usage(),
                 'remaining_requests': RateLimiter.get_remaining_requests(user_id)
             }
@@ -259,18 +89,16 @@ def analyze_crop_endpoint():
 @app.route('/health', methods=['GET'])
 def health_check():
     """Enhanced health check endpoint"""
+    global model, labels
     logger.info("Health check requested")
     
-    # Check system health
     system_healthy = SystemMonitor.is_system_healthy()
-    memory_usage = SystemMonitor.get_memory_usage()
+    memory_usage = SystemMonitor.get_memory_usage()['used_percent']
     cpu_usage = SystemMonitor.get_cpu_usage()
     
-    # Check model status
     model_loaded = model is not None
     labels_loaded = len(labels) > 0
     
-    # Overall health status
     overall_healthy = system_healthy and model_loaded and labels_loaded
     
     status = 'healthy' if overall_healthy else 'unhealthy'
@@ -290,13 +118,14 @@ def health_check():
         },
         'rate_limiting': {
             'requests_per_minute': RATE_LIMIT_REQUESTS,
-            'active_users': len(user_requests)
+            'active_users': len(ml_utils.user_requests) # Access from ml_utils module
         }
     })
 
 @app.route('/train', methods=['POST'])
 def train_endpoint():
     """Endpoint to retrain the model"""
+    global model, labels
     logger.info("Model training requested")
     try:
         if not os.path.exists("Data"):
@@ -309,6 +138,9 @@ def train_endpoint():
         os.makedirs("model", exist_ok=True)
         model.save("model/mobilenetv2_model.h5")
         
+        # Reload labels in case they changed during training
+        labels = load_labels()
+
         logger.info("Model training completed successfully")
         return jsonify({'message': 'Model trained successfully'})
         
@@ -325,23 +157,21 @@ def get_labels():
 @app.route('/status', methods=['GET'])
 def get_status():
     """Get detailed server status"""
+    global model, labels
     logger.info("Status requested")
     
-    # Get system metrics
-    memory_usage = SystemMonitor.get_memory_usage()
+    memory_usage = SystemMonitor.get_memory_usage()['used_percent']
     cpu_usage = SystemMonitor.get_cpu_usage()
     
-    # Count active users
-    active_users = len(user_requests)
+    active_users = len(ml_utils.user_requests) # Access from ml_utils module
     
-    # Get queue status
-    with queue_lock:
-        queue_size = len(request_queue)
+    with ml_utils.queue_lock: # Access from ml_utils module
+        queue_size = len(ml_utils.request_queue) # Access from ml_utils module
     
     return jsonify({
         'server_status': 'running',
         'timestamp': time.time(),
-        'uptime': time.time() - start_time if 'start_time' in globals() else 0,
+        'uptime': time.time() - start_time,
         'system': {
             'memory_usage_percent': memory_usage,
             'cpu_usage_percent': cpu_usage,
@@ -358,82 +188,56 @@ def get_status():
         },
         'queue': {
             'size': queue_size,
-            'processing': processing_lock.locked()
+            'processing': ml_utils.processing_lock.locked() # Access from ml_utils module
         }
     })
 
-def load_or_train_model():
-    """Load existing model or train new one"""
+def initialize_model_and_labels():
+    """Initialize model and labels on server startup."""
     global model, labels
-    
     logger.info("=== MODEL LOADING/TRAINING PROCESS ===")
     
-    # Load labels first
     labels = load_labels()
     logger.info(f"Loaded {len(labels)} labels: {labels}")
     
-    # Try to load existing model from multiple locations
-    model_paths = [
-        "saved_models/best_modelV1.h5",
-        "notebooks/model/best_model.h5",
-        "notebooks/model/mobilenetv2_model.h5",
-        "model/best_model.h5",   
-        "model/mobilenetv2_model.h5"
-    ]
+    model = load_ml_model()
     
-    for model_path in model_paths:
-        if os.path.exists(model_path):
-            try:
-                logger.info(f"Attempting to load model from: {model_path}")
-                model = tf.keras.models.load_model(model_path)
-                logger.info(f"Existing model loaded successfully from {model_path}")
-                logger.info(f"Model summary: {model.summary()}")
-                return True
-            except Exception as e:
-                logger.error(f"Error loading model from {model_path}: {e}")
-                continue
-    
-    # If no existing model found, attempt to train new one
-    logger.info("No existing model found. Attempting to train new model...")
-    try:
-        # Check if training data exists
-        if not os.path.exists("Data"):
-            logger.error("Training data directory 'Data' not found. Cannot train new model.")
-            logger.error("Please ensure training data is available or use an existing model.")
-            return False
+    if model is None:
+        logger.info("No existing model found. Attempting to train new model...")
+        try:
+            if not os.path.exists("Data"):
+                logger.error("Training data directory 'Data' not found. Cannot train new model.")
+                logger.error("Please ensure training data is available or use an existing model.")
+                return False
+                
+            logger.info("Training data found, starting training process...")
+            train_gen, val_gen, num_classes = get_generators("Data", "labels.txt")
+            model, history = train_model(train_gen, val_gen, num_classes)
             
-        logger.info("Training data found, starting training process...")
-        train_gen, val_gen, num_classes = get_generators("Data", "labels.txt")
-        model, history = train_model(train_gen, val_gen, num_classes)
-        
-        # Save the trained model
-        os.makedirs("model", exist_ok=True)
-        model.save("model/mobilenetv2_model.h5")
-        logger.info("New model trained and saved successfully")
-        return True
-    except Exception as e:
-        logger.error(f"Error training model: {e}")
-        return False
+            os.makedirs("model", exist_ok=True)
+            model.save("model/mobilenetv2_model.h5")
+            logger.info("New model trained and saved successfully")
+            return True
+        except Exception as e:
+            logger.error(f"Error training model: {e}")
+            return False
+    return True
 
 if __name__ == '__main__':
     logger.info("=== STARTING KRISHI ML SERVER ===")
     
-    # Record start time
-    start_time = time.time()
-    
-    # Load or train the model when starting the server
-    if load_or_train_model():
+    if initialize_model_and_labels():
         logger.info("✅ Model ready for inference")
-        logger.info("Starting Flask server on http://0.0.0.0:5001")
+        logger.info(f"Starting Flask server on http://{FLASK_HOST}:{FLASK_PORT}")
         logger.info("Available endpoints:")
         logger.info("  - POST /analyze_crop - Analyze crop image")
         logger.info("  - GET  /health - Check server health")
         logger.info("  - GET  /status - Get detailed server status")
         logger.info("  - POST /train - Retrain model")
         logger.info("  - GET  /labels - Get available labels")
-        logger.info("Rate limiting: 10 requests/minute per user")
-        logger.info("System monitoring: Memory < 90%, CPU < 95%")
+        logger.info(f"Rate limiting: {RATE_LIMIT_REQUESTS} requests/{RATE_LIMIT_WINDOW} seconds per user")
+        logger.info(f"System monitoring: Memory < {MEMORY_HEALTH_THRESHOLD}%, CPU < {CPU_HEALTH_THRESHOLD}%")
         
-        app.run(host='0.0.0.0', port=5001, debug=False)
+        app.run(host=FLASK_HOST, port=FLASK_PORT, debug=False)
     else:
         logger.error("❌ Failed to load/train model. Server not started.")
