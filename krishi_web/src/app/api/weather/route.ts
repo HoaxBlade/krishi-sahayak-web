@@ -28,6 +28,7 @@ export async function GET(request: Request) {
   const lon = searchParams.get('lon');
 
   if (!OPENWEATHER_API_KEY) {
+    console.error('OpenWeatherMap API key is not configured. Please set NEXT_PUBLIC_OPENWEATHERMAP_API_KEY.');
     return NextResponse.json({ error: 'OpenWeatherMap API key not configured' }, { status: 500 });
   }
 

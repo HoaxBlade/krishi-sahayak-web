@@ -58,8 +58,8 @@ export class MLService {
       console.log('ML Server health response:', response.status, response.data)
       
       // Check if response is healthy
-      if (response.status === 200 && response.data) {
-        return response.data.healthy !== false && response.data.status !== 'unhealthy'
+      if (response.status === 200 && response.data && response.data.data?.status === 'healthy') {
+        return true
       }
       return false
     } catch (error) {
@@ -129,6 +129,7 @@ export class MLService {
     };
 
     mlStatusCache = { data: status, timestamp: now };
+    console.log('ML Server status being returned:', status);
     return status;
   }
 }
