@@ -61,35 +61,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-100 via-blue-50 to-white">
-      {/* Header */}
-      <header className="backdrop-blur-md bg-white/70 shadow-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-2">
-              <Leaf className="w-8 h-8 text-green-600" />
-              <span className="text-2xl font-bold text-gray-900">Krishi Sahayak</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                {loading ? (
-                  <span className="text-sm text-gray-500">Checking services...</span>
-                ) : (
-                  <>
-                    <div className={`w-3 h-3 rounded-full ${mlStatus?.healthy ? "bg-green-500 animate-pulse" : "bg-red-500"}`} />
-                    <span className="text-sm text-gray-600">
-                      {mlStatus?.healthy ? "ML Server Online" : "ML Server Offline"}
-                    </span>
-                  </>
-                )}
-              </div>
-              <button className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-2 rounded-xl hover:shadow-lg hover:scale-105 transition-all">
-                Get Started
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
+      
       {/* Hero with animated background */}
       <section className="relative py-28 overflow-hidden text-center">
         {/* Animated gradient waves */}

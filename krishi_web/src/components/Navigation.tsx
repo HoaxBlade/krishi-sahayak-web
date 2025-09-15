@@ -45,6 +45,7 @@ export default function Navigation() {
                 <span>{item.name}</span>
               </Link>
             ))}
+            
             <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
               Get Started
             </button>

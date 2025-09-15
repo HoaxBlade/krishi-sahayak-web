@@ -4,6 +4,13 @@ import axios from 'axios'
 const ML_SERVER_URL = process.env.NEXT_PUBLIC_ML_SERVER_URL || 'http://35.222.33.77'
 const USE_API_ROUTES = true // Always use API routes for consistency
 
+// Cache for ML server status
+let mlStatusCache: {
+  data: { healthy: boolean; responseTime: number; timestamp: string; error?: string } | null;
+  timestamp: number;
+} = { data: null, timestamp: 0 };
+const ML_STATUS_CACHE_DURATION = 1000 * 10; // Cache for 10 seconds
+
 // Type for axios error
 interface AxiosError {
   message: string
@@ -106,6 +113,12 @@ export class MLService {
     timestamp: string
     error?: string
   }> {
+    const now = Date.now();
+    if (mlStatusCache.data && (now - mlStatusCache.timestamp < ML_STATUS_CACHE_DURATION)) {
+      console.log('Returning ML server status from cache.');
+      return mlStatusCache.data;
+    }
+
     const startTime = Date.now()
     let healthy = false
     let error: string | undefined
@@ -119,11 +132,14 @@ export class MLService {
 
     const responseTime = Date.now() - startTime
 
-    return {
+    const status = {
       healthy,
       responseTime,
       timestamp: new Date().toISOString(),
       error
-    }
+    };
+
+    mlStatusCache = { data: status, timestamp: now };
+    return status;
   }
 }
