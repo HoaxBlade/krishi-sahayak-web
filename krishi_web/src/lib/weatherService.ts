@@ -1,4 +1,5 @@
-import axios from 'axios'
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import axios, { AxiosError } from 'axios'
 
 export interface WeatherData {
   temperature: number
@@ -34,10 +35,29 @@ export class WeatherService {
 
   async getWeatherByCity(city: string): Promise<WeatherData> {
     try {
-      const response = await axios.get(`/api/weather?city=${city}`)
-      return response.data
+      const response = await axios.get(`/api/weather?city=${city}`, {
+        timeout: 10000,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (response.status === 200 && response.data) {
+        return response.data
+      }
+      throw new Error(`Weather API returned status: ${response.status}`)
     } catch (error) {
       console.error('Weather fetch failed:', error)
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 500) {
+          throw new Error('Weather API server error - check configuration')
+        } else if (error.response?.status === 401) {
+          throw new Error('Weather API authentication failed - check API key')
+        } else if (error.code === 'ECONNABORTED') {
+          throw new Error('Weather API request timeout')
+        }
+      }
       throw new Error('Failed to fetch weather data')
     }
   }

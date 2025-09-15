@@ -275,10 +275,21 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Weather API</span>
                   <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500" />
-                    <span className="text-sm font-medium">Online</span>
+                    <div className={`w-2 h-2 rounded-full ${
+                      weather ? 'bg-green-500' : 'bg-red-500'
+                    }`} />
+                    <span className="text-sm font-medium">
+                      {weather ? 'Connected' : 'Disconnected'}
+                    </span>
                   </div>
                 </div>
+                
+                {weather && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Location</span>
+                    <span className="text-sm font-medium">{weather.location}</span>
+                  </div>
+                )}
               </div>
             </motion.div>
 
@@ -321,3 +332,4 @@ export default function DashboardPage() {
     </div>
   )
 }
+

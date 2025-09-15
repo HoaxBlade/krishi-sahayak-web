@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 
-const ML_SERVER_URL = process.env.ML_SERVER_URL || 'http://35.222.33.77';
+const ML_SERVER_URL = process.env.NEXT_PUBLIC_ML_SERVER_URL || 'http://35.222.33.77';
 
 async function convertFileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
