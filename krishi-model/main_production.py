@@ -431,7 +431,8 @@ if __name__ == '__main__':
     try:
         import gunicorn.app.wsgiapp as wsgi
         logger.info("🚀 Starting with Gunicorn WSGI server...")
-        sys.argv = ['gunicorn', '--bind', f'0.0.0.0:{port}', '--workers', '2', '--timeout', '120', '--keep-alive', '2', '--max-requests', '1000', '--max-requests-jitter', '100', 'main_production:app']
+        num_workers = int(os.getenv('GUNICORN_WORKERS', '2')) # Default to 2 workers
+        sys.argv = ['gunicorn', '--bind', f'0.0.0.0:{port}', '--workers', str(num_workers), '--timeout', '120', '--keep-alive', '2', '--max-requests', '1000', '--max-requests-jitter', '100', 'main_production:app']
         wsgi.run()
     except ImportError:
         logger.warning("⚠️ Gunicorn not available, falling back to Flask development server")

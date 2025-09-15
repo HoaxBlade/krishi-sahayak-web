@@ -71,40 +71,24 @@ export class MLService {
 
   async analyzeCropHealth(imageFile: File): Promise<MLAnalysisResult> {
     try {
-      // Convert image to base64
-      const base64Image = await this.convertToBase64(imageFile)
+      const formData = new FormData();
+      formData.append('image', imageFile);
       
-      const url = USE_API_ROUTES ? '/api/ml/analyze' : `${this.baseUrl}/analyze_crop`
-      console.log('Analyzing crop health at:', url)
+      const url = USE_API_ROUTES ? '/api/ml/analyze' : `${this.baseUrl}/analyze_crop`;
+      console.log('Analyzing crop health at:', url);
       
-      const response = await axios.post(url, {
-        image: base64Image
-      }, {
+      const response = await axios.post(url, formData, {
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'multipart/form-data'
         },
         timeout: 30000
-      })
+      });
 
-      return response.data
+      return response.data;
     } catch (error) {
-      console.error('Crop analysis failed:', error)
-      throw new Error('Failed to analyze crop health')
+      console.error('Crop analysis failed:', error);
+      throw new Error('Failed to analyze crop health');
     }
-  }
-
-  private async convertToBase64(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.readAsDataURL(file)
-      reader.onload = () => {
-        const result = reader.result as string
-        // Remove data:image/jpeg;base64, prefix
-        const base64 = result.split(',')[1]
-        resolve(base64)
-      }
-      reader.onerror = error => reject(error)
-    })
   }
 
   async getServerStatus(): Promise<{

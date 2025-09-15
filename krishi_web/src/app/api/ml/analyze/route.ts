@@ -1,45 +1,52 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server';
+import axios from 'axios';
 
-const ML_SERVER_URL = process.env.NEXT_PUBLIC_ML_SERVER_URL || 'http://35.222.33.77'
+const ML_SERVER_URL = process.env.ML_SERVER_URL || 'http://35.222.33.77';
 
-export async function POST(request: NextRequest) {
+async function convertFileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Remove data:image/jpeg;base64, prefix
+      const base64 = result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = error => reject(error);
+  });
+}
+
+export async function POST(request: Request) {
+  if (!ML_SERVER_URL) {
+    return NextResponse.json({ error: 'ML Server URL not configured' }, { status: 500 });
+  }
+
   try {
-    console.log('Proxying ML Server analyze request to:', ML_SERVER_URL)
-    
-    const body = await request.json()
-    console.log('Request body:', { hasImage: !!body.image, imageLength: body.image?.length })
-    
-    // Create a timeout controller
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 30000)
-    
-    const response = await fetch(`${ML_SERVER_URL}/analyze_crop`, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'User-Agent': 'Krishi-Sahayak-Web/1.0.0'
-      },
-      body: JSON.stringify(body),
-      signal: controller.signal
-    })
-    
-    clearTimeout(timeoutId)
+    const formData = await request.formData();
+    const imageFile = formData.get('image') as File;
 
-    if (!response.ok) {
-      throw new Error(`ML Server responded with status: ${response.status}`)
+    if (!imageFile) {
+      return NextResponse.json({ error: 'No image file provided' }, { status: 400 });
     }
 
-    const data = await response.json()
-    console.log('ML Server analyze response:', data)
+    const base64Image = await convertFileToBase64(imageFile);
 
-    return NextResponse.json(data)
+    const mlResponse = await axios.post(`${ML_SERVER_URL}/analyze_crop`, {
+      image: base64Image,
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      timeout: 30000,
+    });
+
+    return NextResponse.json(mlResponse.data);
   } catch (error) {
-    console.error('ML Server analyze failed:', error)
-    
-    return NextResponse.json({
-      error: 'Failed to analyze crop health',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 })
+    console.error('Error during ML analysis:', error);
+    if (axios.isAxiosError(error) && error.response) {
+      return NextResponse.json({ error: error.response.data }, { status: error.response.status });
+    }
+    return NextResponse.json({ error: 'Failed to perform ML analysis' }, { status: 500 });
   }
 }
