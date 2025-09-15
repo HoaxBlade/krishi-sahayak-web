@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 
-const OPENWEATHER_API_KEY = process.env.OPENWEATHERMAP_API_KEY;
+const OPENWEATHER_API_KEY = process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY;
 const WEATHER_CACHE_DURATION = 1000 * 60 * 5; // Cache for 5 minutes
 
 interface WeatherData {

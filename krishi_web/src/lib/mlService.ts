@@ -56,7 +56,12 @@ export class MLService {
         }
       })
       console.log('ML Server health response:', response.status, response.data)
-      return response.status === 200
+      
+      // Check if response is healthy
+      if (response.status === 200 && response.data) {
+        return response.data.healthy !== false && response.data.status !== 'unhealthy'
+      }
+      return false
     } catch (error) {
       const axiosError = error as AxiosError
       console.error('ML Server health check failed:', {
