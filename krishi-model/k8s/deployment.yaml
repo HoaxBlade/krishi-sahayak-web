@@ -19,8 +19,7 @@ spec:
     spec:
       containers:
       - name: ml-server
-        image: python:3.9-slim
-        command: ["python", "/app/ml-server.py"]
+        image: krishi-sahayak/ml-server:latest
         ports:
         - containerPort: 5000
           name: http
@@ -71,12 +70,7 @@ spec:
         volumeMounts:
         - name: logs
           mountPath: /app/logs
-        - name: ml-server-script
-          mountPath: /app
       volumes:
       - name: logs
         emptyDir: {}
-      - name: ml-server-script
-        configMap:
-          name: ml-server-script
       restartPolicy: Always

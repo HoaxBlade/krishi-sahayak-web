@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 IMAGE_NAME="krishi-sahayak/ml-server"
 IMAGE_TAG="latest"
 NAMESPACE="krishi-sahayak"
-REGISTRY="your-registry.com"  # Replace with your container registry
+REGISTRY="${CONTAINER_REGISTRY:-your-registry.com}" # Use CONTAINER_REGISTRY env var or default
 
 echo -e "${BLUE}🚀 Starting Krishi Sahayak ML Server Deployment${NC}"
 
