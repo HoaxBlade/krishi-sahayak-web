@@ -9,7 +9,9 @@ import {
   Thermometer,
   MapPin,
   RefreshCw,
-  AlertCircle
+  AlertCircle,
+  CheckCircle,
+  AlertTriangle
 } from 'lucide-react'
 import { WeatherService, WeatherData } from '@/lib/weatherService'
 import Link from 'next/link'
@@ -19,17 +21,39 @@ export default function WeatherPage() {
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [location, setLocation] = useState('Delhi')
+  const [location, setLocation] = useState('Delhi') // Default to Delhi
   const [customLocation, setCustomLocation] = useState('')
 
   useEffect(() => {
-    fetchWeather(location)
-  }, [location])
+    const initializeLocation = async () => {
+      const storedLocation = localStorage.getItem('userWeatherLocation');
+      if (storedLocation) {
+        const { latitude, longitude, location: storedCity } = JSON.parse(storedLocation);
+        if (latitude && longitude) {
+          await fetchWeatherByCoordinates(latitude, longitude);
+        } else if (storedCity) {
+          setLocation(storedCity);
+          await fetchWeatherByCity(storedCity);
+        }
+      } else {
+        await fetchWeatherByCity(location); // Fetch for default 'Delhi'
+      }
+    };
+    initializeLocation();
+  }, []); // Run only once on component mount
 
-  const fetchWeather = async (city: string) => {
+  useEffect(() => {
+    // This useEffect will handle subsequent city changes from quick select or search input
+    // The initial load from stored coordinates is handled by initializeLocation
+    if (location && weather && weather.location !== location) {
+      fetchWeatherByCity(location);
+    }
+  }, [location, weather]); // Added weather to dependency array to react to its changes
+
+
+  const fetchWeatherByCity = async (city: string) => {
     setLoading(true)
     setError(null)
-    
     try {
       const weatherService = WeatherService.getInstance()
       const data = await weatherService.getWeatherByCity(city)
@@ -42,13 +66,30 @@ export default function WeatherPage() {
     }
   }
 
+  const fetchWeatherByCoordinates = async (latitude: number, longitude: number) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const weatherService = WeatherService.getInstance()
+      const data = await weatherService.getWeatherByCoordinates(latitude, longitude)
+      setWeather(data)
+      setLocation(data.location); // Update location state with the actual city name from coordinates
+    } catch (err) {
+      setError('Failed to fetch weather data for your location. Please try again or search by city.')
+      console.error('Weather fetch error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleLocationSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (customLocation.trim()) {
       setLocation(customLocation.trim())
-      fetchWeather(customLocation.trim())
+      fetchWeatherByCity(customLocation.trim())
     }
   }
+
 
   const getWeatherIcon = (description: string) => {
     const desc = description.toLowerCase()
@@ -64,30 +105,28 @@ export default function WeatherPage() {
   }
 
   const getWeatherAdvice = (weather: WeatherData) => {
-    const advice: string[] = []
+    const advice: { type: 'favorable' | 'warning'; message: string }[] = []
     
     if (weather.temperature < 5) {
-      advice.push('⚠️ Protect crops from frost damage')
-    }
-    
-    if (weather.temperature > 35) {
-      advice.push('🌡️ High temperature - ensure adequate irrigation')
+      advice.push({ type: 'warning', message: 'Protect crops from frost damage' })
+    } else if (weather.temperature > 35) {
+      advice.push({ type: 'warning', message: 'High temperature - ensure adequate irrigation' })
     }
     
     if (weather.humidity > 80) {
-      advice.push('💧 High humidity - watch for fungal diseases')
+      advice.push({ type: 'warning', message: 'High humidity - watch for fungal diseases' })
     }
     
     if (weather.precipitation > 10) {
-      advice.push('🌧️ Heavy rain - check drainage systems')
+      advice.push({ type: 'warning', message: 'Heavy rain - check drainage systems' })
     }
     
     if (weather.windSpeed > 10) {
-      advice.push('💨 Strong winds - secure plants and structures')
+      advice.push({ type: 'warning', message: 'Strong winds - secure plants and structures' })
     }
     
     if (advice.length === 0) {
-      advice.push('✅ Weather conditions are favorable for farming')
+      advice.push({ type: 'favorable', message: 'Weather conditions are favorable for farming' })
     }
     
     return advice
@@ -120,7 +159,7 @@ export default function WeatherPage() {
                 value={customLocation}
                 onChange={(e) => setCustomLocation(e.target.value)}
                 placeholder="Enter city name..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent !text-gray-900 !dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
               />
               <button
                 type="submit"
@@ -137,7 +176,7 @@ export default function WeatherPage() {
                 key={city}
                 onClick={() => {
                   setLocation(city)
-                  fetchWeather(city)
+                  fetchWeatherByCity(city)
                 }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   location === city
@@ -229,9 +268,20 @@ export default function WeatherPage() {
               
               <div className="space-y-3">
                 {getWeatherAdvice(weather).map((advice, index) => (
-                  <div key={index} className="flex items-start space-x-3 p-3 bg-green-50 rounded-lg">
-                    <div className="text-lg">{advice.split(' ')[0]}</div>
-                    <p className="text-sm text-green-700">{advice.substring(advice.indexOf(' ') + 1)}</p>
+                  <div
+                    key={index}
+                    className={`flex items-start space-x-3 p-3 rounded-lg ${
+                      advice.type === 'favorable' ? 'bg-green-50' : 'bg-orange-50'
+                    }`}
+                  >
+                    {advice.type === 'favorable' ? (
+                      <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                    ) : (
+                      <AlertTriangle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                    )}
+                    <p className={`text-sm ${advice.type === 'favorable' ? 'text-green-700' : 'text-orange-700'}`}>
+                      {advice.message}
+                    </p>
                   </div>
                 ))}
               </div>

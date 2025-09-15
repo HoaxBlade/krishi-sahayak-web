@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation' // Import usePathname
 import { motion } from 'framer-motion'
 import {
-  Leaf,
   Menu,
   X,
   Camera,
@@ -13,6 +12,7 @@ import {
   BarChart3,
   Home
 } from 'lucide-react'
+import Image from 'next/image'
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
@@ -30,9 +30,27 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-3"> {/* Adjusted padding */}
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <Leaf className="w-7 h-7 text-green-600" /> {/* Slightly smaller icon */}
-            <span className="text-xl font-bold text-gray-900">Krishi Sahayak</span> {/* Slightly smaller text */}
+          <Link href="/" className="flex items-center space-x-3">
+            <Image
+              src="/logo.jpg"
+              alt="Krishi Sahayak Logo"
+              width={50}
+              height={50}
+              className="rounded-full object-cover"
+            />
+            <div className="flex flex-col items-start">
+              <span className="text-2xl font-bold text-gray-900">Krishi Sahayak</span>
+              <div className="flex items-center space-x-1">
+                <span className="text-sm text-gray-500">Powered by:</span>
+                <Image
+                  src="/NIELIT.jpeg"
+                  alt="NIELIT Logo"
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
+              </div>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}

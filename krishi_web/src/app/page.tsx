@@ -31,25 +31,66 @@ export default function HomePage() {
   const [mlStatus, setMlStatus] = useState<MLStatus | null>(null)
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [locationError, setLocationError] = useState<string | null>(null)
 
   useEffect(() => {
-    const checkServices = async () => {
+    const fetchLocationAndServices = async () => {
+      setLoading(true)
+      let lat: number | null = null
+      let lon: number | null = null
+
+      if (navigator.geolocation) {
+        try {
+          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+          });
+          lat = position.coords.latitude;
+          lon = position.coords.longitude;
+          setUserLocation({ latitude: lat, longitude: lon });
+        } catch (error: any) {
+          console.error("Geolocation error:", error);
+          setLocationError("Unable to retrieve your location. Displaying weather for a default city.");
+        }
+      } else {
+        setLocationError("Geolocation is not supported by your browser. Displaying weather for a default city.");
+      }
+
       try {
         const mlService = MLService.getInstance()
         const weatherService = WeatherService.getInstance()
+        
+        let weatherDataPromise;
+        if (lat !== null && lon !== null) {
+          weatherDataPromise = weatherService.getWeatherByCoordinates(lat, lon);
+        } else {
+          weatherDataPromise = weatherService.getWeatherByCity("Delhi"); // Fallback to Delhi
+        }
+
         const [ml, weatherData] = await Promise.all([
           mlService.getServerStatus(),
-          weatherService.getWeatherByCity("Delhi")
+          weatherDataPromise
         ])
         setMlStatus(ml)
         setWeather(weatherData)
+
+        // Store location data in localStorage
+        if (weatherData) {
+          localStorage.setItem('userWeatherLocation', JSON.stringify({
+            location: weatherData.location,
+            latitude: lat,
+            longitude: lon
+          }));
+        }
+
       } catch (error) {
         console.error("Service check failed:", error)
+        setLocationError(prev => prev || "Failed to fetch weather data.");
       } finally {
         setLoading(false)
       }
     }
-    checkServices()
+    fetchLocationAndServices()
   }, [])
 
   const features = [
@@ -183,18 +224,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-10 relative"> {/* Adjusted padding */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 via-blue-500 to-green-500" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="flex items-center justify-center space-x-2 mb-5"> {/* Adjusted margin */}
-            <Leaf className="w-7 h-7 text-green-400" /> {/* Adjusted icon size */}
-            <span className="text-xl font-bold">Krishi Sahayak</span> {/* Adjusted text size */}
-          </div>
-          <p className="text-gray-400 mb-3 text-sm">Empowering farmers with AI-driven agricultural solutions</p> {/* Adjusted margin and text size */}
-          <p className="text-gray-500 text-xs">© 2025 Krishi Sahayak. All rights reserved.</p> {/* Adjusted text size */}
-        </div>
-      </footer>
     </div>
   )
 }

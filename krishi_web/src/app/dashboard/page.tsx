@@ -38,9 +38,24 @@ export default function DashboardPage() {
         const mlService = MLService.getInstance()
         const weatherService = WeatherService.getInstance()
         
+        let weatherDataPromise;
+        const storedLocation = localStorage.getItem('userWeatherLocation');
+        if (storedLocation) {
+          const { latitude, longitude, location } = JSON.parse(storedLocation);
+          if (latitude && longitude) {
+            weatherDataPromise = weatherService.getWeatherByCoordinates(latitude, longitude);
+          } else if (location) {
+            weatherDataPromise = weatherService.getWeatherByCity(location);
+          } else {
+            weatherDataPromise = weatherService.getWeatherByCity('Delhi');
+          }
+        } else {
+          weatherDataPromise = weatherService.getWeatherByCity('Delhi');
+        }
+
         const [mlStatus, weatherData] = await Promise.all([
           mlService.getServerStatus(),
-          weatherService.getWeatherByCity('Delhi')
+          weatherDataPromise
         ])
         
         setMlStatus(mlStatus)
@@ -226,54 +241,25 @@ export default function DashboardPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <h3 className="text-lg font-semibold text-gray-900 mb-3"> {/* Adjusted text size and margin */}
-                System Status
-              </h3>
-              
-              <div className="space-y-3"> {/* Adjusted spacing */}
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">System Status</h3>
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-500 text-sm">ML Server</span> {/* Adjusted text color and size */}
+                  <span className="text-gray-500 text-sm">ML Server</span>
                   <div className="flex items-center space-x-2">
-                    <div className={`w-2 h-2 rounded-full ${
-                      mlStatus?.healthy ? 'bg-green-500' : 'bg-red-500'
-                    }`} />
-                    <span className="text-xs font-medium"> {/* Adjusted text size */}
-                      {mlStatus?.healthy ? 'Online' : 'Offline'}
-                    </span>
+                    <div className={`w-2 h-2 rounded-full ${mlStatus?.healthy ? 'bg-green-500' : 'bg-red-500'}`} />
+                    <span className="text-xs font-medium">{mlStatus?.healthy ? 'Online' : 'Offline'}</span>
                   </div>
                 </div>
-                
-                {mlStatus?.error && (
-                  <div className="mt-1.5 p-1.5 bg-red-50 border border-red-200 rounded text-xs text-red-700"> {/* Adjusted padding and text size */}
-                    {mlStatus.error}
-                  </div>
-                )}
-                
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-500 text-sm">Response Time</span> {/* Adjusted text color and size */}
-                  <span className="text-xs font-medium"> {/* Adjusted text size */}
-                    {mlStatus?.responseTime || 0}ms
-                  </span>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500 text-sm">Weather API</span> {/* Adjusted text color and size */}
+                  <span className="text-gray-500 text-sm">Weather API</span>
                   <div className="flex items-center space-x-2">
-                    <div className={`w-2 h-2 rounded-full ${
-                      weather ? 'bg-green-500' : 'bg-red-500'
-                    }`} />
-                    <span className="text-xs font-medium"> {/* Adjusted text size */}
-                      {weather ? 'Connected' : 'Disconnected'}
-                    </span>
+                    <div className={`w-2 h-2 rounded-full ${weather ? 'bg-green-500' : 'bg-red-500'}`} />
+                    <span className="text-xs font-medium">{weather ? 'Connected' : 'Disconnected'}</span>
                   </div>
                 </div>
-                
-                {weather && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-500 text-sm">Location</span> {/* Adjusted text color and size */}
-                    <span className="text-xs font-medium">{weather.location}</span> {/* Adjusted text size */}
-                  </div>
-                )}
+                <Link href="/" className="text-sm text-green-600 hover:text-green-700 font-medium mt-2 block">
+                  View Full Status
+                </Link>
               </div>
             </motion.div>
 
@@ -285,29 +271,15 @@ export default function DashboardPage() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
               >
-                <h3 className="text-lg font-semibold text-gray-900 mb-3"> {/* Adjusted text size and margin */}
-                  Current Weather
-                </h3>
-                
-                <div className="text-center mb-3"> {/* Adjusted margin */}
-                  <div className="text-3xl mb-1.5"> {/* Adjusted text size and margin */}
-                    {WeatherService.getInstance().getWeatherIcon(weather.description)}
-                  </div>
-                  <p className="text-xl font-bold text-gray-900">{weather.temperature}°C</p> {/* Adjusted text size */}
-                  <p className="text-gray-500 capitalize text-sm">{weather.description}</p> {/* Adjusted text color and size */}
-                  <p className="text-xs text-gray-400">{weather.location}</p> {/* Adjusted text size and color */}
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Current Weather</h3>
+                <div className="text-center mb-3">
+                  <p className="text-xl font-bold text-gray-900">{weather.temperature}°C</p>
+                  <p className="text-gray-500 capitalize text-sm">{weather.description}</p>
+                  <p className="text-xs text-gray-400">{weather.location}</p>
                 </div>
-                
-                <div className="grid grid-cols-2 gap-3 text-xs"> {/* Adjusted gap and text size */}
-                  <div>
-                    <span className="text-gray-400">Humidity</span> {/* Adjusted text color */}
-                    <p className="font-normal text-gray-700">{weather.humidity}%</p> {/* Adjusted font weight and color */}
-                  </div>
-                  <div>
-                    <span className="text-gray-400">Wind</span> {/* Adjusted text color */}
-                    <p className="font-normal text-gray-700">{weather.windSpeed} m/s</p> {/* Adjusted font weight and color */}
-                  </div>
-                </div>
+                <Link href="/weather" className="text-sm text-green-600 hover:text-green-700 font-medium mt-2 block">
+                  View Full Forecast
+                </Link>
               </motion.div>
             )}
           </div>

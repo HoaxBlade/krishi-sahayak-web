@@ -23,7 +23,7 @@ export class WeatherService {
     return WeatherService.instance
   }
 
-  async getCurrentWeather(latitude: number, longitude: number): Promise<WeatherData> {
+  async getWeatherByCoordinates(latitude: number, longitude: number): Promise<WeatherData> {
     try {
       const response = await axios.get(`/api/weather?lat=${latitude}&lon=${longitude}`)
       return response.data
