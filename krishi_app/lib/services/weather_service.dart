@@ -9,6 +9,7 @@ import 'config_service.dart';
 import 'cache_service.dart';
 import 'firebase_analytics_service.dart';
 import 'dart:io'; // Added for Directory.current
+import 'location_service.dart';
 
 class WeatherData {
   final int? id;
@@ -143,85 +144,10 @@ class WeatherService {
       '🔑 [WeatherService] Weather API initialized with key: ${apiKey.substring(0, 8)}...',
     );
 
-    await _checkLocationPermission();
-    await _getCurrentLocation();
+    _currentPosition = await LocationService().getCurrentLocation();
     _startAutoRefresh();
   }
 
-  // Check and request location permission
-  Future<bool> _checkLocationPermission() async {
-    debugPrint('📍 [WeatherService] Checking location permission...');
-
-    try {
-      LocationPermission permission = await Geolocator.checkPermission();
-      debugPrint('📍 [WeatherService] Current permission status: $permission');
-
-      if (permission == LocationPermission.denied) {
-        debugPrint(
-          '📍 [WeatherService] Location permission denied, requesting...',
-        );
-        permission = await Geolocator.requestPermission();
-        debugPrint(
-          '📍 [WeatherService] Permission request result: $permission',
-        );
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        debugPrint('❌ [WeatherService] Location permission permanently denied');
-        return false;
-      }
-
-      if (permission == LocationPermission.whileInUse ||
-          permission == LocationPermission.always) {
-        debugPrint('✅ [WeatherService] Location permission granted');
-        return true;
-      }
-
-      debugPrint(
-        '❌ [WeatherService] Location permission not granted: $permission',
-      );
-      return false;
-    } catch (e) {
-      debugPrint('❌ [WeatherService] Error checking location permission: $e');
-      return false;
-    }
-  }
-
-  // Get current Location
-  Future<Position?> _getCurrentLocation() async {
-    try {
-      debugPrint('📍 [WeatherService] Getting current location...');
-      _currentPosition = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 10),
-      );
-      debugPrint(
-        '✅ [WeatherService] Location obtained: ${_currentPosition!.latitude}, ${_currentPosition!.longitude}',
-      );
-      return _currentPosition;
-    } catch (e) {
-      debugPrint('❌ [WeatherService] Error getting current location: $e');
-      debugPrint(
-        '📍 [WeatherService] Using default location (New Delhi, India)',
-      );
-
-      // Fallback to a default location (New Delhi, India)
-      _currentPosition = Position(
-        latitude: 28.7041,
-        longitude: 77.1025,
-        timestamp: DateTime.now(),
-        accuracy: 0,
-        altitude: 0,
-        heading: 0,
-        speed: 0,
-        speedAccuracy: 0,
-        altitudeAccuracy: 0,
-        headingAccuracy: 0,
-      );
-
-      return _currentPosition;
-    }
-  }
 
   // Start automatic refresh timer
   void _startAutoRefresh() {
@@ -254,7 +180,7 @@ class WeatherService {
       await _ensureInitialized();
 
       if (_currentPosition == null) {
-        await _getCurrentLocation();
+        _currentPosition = await LocationService().getCurrentLocation();
         if (_currentPosition == null) {
           debugPrint(
             '❌ [WeatherService] No location available for weather fetch',
@@ -309,7 +235,7 @@ class WeatherService {
       await _ensureInitialized();
 
       if (_currentPosition == null) {
-        await _getCurrentLocation();
+        _currentPosition = await LocationService().getCurrentLocation();
         if (_currentPosition == null) {
           debugPrint(
             '❌ [WeatherService] No location available for forecast fetch',

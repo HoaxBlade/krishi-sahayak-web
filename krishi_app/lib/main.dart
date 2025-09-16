@@ -17,6 +17,7 @@ import 'services/push_notification_service.dart';
 import 'services/config_service.dart';
 import 'services/weather_service.dart';
 import 'services/ml_service.dart';
+import 'services/location_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/crop_screen.dart';
 import 'screens/weather_screen.dart';
@@ -43,6 +44,9 @@ void main() async {
 
   // Initialize configuration service first
   await ConfigService().initialize();
+
+  // Initialize Location Service
+  await LocationService().initialize();
 
   // Initialize Firebase Analytics
   await FirebaseAnalyticsService().initialize();
@@ -81,6 +85,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Krishi Sahayak',
       theme: ThemeData(
         useMaterial3: true,

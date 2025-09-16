@@ -71,7 +71,10 @@ class _HomeScreenState extends State<HomeScreen> {
     _connectivitySubscription = _connectivityService.connectionStatus.listen((
       isConnected,
     ) {
-      if (mounted) {}
+      if (mounted) {
+        // Reload data when connectivity changes, especially if it comes online
+        _loadData();
+      }
     });
   }
 

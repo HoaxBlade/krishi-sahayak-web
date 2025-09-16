@@ -102,7 +102,6 @@ class _WeatherScreenState extends State<WeatherScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('Weather'),
         actions: [
           if (!_isConnected) const Icon(Icons.wifi_off, color: Colors.red),
@@ -385,7 +384,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
             ),
             const SizedBox(height: 8),
             ..._forecast
-                .take(5)
+                .take(7)
                 .map(
                   (weather) => ListTile(
                     leading: const Icon(Icons.wb_sunny),
