@@ -1,0 +1,36 @@
+graph TD
+    subgraph User Interfaces
+        A[krishi_app - Flutter Mobile App]
+        B[krishi_web - Next.js Web App]
+    end
+
+    subgraph Backend Services
+        C[krishi-model - ML Inference Server]
+        D[External Weather API]
+        E[Firebase - Analytics & Backend]
+        F[Supabase - Database]
+    end
+
+    A -- HTTP/HTTPS (Image Upload, Status Request) --> C
+    C -- JSON (Prediction Results, Status) --> A
+
+    B -- HTTP/HTTPS (Status Request, Image Upload) --> C
+    C -- JSON (Prediction Results, Status) --> B
+
+    A -- HTTP/HTTPS (Location Data) --> D
+    D -- JSON (Weather Data) --> A
+
+    B -- HTTP/HTTPS (Location Data) --> D
+    D -- JSON (Weather Data) --> B
+
+    A -- Firebase SDK (Analytics Events) --> E
+    E -- Data --> A
+
+    B -- HTTP/HTTPS (Data Operations) --> F
+    F -- Data --> B
+
+    A -- Local Storage (SQLite, Cache) --> A
+    B -- Local Storage (Browser Cache) --> B
+
+    C -- Model Files, Labels --> C
+    C -- Training Data --> C
