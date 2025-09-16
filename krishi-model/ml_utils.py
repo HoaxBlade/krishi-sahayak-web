@@ -7,6 +7,7 @@ from collections import defaultdict, deque
 import numpy as np # type: ignore
 from PIL import Image # type: ignore
 import tensorflow as tf # type: ignore
+import tensorflow.lite as tflite # type: ignore
 import logging
 import psutil
 
@@ -165,23 +166,42 @@ def preprocess_image(image_data):
 def load_ml_model():
     """Load the ML model from common paths and run warm-up inference."""
     model = None
+    interpreter = None
+    is_tflite = False
+
     for model_path in MODEL_PATHS:
         if os.path.exists(model_path):
             try:
                 logger.info(f"Attempting to load model from: {model_path}")
-                model = tf.keras.models.load_model(model_path)
-                # Warm-up for lower p95 latency
-                _ = model.predict(np.zeros((1, IMAGE_SIZE[0], IMAGE_SIZE[1], 3), dtype=np.float32), verbose=0)
-                logger.info(f"✅ Model loaded and warmed from {model_path}")
-                return model
+                if model_path.endswith('.tflite'):
+                    interpreter = tflite.Interpreter(model_path=model_path)
+                    interpreter.allocate_tensors()
+                    is_tflite = True
+                    logger.info(f"✅ TensorFlow Lite model loaded from {model_path}")
+
+                    # Warm-up for lower p95 latency
+                    input_details = interpreter.get_input_details()
+                    output_details = interpreter.get_output_details()
+                    input_shape = input_details[0]['shape']
+                    interpreter.set_tensor(input_details[0]['index'], np.zeros(input_shape, dtype=np.float32))
+                    interpreter.invoke()
+                    _ = interpreter.get_tensor(output_details[0]['index'])
+                    logger.info(f"✅ TensorFlow Lite model warmed up from {model_path}")
+                    return interpreter, is_tflite
+                else:
+                    model = tf.keras.models.load_model(model_path)
+                    # Warm-up for lower p95 latency
+                    _ = model.predict(np.zeros((1, IMAGE_SIZE[0], IMAGE_SIZE[1], 3), dtype=np.float32), verbose=0)
+                    logger.info(f"✅ Keras model loaded and warmed from {model_path}")
+                    return model, is_tflite
             except Exception as e:
                 logger.error(f"Error loading model from {model_path}: {e}")
                 continue
     logger.error("❌ No valid model file found in known paths")
-    return None
+    return None, False
 
-def analyze_crop_prediction(model, image_data, labels):
-    """Analyze crop health using the loaded model"""
+def analyze_crop_prediction(model_or_interpreter, image_data, labels, is_tflite_model):
+    """Analyze crop health using the loaded model or TFLite interpreter"""
     try:
         logger.info("Starting crop analysis...")
         
@@ -191,8 +211,31 @@ def analyze_crop_prediction(model, image_data, labels):
         
         # Make prediction
         logger.info("Making model prediction...")
-        predictions = model.predict(processed_image, verbose=0)
-        logger.info(f"Model prediction completed: shape={predictions.shape}")
+        if is_tflite_model:
+            interpreter = model_or_interpreter
+            input_details = interpreter.get_input_details()
+            output_details = interpreter.get_output_details()
+
+            # Ensure input tensor has the correct type and shape
+            input_shape = input_details[0]['shape']
+            input_dtype = input_details[0]['dtype']
+            
+            # Resize processed_image to match input_shape if necessary (e.g., batch size)
+            # Assuming processed_image already has batch dimension (1, H, W, C)
+            if processed_image.shape != tuple(input_shape):
+                # This case should ideally not happen if preprocess_image is correct
+                # but as a safeguard, resize if shapes mismatch
+                logger.warning(f"Input image shape {processed_image.shape} does not match TFLite input shape {input_shape}. Attempting to reshape.")
+                processed_image = np.resize(processed_image, input_shape)
+
+            interpreter.set_tensor(input_details[0]['index'], processed_image.astype(input_dtype))
+            interpreter.invoke()
+            predictions = interpreter.get_tensor(output_details[0]['index'])
+            logger.info(f"TFLite model prediction completed: shape={predictions.shape}")
+        else:
+            model = model_or_interpreter
+            predictions = model.predict(processed_image, verbose=0)
+            logger.info(f"Keras model prediction completed: shape={predictions.shape}")
         
         # Get the predicted class
         predicted_class = np.argmax(predictions[0])

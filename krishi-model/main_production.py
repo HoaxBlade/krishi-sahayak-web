@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 model = None
 labels = []
 model_loaded = False
+is_tflite_model = False # New flag to indicate if the loaded model is TFLite
 start_time = time.time()
 
 # Initialize Flask app
@@ -47,13 +48,15 @@ ml_queue_manager = MLQueueManager()
 
 def initialize_production_model_and_labels():
     """Initialize model and labels for production server."""
-    global model, labels, model_loaded
+    global model, labels, model_loaded, is_tflite_model
     logger.info("=== PRODUCTION MODEL LOADING PROCESS ===")
     
     labels = load_labels()
     logger.info(f"Loaded {len(labels)} labels: {labels}")
     
-    model = load_ml_model()
+    loaded_model, tflite_flag = load_ml_model()
+    model = loaded_model
+    is_tflite_model = tflite_flag
     model_loaded = (model is not None)
     
     if not model_loaded:
@@ -203,8 +206,8 @@ def analyze_crop_endpoint():
                 'status': 'error'
             }), 400
         
-        # Use the shared analysis function
-        result = analyze_crop_prediction(model, image_data_input, labels)
+        # Use the shared analysis function, passing the tflite flag
+        result = analyze_crop_prediction(model, image_data_input, labels, is_tflite_model)
         
         processing_time = time.time() - start_time_req
         
