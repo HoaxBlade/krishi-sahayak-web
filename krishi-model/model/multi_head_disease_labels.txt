@@ -1,0 +1,13 @@
+Bacterial Blight
+Brown_Rust
+Brown_Spot
+Common_Rust
+Early_Blight
+Gray_Leaf_Spot
+Healthy
+Late_Blight
+Leaf_Blast
+Neck_Blast
+Northern_Leaf_Blight
+Red Rot
+Yellow_Rust

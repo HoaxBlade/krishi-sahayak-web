@@ -33,3 +33,41 @@ def build_multitask_model(num_classes):
 
     model = Model(inputs=base.input, outputs={'class_output': class_output, 'reg_output': reg_output})
     return model
+
+def build_multi_head_model(num_crop_types, num_disease_classes, input_shape=(224, 224, 3)):
+    """
+    Builds a MobileNetV2-based model with two output heads:
+    one for crop type classification and one for disease/health status classification.
+    """
+    base_model = MobileNetV2(input_shape=input_shape,
+                             include_top=False,
+                             weights='imagenet')
+
+    # Freeze the base model initially
+    for layer in base_model.layers:
+        layer.trainable = False
+        
+    x = base_model.output
+    x = GlobalAveragePooling2D()(x)
+    x = BatchNormalization()(x)
+    x = Dense(256, activation='relu')(x)
+    x = Dropout(0.5)(x)
+
+    # Crop Type Classification Head
+    crop_type_output = Dense(
+        num_crop_types,
+        activation='softmax',
+        name='crop_type_output',
+        kernel_regularizer=l2(0.001)
+    )(x)
+
+    # Disease/Health Status Classification Head
+    disease_output = Dense(
+        num_disease_classes,
+        activation='softmax',
+        name='disease_output',
+        kernel_regularizer=l2(0.001)
+    )(x)
+
+    model = Model(inputs=base_model.input, outputs={'crop_type_output': crop_type_output, 'disease_output': disease_output})
+    return model

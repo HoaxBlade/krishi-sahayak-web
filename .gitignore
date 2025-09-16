@@ -1,4 +1,6 @@
 **/*Data
+**/*SplitData_CropType
+**/*SplitData_Disease_Specific
 **/*.zip
 **/*venv
 **/__pycache__
