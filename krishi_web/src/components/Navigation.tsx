@@ -39,7 +39,7 @@ export default function Navigation() {
               className="rounded-full object-cover"
             />
             <div className="flex flex-col items-start">
-              <span className="text-2xl font-bold text-gray-900">Krishi Sahayak</span>
+              <span className="text-xl font-bold text-gray-600">Krishi Sahayak</span>
               <div className="flex items-center space-x-1">
                 <span className="text-sm text-gray-500">Powered by:</span>
                 <Image
@@ -59,10 +59,18 @@ export default function Navigation() {
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center space-x-2 text-gray-600 hover:text-green-600 transition-colors px-3 py-2 rounded-md ${ /* Added padding and rounded corners */
-                  pathname === item.href ? 'text-green-600 font-semibold bg-green-50' : '' /* Added background for active */
+                className={`relative flex items-center space-x-2 text-gray-600 hover:text-green-600 transition-colors px-3 py-2 rounded-md ${
+                  pathname === item.href ? 'text-green-600 font-semibold bg-green-50' : ''
                 }`}
               >
+                {pathname === item.href && (
+                  <motion.span
+                    layoutId="underline"
+                    className="absolute bottom-0 left-0 w-full h-0.5 bg-green-600"
+                    initial={false}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  />
+                )}
                 <item.icon className="w-4 h-4" /> {/* Slightly smaller icon */}
                 <span className="text-sm">{item.name}</span> {/* Slightly smaller text */}
               </Link>

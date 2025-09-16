@@ -1,0 +1,13 @@
+data_params:
+  raw_data_path: "data/raw_data.txt"
+  processed_data_path: "data/processed"
+  english_vocab_path: "data/english_vocab.pkl"
+  hindi_vocab_path: "data/hindi_vocab.pkl"
+  max_sequence_length: 128
+  vocab_size: 10000
+  subset_size: 10000
+model_params:
+  embedding_dim: 256
+  latent_dim: 512
+  epochs: 10
+  batch_size: 64

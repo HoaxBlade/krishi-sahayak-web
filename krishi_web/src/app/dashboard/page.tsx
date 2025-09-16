@@ -141,7 +141,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10"> {/* Adjusted padding */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-7"> {/* Adjusted margin */}
           <h1 className="text-3xl font-bold text-gray-900 mb-3"> {/* Adjusted text size and margin */}
             Farming Dashboard
@@ -156,10 +156,11 @@ export default function DashboardPage() {
           {stats.map((stat, index) => (
             <motion.div
               key={stat.title}
-              className="bg-white rounded-xl shadow-subtle p-5" /* Refined card style */
+              className="bg-white rounded-xl shadow-subtle p-5"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
+              whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.08)" }}
+              transition={{ duration: 0.5, delay: index * 0.1, type: "spring", stiffness: 100 }}
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -200,34 +201,39 @@ export default function DashboardPage() {
             
             <div className="space-y-3"> {/* Adjusted spacing */}
               {recentAnalyses.map((analysis) => (
-                <div key={analysis.id} className="flex items-center justify-between p-3.5 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"> {/* Refined list item style */}
+                <motion.div
+                  key={analysis.id}
+                  className="flex items-center justify-between p-3.5 border border-gray-100 rounded-lg"
+                  whileHover={{ scale: 1.01, backgroundColor: "#f0f0f0", boxShadow: "0 5px 10px rgba(0, 0, 0, 0.05)" }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                >
                   <div className="flex items-center space-x-4">
-                    <div className={`w-2.5 h-2.5 rounded-full ${ /* Adjusted size */
+                    <div className={`w-2.5 h-2.5 rounded-full ${
                       analysis.status === 'Healthy' ? 'bg-green-500' : 'bg-red-500'
                     }`} />
                     <div>
-                      <p className="font-medium text-gray-800">{analysis.crop}</p> {/* Adjusted text color */}
-                      <p className="text-xs text-gray-500">{analysis.location}</p> {/* Adjusted text size and color */}
+                      <p className="font-medium text-gray-800">{analysis.crop}</p>
+                      <p className="text-xs text-gray-500">{analysis.location}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium text-gray-800">{analysis.status}</p> {/* Adjusted text color */}
-                    <p className="text-xs text-gray-500">{analysis.confidence}% confidence</p> {/* Adjusted text size and color */}
+                    <p className="font-medium text-gray-800">{analysis.status}</p>
+                    <p className="text-xs text-gray-500">{analysis.confidence}% confidence</p>
                   </div>
-                  <div className="text-xs text-gray-400"> {/* Adjusted text size and color */}
+                  <div className="text-xs text-gray-400">
                     {analysis.date}
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
             
             <div className="mt-5"> {/* Adjusted margin */}
               <Link
                 href="/analyze"
-                className="inline-flex items-center text-green-600 hover:text-green-700 font-semibold text-sm" /* Adjusted font weight and size */
+                className="inline-flex items-center text-green-600 hover:text-green-700 font-semibold text-sm transition-all hover:scale-[1.02]"
               >
                 Analyze New Crop
-                <BarChart3 className="w-3.5 h-3.5 ml-2" /> {/* Adjusted icon size */}
+                <BarChart3 className="w-3.5 h-3.5 ml-2" />
               </Link>
             </div>
           </motion.div>
@@ -236,10 +242,11 @@ export default function DashboardPage() {
           <div className="space-y-5"> {/* Adjusted spacing */}
             {/* System Status */}
             <motion.div
-              className="bg-white rounded-xl shadow-subtle p-5" /* Refined card style */
+              className="bg-white rounded-xl shadow-subtle p-5"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
+              whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.08)" }}
+              transition={{ duration: 0.5, type: "spring", stiffness: 100 }}
             >
               <h3 className="text-lg font-semibold text-gray-900 mb-3">System Status</h3>
               <div className="space-y-3">
@@ -257,7 +264,7 @@ export default function DashboardPage() {
                     <span className="text-xs font-medium">{weather ? 'Connected' : 'Disconnected'}</span>
                   </div>
                 </div>
-                <Link href="/" className="text-sm text-green-600 hover:text-green-700 font-medium mt-2 block">
+                <Link href="/" className="text-sm text-green-600 hover:text-green-700 font-medium mt-2 block transition-all hover:scale-[1.02]">
                   View Full Status
                 </Link>
               </div>
@@ -266,10 +273,11 @@ export default function DashboardPage() {
             {/* Weather Summary */}
             {weather && (
               <motion.div
-                className="bg-white rounded-xl shadow-subtle p-5" /* Refined card style */
+                className="bg-white rounded-xl shadow-subtle p-5"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
+                whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.08)" }}
+                transition={{ duration: 0.5, delay: 0.1, type: "spring", stiffness: 100 }}
               >
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Current Weather</h3>
                 <div className="text-center mb-3">
@@ -277,7 +285,7 @@ export default function DashboardPage() {
                   <p className="text-gray-500 capitalize text-sm">{weather.description}</p>
                   <p className="text-xs text-gray-400">{weather.location}</p>
                 </div>
-                <Link href="/weather" className="text-sm text-green-600 hover:text-green-700 font-medium mt-2 block">
+                <Link href="/weather" className="text-sm text-green-600 hover:text-green-700 font-medium mt-2 block transition-all hover:scale-[1.02]">
                   View Full Forecast
                 </Link>
               </motion.div>

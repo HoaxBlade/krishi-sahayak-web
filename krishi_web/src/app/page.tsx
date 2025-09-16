@@ -101,17 +101,17 @@ export default function HomePage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-100 via-blue-50 to-white">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Animated gradient waves */}
+      <motion.div
+        className="absolute inset-0 bg-gradient-to-br from-green-200 via-blue-100 to-white z-0"
+        animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%", "50% 0%", "0% 50%"] }}
+        transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+        style={{ backgroundSize: "200% 200%" }}
+      />
       
       {/* Hero with animated background */}
-      <section className="relative py-24 overflow-hidden text-center"> {/* Adjusted padding */}
-        {/* Animated gradient waves */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-br from-green-200 via-transparent to-blue-100"
-          animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
-          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-          style={{ backgroundSize: "200% 200%" }}
-        />
+      <section className="relative py-24 overflow-hidden text-center z-10">
         <div className="relative">
           <motion.h1
             className="text-5xl md:text-6xl font-extrabold text-gray-900 mb-8 leading-tight" /* Adjusted text size and margin */
@@ -125,24 +125,35 @@ export default function HomePage() {
             Revolutionize your farming with AI-powered crop analysis, weather insights, and smart tools.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-gradient-to-r from-green-600 to-green-700 text-white px-7 py-3.5 rounded-xl text-base font-medium hover:shadow-lg hover:scale-[1.02] transition-all flex items-center justify-center shadow-md"> {/* Refined button style */}
+            <motion.button
+              className="bg-gradient-to-r from-green-600 to-green-700 text-white px-7 py-3.5 rounded-xl text-base font-medium flex items-center justify-center shadow-md"
+              whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.1)" }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
               Analyze Your Crops <ArrowRight className="ml-2 w-5 h-5" />
-            </button>
-            <button className="border border-green-600 text-green-700 px-7 py-3.5 rounded-xl text-base font-medium hover:bg-green-50 hover:scale-[1.02] transition-all shadow-sm hover:shadow-md"> {/* Refined button style */}
+            </motion.button>
+            <motion.button
+              className="border border-green-600 text-green-700 px-7 py-3.5 rounded-xl text-base font-medium shadow-sm"
+              whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.08)" }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
               Learn More
-            </button>
+            </motion.button>
           </div>
         </div>
       </section>
 
       {/* Weather */}
       {weather && (
-        <section className="py-10"> {/* Adjusted padding */}
+        <section className="relative py-12 z-10">
           <motion.div
-            className="backdrop-blur-xl bg-white/60 border border-gray-100 rounded-2xl shadow-subtle p-7 max-w-sm mx-auto hover:scale-[1.02] transition-transform" /* Refined card style */
+            className="backdrop-blur-xl bg-white/60 border border-gray-100 rounded-2xl shadow-subtle p-7 max-w-sm mx-auto"
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.08)" }}
+            transition={{ duration: 0.8, type: "spring", stiffness: 100 }}
           >
             <div className="flex items-center justify-between mb-5"> {/* Adjusted margin */}
               <div>
@@ -164,22 +175,20 @@ export default function HomePage() {
       )}
 
       {/* System Status Section */}
-      <section className="py-16 bg-gray-50"> {/* Adjusted padding */}
+      <section className="relative py-12 bg-gray-50 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10"> {/* Adjusted margin */}
-            <h2 className="text-3xl font-bold text-gray-900 mb-3">System Status</h2> {/* Adjusted text size and margin */}
-            <p className="text-lg text-gray-600">Real-time monitoring of our AI services</p> {/* Adjusted text size */}
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">System Status</h2>
+            <p className="text-lg text-gray-600">Real-time monitoring of our AI services</p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-7"> {/* Adjusted gap */}
-            {/* ML Server */}
+          <div className="grid md:grid-cols-3 gap-7">
             <StatusCard
               title="ML Server"
               status={mlStatus?.healthy ? "Healthy" : "Unhealthy"}
               extra={`Response Time: ${mlStatus?.responseTime || 0}ms`}
               healthy={!!mlStatus?.healthy}
             />
-            {/* Weather API */}
             <StatusCard
               title="Weather API"
               status={weather ? "Connected" : "Disconnected"}
@@ -187,7 +196,6 @@ export default function HomePage() {
               healthy={!!weather}
               delay={0.1}
             />
-            {/* Database */}
             <StatusCard
               title="Database"
               status="Connected"
@@ -200,24 +208,25 @@ export default function HomePage() {
       </section>
 
       {/* Features */}
-      <section className="py-20 bg-gradient-to-b from-white to-green-50"> {/* Adjusted padding */}
+      <section className="relative py-12 bg-gradient-to-b from-white to-green-50 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900 mb-3">Powerful Features for Modern Farming</h2> {/* Adjusted text size and margin */}
-          <p className="text-base text-gray-600 mb-14">Everything you need to optimize your agricultural operations</p> {/* Adjusted text size and margin */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8"> {/* Adjusted gap */}
+          <h2 className="text-3xl font-extrabold text-gray-900 mb-3">Powerful Features for Modern Farming</h2>
+          <p className="text-base text-gray-600 mb-14">Everything you need to optimize your agricultural operations</p>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((f, i) => (
               <motion.div
                 key={i}
-                className="text-center p-6 rounded-xl bg-white/70 backdrop-blur-md shadow-subtle hover:shadow-lg hover:scale-[1.02] transition-all" /* Refined card style and hover effect */
+                className="text-center p-6 rounded-xl bg-white/70 backdrop-blur-md shadow-subtle"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.15 }}
+                whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.08)" }}
+                transition={{ delay: i * 0.15, type: "spring", stiffness: 100 }}
               >
-                <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-green-100 to-blue-100 text-green-600 rounded-full mb-3 shadow-inner"> {/* Adjusted size and margin */}
+                <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-green-100 to-blue-100 text-green-600 rounded-full mb-3 shadow-inner">
                   {f.icon}
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-1.5">{f.title}</h3> {/* Adjusted text size and weight */}
-                <p className="text-gray-600 text-sm">{f.desc}</p> {/* Adjusted text size */}
+                <h3 className="text-lg font-medium text-gray-900 mb-1.5">{f.title}</h3>
+                <p className="text-gray-600 text-sm">{f.desc}</p>
               </motion.div>
             ))}
           </div>
