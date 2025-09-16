@@ -53,8 +53,8 @@ export default function SignupForm({ onSuccess, onSwitchToLogin }: SignupFormPro
       })
       
       onSuccess?.()
-    } catch (err: any) {
-      setError(err.message || 'Sign up failed. Please try again.')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Sign up failed. Please try again.')
     } finally {
       setLoading(false)
     }

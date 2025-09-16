@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, User } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -128,7 +128,7 @@ export class AuthService {
   }
 
   // Listen to auth state changes
-  onAuthStateChange(callback: (user: any) => void) {
+  onAuthStateChange(callback: (user: User | null) => void) {
     return supabase.auth.onAuthStateChange((event, session) => {
       callback(session?.user ?? null)
     })
@@ -180,7 +180,7 @@ export class AuthService {
   // Health check
   async checkConnection(): Promise<boolean> {
     try {
-      const { data, error } = await supabase.from('crops').select('id').limit(1)
+      const { error } = await supabase.from('crops').select('id').limit(1)
       return !error
     } catch (error) {
       console.error('❌ [AuthService] Connection check failed:', error)

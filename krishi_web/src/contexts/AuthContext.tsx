@@ -9,9 +9,9 @@ interface AuthContextType {
   loading: boolean
   isAuthenticated: boolean
   signIn: (email: string, password: string) => Promise<void>
-  signUp: (email: string, password: string, metadata?: any) => Promise<void>
+  signUp: (email: string, password: string, metadata?: { full_name?: string; phone?: string }) => Promise<void>
   signOut: () => Promise<void>
-  updateProfile: (updates: any) => Promise<void>
+  updateProfile: (updates: { full_name?: string; phone?: string }) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -50,7 +50,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     getInitialSession()
 
     // Listen for auth state changes
-    const { data: { subscription } } = authService.onAuthStateChange((user) => {
+    const { data: { subscription } } = authService.onAuthStateChange((user: User | null) => {
       setUser(user)
       setLoading(false)
     })
@@ -65,7 +65,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     await authService.signIn({ email, password })
   }
 
-  const signUp = async (email: string, password: string, metadata?: any) => {
+  const signUp = async (email: string, password: string, metadata?: { full_name?: string; phone?: string }) => {
     const authService = AuthService.getInstance()
     await authService.signUp({ email, password, metadata })
   }
@@ -75,7 +75,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     await authService.signOut()
   }
 
-  const updateProfile = async (updates: any) => {
+  const updateProfile = async (updates: { full_name?: string; phone?: string }) => {
     const authService = AuthService.getInstance()
     await authService.updateProfile(updates)
   }
