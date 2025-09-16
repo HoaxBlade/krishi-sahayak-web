@@ -9,11 +9,9 @@ import {
   Leaf,
   AlertTriangle,
   CheckCircle,
-  Loader2,
-  ArrowLeft
+  Loader2
 } from 'lucide-react'
 import { MLService, MLAnalysisResult } from '@/lib/mlService'
-import Link from 'next/link'
 
 type DisplayLanguage = 'hindi' | 'english';
 

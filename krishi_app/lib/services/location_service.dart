@@ -1,3 +1,5 @@
+// ignore_for_file: unused_import
+
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';

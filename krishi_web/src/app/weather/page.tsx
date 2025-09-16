@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Cloud, 
@@ -14,8 +14,6 @@ import {
   AlertTriangle
 } from 'lucide-react'
 import { WeatherService, WeatherData } from '@/lib/weatherService'
-import Link from 'next/link'
-import { ArrowLeft, Leaf } from 'lucide-react'
 
 export default function WeatherPage() {
   const [weather, setWeather] = useState<WeatherData | null>(null)
@@ -23,6 +21,21 @@ export default function WeatherPage() {
   const [error, setError] = useState<string | null>(null)
   const [location, setLocation] = useState('Delhi') // Default to Delhi
   const [customLocation, setCustomLocation] = useState('')
+
+  const fetchWeatherByCity = useCallback(async (city: string) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const weatherService = WeatherService.getInstance()
+      const data = await weatherService.getWeatherByCity(city)
+      setWeather(data)
+    } catch (err) {
+      setError('Failed to fetch weather data. Please try again.')
+      console.error('Weather fetch error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     const initializeLocation = async () => {
@@ -40,7 +53,7 @@ export default function WeatherPage() {
       }
     };
     initializeLocation();
-  }, []); // Run only once on component mount
+  }, [fetchWeatherByCity, location]); // Added dependencies
 
   useEffect(() => {
     // This useEffect will handle subsequent city changes from quick select or search input
@@ -48,23 +61,7 @@ export default function WeatherPage() {
     if (location && weather && weather.location !== location) {
       fetchWeatherByCity(location);
     }
-  }, [location, weather]); // Added weather to dependency array to react to its changes
-
-
-  const fetchWeatherByCity = async (city: string) => {
-    setLoading(true)
-    setError(null)
-    try {
-      const weatherService = WeatherService.getInstance()
-      const data = await weatherService.getWeatherByCity(city)
-      setWeather(data)
-    } catch (err) {
-      setError('Failed to fetch weather data. Please try again.')
-      console.error('Weather fetch error:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [location, weather, fetchWeatherByCity]); // Added fetchWeatherByCity to dependency array
 
   const fetchWeatherByCoordinates = async (latitude: number, longitude: number) => {
     setLoading(true)

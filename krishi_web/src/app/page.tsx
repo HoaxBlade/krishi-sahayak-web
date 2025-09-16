@@ -1,13 +1,15 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { 
-  Leaf, Camera, BarChart3, Cloud, Shield, ArrowRight, Wind, Droplet, Thermometer, Umbrella, CheckCircle 
+  Leaf, ShoppingCart, BarChart3, Cloud, Shield, ArrowRight, Wind, Droplet, Thermometer, Umbrella, CheckCircle 
 } from "lucide-react"
 import { MLService } from "@/lib/mlService"
 import { WeatherService } from "@/lib/weatherService"
+import { useAuth } from "@/contexts/AuthContext"
 import React from "react" 
 
 type MLStatus = {
@@ -28,6 +30,7 @@ type WeatherData = {
 }
 
 export default function HomePage() {
+  const { isAuthenticated } = useAuth()
   const [mlStatus, setMlStatus] = useState<MLStatus | null>(null)
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -94,7 +97,7 @@ export default function HomePage() {
   }, [])
 
   const features = [
-    { icon: <Camera />, title: "AI-Powered Crop Analysis", desc: "Upload crop images for instant health analysis using advanced machine learning" },
+    { icon: <ShoppingCart />, title: "Agricultural Marketplace", desc: "Buy and sell crops, seeds, fertilizers, and farming equipment" },
     { icon: <Cloud />, title: "Real-time Weather Data", desc: "Get accurate forecasts and smart farming recommendations" },
     { icon: <BarChart3 />, title: "Crop Management", desc: "Track your crops, planting dates, and harvest schedules" },
     { icon: <Shield />, title: "Disease Detection", desc: "Early alerts for plant diseases and pest infestations" }
@@ -125,14 +128,15 @@ export default function HomePage() {
             Revolutionize your farming with AI-powered crop analysis, weather insights, and smart tools.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <motion.button
+            <motion.a
+              href="/marketplace"
               className="bg-gradient-to-r from-green-600 to-green-700 text-white px-7 py-3.5 rounded-xl text-base font-medium flex items-center justify-center shadow-md"
               whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.1)" }}
               whileTap={{ scale: 0.98 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
-              Analyze Your Crops <ArrowRight className="ml-2 w-5 h-5" />
-            </motion.button>
+              Explore Marketplace <ArrowRight className="ml-2 w-5 h-5" />
+            </motion.a>
             <motion.button
               className="border border-green-600 text-green-700 px-7 py-3.5 rounded-xl text-base font-medium shadow-sm"
               whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.08)" }}

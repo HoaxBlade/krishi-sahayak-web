@@ -10,13 +10,17 @@ import {
   Camera,
   Cloud,
   BarChart3,
-  Home
+  Home,
+  LogIn,
+  User
 } from 'lucide-react'
 import Image from 'next/image'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname() // Initialize usePathname
+  const { user, isAuthenticated } = useAuth()
 
   const navItems = [
     { name: 'Home', href: '/', icon: Home },
@@ -76,9 +80,27 @@ export default function Navigation() {
               </Link>
             ))}
             
-            <button className="bg-green-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-green-700 transition-all shadow-md hover:shadow-lg"> {/* Refined button style */}
-              Get Started
-            </button>
+            {isAuthenticated ? (
+              <div className="flex items-center space-x-3">
+                <Link
+                  href="/profile"
+                  className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors px-3 py-2 rounded-lg hover:bg-gray-100"
+                >
+                  <User className="w-4 h-4" />
+                  <span className="text-sm">
+                    Hi {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
+                  </span>
+                </Link>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="bg-green-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-green-700 transition-all shadow-md hover:shadow-lg flex items-center space-x-2"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>Get Started</span>
+              </Link>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -114,9 +136,29 @@ export default function Navigation() {
                 </Link>
               ))}
               <div className="px-4 pt-2">
-                <button className="w-full bg-green-600 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-green-700 transition-colors shadow-md"> {/* Refined button style */}
-                  Get Started
-                </button>
+                {isAuthenticated ? (
+                  <div className="space-y-2">
+                    <Link
+                      href="/profile"
+                      className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors px-2 py-2 rounded-lg hover:bg-gray-100"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <User className="w-4 h-4" />
+                      <span className="text-sm">
+                        Hi {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
+                      </span>
+                    </Link>
+                  </div>
+                ) : (
+                  <Link
+                    href="/login"
+                    className="w-full bg-green-600 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-green-700 transition-colors shadow-md flex items-center justify-center space-x-2"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <LogIn className="w-4 h-4" />
+                    <span>Get Started</span>
+                  </Link>
+                )}
               </div>
             </div>
           </motion.div>
