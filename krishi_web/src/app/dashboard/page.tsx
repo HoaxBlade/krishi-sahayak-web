@@ -7,14 +7,17 @@ import {
   Activity, 
   Leaf,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  User
 } from 'lucide-react'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
 import { MLService } from '@/lib/mlService'
 import { WeatherService } from '@/lib/weatherService'
+import ProtectedRoute from '@/components/ProtectedRoute'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function DashboardPage() {
+  const { user } = useAuth()
   const [mlStatus, setMlStatus] = useState<{
     healthy: boolean
     responseTime: number
@@ -140,15 +143,29 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-7"> {/* Adjusted margin */}
-          <h1 className="text-3xl font-bold text-gray-900 mb-3"> {/* Adjusted text size and margin */}
-            Farming Dashboard
-          </h1>
-          <p className="text-lg text-gray-600"> {/* Adjusted text size */}
-            Monitor your agricultural operations and AI insights
-          </p>
+          <div className="flex justify-between items-start mb-3">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2"> {/* Adjusted text size and margin */}
+                Farming Dashboard
+              </h1>
+              <p className="text-lg text-gray-600"> {/* Adjusted text size */}
+                Monitor your agricultural operations and AI insights
+              </p>
+            </div>
+            <Link
+              href="/profile"
+              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors px-3 py-2 rounded-lg hover:bg-gray-100"
+            >
+              <User className="w-5 h-5" />
+              <span className="text-sm">
+                Hi {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
+              </span>
+            </Link>
+          </div>
         </div>
 
         {/* Stats Grid */}
@@ -294,6 +311,7 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+    </ProtectedRoute>
   )
 }
 
