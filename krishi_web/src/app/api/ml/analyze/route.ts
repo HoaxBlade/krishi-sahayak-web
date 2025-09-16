@@ -4,17 +4,11 @@ import axios from 'axios';
 const ML_SERVER_URL = process.env.NEXT_PUBLIC_ML_SERVER_URL || 'http://35.222.33.77';
 
 async function convertFileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => {
-      const result = reader.result as string;
-      // Remove data:image/jpeg;base64, prefix
-      const base64 = result.split(',')[1];
-      resolve(base64);
-    };
-    reader.onerror = error => reject(error);
-  });
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  const base64 = buffer.toString('base64');
+  const mimeType = file.type;
+  return `data:${mimeType};base64,${base64}`;
 }
 
 export async function POST(request: Request) {
@@ -30,7 +24,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No image file provided' }, { status: 400 });
     }
 
-    const base64Image = await convertFileToBase64(imageFile);
+    const base64ImageWithPrefix = await convertFileToBase64(imageFile);
+    const base64Image = base64ImageWithPrefix.split(',')[1];
 
     const mlResponse = await axios.post(`${ML_SERVER_URL}/analyze_crop`, {
       image: base64Image,
@@ -38,7 +33,7 @@ export async function POST(request: Request) {
       headers: {
         'Content-Type': 'application/json',
       },
-      timeout: 30000,
+      timeout: 90000,
     });
 
     return NextResponse.json(mlResponse.data);
