@@ -10,11 +10,10 @@ MAX_FILE_SIZE = int(os.getenv('MAX_FILE_SIZE', '10485760'))  # 10MB
 
 # Model and Label Paths
 MODEL_PATHS = [
-    "model/mobilenetv2_quant.tflite", # Prioritize quantized model
     "saved_models/best_modelV1.h5",
+    "model/best_model.h5",
     "notebooks/model/best_model.h5",
     "notebooks/model/mobilenetv2_model.h5",
-    "model/best_model.h5",
     "model/mobilenetv2_model.h5"
 ]
 
