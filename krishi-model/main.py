@@ -5,10 +5,11 @@ from flask import Flask, request, jsonify # type: ignore
 from flask_cors import CORS # type: ignore
 from werkzeug.exceptions import RequestEntityTooLarge # type: ignore
 from PIL import Image # type: ignore
+from transformers import pipeline # type: ignore
 
 # Import utilities from ml_utils and config
 import ml_utils
-from ml_utils import load_labels, preprocess_image, analyze_crop_prediction, load_ml_model, RateLimiter, SystemMonitor, MLQueueManager
+from ml_utils import load_labels, preprocess_image, analyze_crop_prediction, load_ml_model, RateLimiter, SystemMonitor, MLQueueManager, get_gemini_crop_analysis
 from config import RATE_LIMIT_REQUESTS, RATE_LIMIT_WINDOW, FLASK_PORT, FLASK_HOST, MEMORY_HEALTH_THRESHOLD, CPU_HEALTH_THRESHOLD, MAX_FILE_SIZE
 
 # Import existing training utilities
@@ -47,11 +48,28 @@ ml_queue_manager = MLQueueManager()
 model = None
 labels = []
 
+# Initialize the translation pipeline globally
+translator_pipeline = pipeline("translation", model="Helsinki-NLP/opus-mt-en-hi")
+
 # Record start time
 start_time = time.time()
 
+# --- Translation Function ---
+def translate_text(text: str, target_language: str = 'hi') -> str:
+    """
+    Translates the input English text to the target language (default: Hindi).
+    """
+    if target_language == 'hi':
+        result = translator_pipeline(text)
+        hindi_translation = result[0]['translation_text']
+        return hindi_translation
+    else:
+        # For now, only Hindi is supported. Can be extended later.
+        logger.warning(f"Translation to {target_language} is not supported yet. Returning original text.")
+        return text
+
 @app.route('/analyze_crop', methods=['POST'])
-def analyze_crop_endpoint():
+async def analyze_crop_endpoint():
     """Endpoint to analyze crop health from image"""
     global model, labels
     try:
@@ -114,8 +132,19 @@ def analyze_crop_endpoint():
             }), 500
         
         with ml_queue_manager.processing_lock:
-            result = analyze_crop_prediction(model, image_data, labels)
+            model_or_interpreter, is_tflite_model = model # Unpack the model and its type
+            result = analyze_crop_prediction(model_or_interpreter, image_data, labels, is_tflite_model)
             logger.info("=== CROP ANALYSIS COMPLETED ===")
+            
+            # Fetch Gemini analysis
+            disease_label = result.get('crop_type', 'Unknown')
+            gemini_analysis_english = await get_gemini_crop_analysis(disease_label)
+            
+            # Translate Gemini analysis to Hindi
+            gemini_analysis_hindi = translate_text(gemini_analysis_english, 'hi')
+            
+            result['gemini_analysis_english'] = gemini_analysis_english
+            result['gemini_analysis_hindi'] = gemini_analysis_hindi
             
             result['system_info'] = {
                 'memory_usage': system_monitor.get_memory_usage()['used_percent'],

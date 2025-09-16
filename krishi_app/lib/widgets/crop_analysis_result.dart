@@ -1,34 +1,65 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class CropAnalysisResult extends StatelessWidget {
+class CropAnalysisResult extends StatefulWidget {
   final Map<String, dynamic> result;
 
   const CropAnalysisResult({super.key, required this.result});
 
   @override
+  State<CropAnalysisResult> createState() => _CropAnalysisResultState();
+}
+
+class _CropAnalysisResultState extends State<CropAnalysisResult> {
+  late SharedPreferences _prefs;
+  bool _isHindiSelected = true; // Default to Hindi
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLanguagePreference();
+  }
+
+  Future<void> _loadLanguagePreference() async {
+    _prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isHindiSelected = _prefs.getBool('isHindi') ?? true;
+    });
+  }
+
+  Future<void> _toggleLanguage(bool value) async {
+    setState(() {
+      _isHindiSelected = value;
+    });
+    await _prefs.setBool('isHindi', _isHindiSelected);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final bool isHealthy = result['is_healthy'] ?? false;
-    final String cropType = result['crop_type'] ?? 'Unknown';
+    final bool isHealthy = widget.result['is_healthy'] ?? false;
+    final String cropType = widget.result['crop_type'] ?? 'Unknown';
+    final String? geminiAnalysisEnglish = widget.result['gemini_analysis_english'];
+    final String? geminiAnalysisHindi = widget.result['gemini_analysis_hindi'];
 
     // Safely convert confidence to double
     double confidence = 0.0;
-    if (result['confidence'] != null) {
-      if (result['confidence'] is String) {
-        confidence = double.tryParse(result['confidence'] as String) ?? 0.0;
-      } else if (result['confidence'] is num) {
-        confidence = (result['confidence'] as num).toDouble();
+    if (widget.result['confidence'] != null) {
+      if (widget.result['confidence'] is String) {
+        confidence = double.tryParse(widget.result['confidence'] as String) ?? 0.0;
+      } else if (widget.result['confidence'] is num) {
+        confidence = (widget.result['confidence'] as num).toDouble();
       }
     }
     confidence = confidence * 100;
 
     // Safely convert prediction class to int
     int predictionClass = 0;
-    if (result['prediction_class'] != null) {
-      if (result['prediction_class'] is String) {
+    if (widget.result['prediction_class'] != null) {
+      if (widget.result['prediction_class'] is String) {
         predictionClass =
-            int.tryParse(result['prediction_class'] as String) ?? 0;
-      } else if (result['prediction_class'] is num) {
-        predictionClass = (result['prediction_class'] as num).toInt();
+            int.tryParse(widget.result['prediction_class'] as String) ?? 0;
+      } else if (widget.result['prediction_class'] is num) {
+        predictionClass = (widget.result['prediction_class'] as num).toInt();
       }
     }
 
@@ -105,20 +136,64 @@ class CropAnalysisResult extends StatelessWidget {
 
               const SizedBox(height: 24), // Increased spacing
 
+              // Gemini Analysis Section
+              if (geminiAnalysisEnglish != null || geminiAnalysisHindi != null) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Detailed Analysis',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          'English',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: _isHindiSelected ? Theme.of(context).colorScheme.onSurface.withOpacity(0.6) : Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                        Switch(
+                          value: _isHindiSelected,
+                          onChanged: _toggleLanguage,
+                          activeColor: Theme.of(context).colorScheme.primary,
+                          inactiveThumbColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                          inactiveTrackColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                        ),
+                        Text(
+                          'हिंदी',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: _isHindiSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  _isHindiSelected
+                      ? (geminiAnalysisHindi ?? 'No Hindi analysis available.')
+                      : (geminiAnalysisEnglish ?? 'No English analysis available.'),
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                const SizedBox(height: 24),
+              ],
+
               // All predictions
-              if (result['all_predictions'] != null) ...[
+              if (widget.result['all_predictions'] != null) ...[
                 Text(
                   'All Predictions:',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 10), // Increased spacing
-                ...List.generate((result['all_predictions'] as List).length, (
+                ...List.generate((widget.result['all_predictions'] as List).length, (
                   index,
                 ) {
                   // Safely convert prediction to double
                   double pred = 0.0;
                   final predictionValue =
-                      (result['all_predictions'] as List)[index];
+                      (widget.result['all_predictions'] as List)[index];
                   if (predictionValue is String) {
                     pred = double.tryParse(predictionValue) ?? 0.0;
                   } else if (predictionValue is num) {

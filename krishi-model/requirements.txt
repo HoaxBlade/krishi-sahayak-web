@@ -24,5 +24,13 @@ faiss-cpu>=1.12.0         # Use instead of faiss
 sentence-transformers>=2.2.2
 huggingface_hub>=0.16.4
 
+# Vector similarity / embeddings (Python 3.11 compatible)
+faiss-cpu>=1.12.0         # Use instead of faiss
+sentence-transformers>=2.2.2
+huggingface_hub>=0.16.4
+
 # OpenCV
 opencv-python>=4.12.0
+
+# Google Generative AI
+google-generativeai>=0.3.0

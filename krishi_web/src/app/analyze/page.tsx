@@ -3,11 +3,11 @@
 
 import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { 
-  Camera, 
-  Upload, 
-  Leaf, 
-  AlertTriangle, 
+import {
+  Camera,
+  Upload,
+  Leaf,
+  AlertTriangle,
   CheckCircle,
   Loader2,
   ArrowLeft
@@ -15,12 +15,15 @@ import {
 import { MLService, MLAnalysisResult } from '@/lib/mlService'
 import Link from 'next/link'
 
+type DisplayLanguage = 'hindi' | 'english';
+
 export default function AnalyzePage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [analysis, setAnalysis] = useState<MLAnalysisResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [displayLanguage, setDisplayLanguage] = useState<DisplayLanguage>('hindi'); // Default to Hindi
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,6 +32,7 @@ export default function AnalyzePage() {
       setSelectedFile(file)
       setError(null)
       setAnalysis(null)
+      setDisplayLanguage('hindi'); // Reset language on new file select
       
       // Create preview
       const reader = new FileReader()
@@ -148,6 +152,7 @@ export default function AnalyzePage() {
                       setSelectedFile(null)
                       setPreview(null)
                       setAnalysis(null)
+                      setDisplayLanguage('hindi'); // Reset language on clear
                     }}
                     className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors" /* Adjusted padding */
                   >
@@ -247,6 +252,26 @@ export default function AnalyzePage() {
                   </div>
                 </div>
 
+                {/* Gemini Analysis */}
+                {(analysis.gemini_analysis_hindi || analysis.gemini_analysis_english) && (
+                  <div className="bg-blue-50/70 rounded-xl p-3.5">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="font-medium text-blue-800 text-base">
+                        AI Insights ({displayLanguage === 'hindi' ? 'Hindi' : 'English'})
+                      </h4>
+                      <button
+                        onClick={() => setDisplayLanguage(displayLanguage === 'hindi' ? 'english' : 'hindi')}
+                        className="text-sm text-blue-600 hover:underline"
+                      >
+                        View in {displayLanguage === 'hindi' ? 'English' : 'Hindi'}
+                      </button>
+                    </div>
+                    <p className="text-xs text-blue-700 whitespace-pre-wrap">
+                      {displayLanguage === 'hindi' ? analysis.gemini_analysis_hindi : analysis.gemini_analysis_english}
+                    </p>
+                  </div>
+                )}
+
                 {/* Recommendations */}
                 <div className="bg-green-50/70 rounded-xl p-3.5"> {/* Refined background, rounded corners, and padding */}
                   <h4 className="font-medium text-green-800 mb-1.5 text-base"> {/* Adjusted font weight, color, and margin */}
@@ -284,6 +309,7 @@ export default function AnalyzePage() {
                       setSelectedFile(null)
                       setPreview(null)
                       setAnalysis(null)
+                      setDisplayLanguage('hindi'); // Reset language on clear
                     }}
                     className="flex-1 bg-gray-100 text-gray-600 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors shadow-sm hover:shadow-md" /* Refined button style */
                   >

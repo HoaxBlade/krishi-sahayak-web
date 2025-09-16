@@ -25,6 +25,8 @@ export interface MLAnalysisResult {
   confidence: string
   prediction_class: string
   all_predictions: Record<string, number>
+  gemini_analysis_english: string
+  gemini_analysis_hindi: string
 }
 
 export class MLService {

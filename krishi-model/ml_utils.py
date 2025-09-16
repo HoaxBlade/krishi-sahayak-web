@@ -10,13 +10,56 @@ import tensorflow as tf # type: ignore
 import tensorflow.lite as tflite # type: ignore
 import logging
 import psutil
+import google.generativeai as genai # Import the Gemini API library
+import asyncio # For asynchronous API calls
 
 from config import (
     RATE_LIMIT_REQUESTS, RATE_LIMIT_WINDOW, MODEL_PATHS, LABEL_PATHS,
-    MEMORY_HEALTH_THRESHOLD, CPU_HEALTH_THRESHOLD, IMAGE_SIZE, MAX_FILE_SIZE
+    MEMORY_HEALTH_THRESHOLD, CPU_HEALTH_THRESHOLD, IMAGE_SIZE, MAX_FILE_SIZE,
+    GEMINI_API_KEY # Import the Gemini API key
 )
 
 logger = logging.getLogger(__name__)
+
+# Configure Gemini API
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    logger.info("Gemini API configured successfully.")
+else:
+    logger.warning("GEMINI_API_KEY not found. Gemini analysis will not be available.")
+
+async def get_gemini_crop_analysis(disease_label: str) -> str:
+    """
+    Fetches detailed crop disease analysis from the Gemini API.
+    """
+    if not GEMINI_API_KEY:
+        return "Gemini API key not configured. Detailed analysis not available."
+
+    try:
+        model = genai.GenerativeModel('gemini-pro')
+        prompt = (
+            f"You are a professional crop analyst. Provide a detailed analysis for the crop disease "
+            f"'{disease_label}'. Your analysis should cover the following aspects:\n\n"
+            f"1. Why the disease is caused.\n"
+            f"2. Precautions to take to prevent or manage the disease.\n"
+            f"3. How to get rid of the disease (treatment methods).\n\n"
+            f"Please provide the information in clear, concise English."
+        )
+        
+        logger.info(f"Sending prompt to Gemini for disease: {disease_label}")
+        response = await model.generate_content_async(prompt)
+        
+        if response and response.candidates:
+            analysis = response.candidates[0].content.parts[0].text
+            logger.info(f"Received Gemini analysis for {disease_label}")
+            return analysis
+        else:
+            logger.warning(f"No content received from Gemini for disease: {disease_label}")
+            return "No detailed analysis available from Gemini for this disease."
+            
+    except Exception as e:
+        logger.error(f"Error fetching Gemini analysis for '{disease_label}': {e}")
+        return f"Error fetching detailed analysis: {e}"
 
 class RateLimiter:
     """Simple rate limiter for user requests"""

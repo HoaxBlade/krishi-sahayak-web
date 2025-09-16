@@ -266,6 +266,20 @@ class MLService {
       debugPrint(
         '📊 [MLService] All predictions type: ${result['all_predictions'].runtimeType}',
       );
+
+      // Extract new Gemini analysis fields
+      final String? geminiAnalysisEnglish = result['gemini_analysis_english'];
+      final String? geminiAnalysisHindi = result['gemini_analysis_hindi'];
+
+      if (geminiAnalysisEnglish != null) {
+        result['gemini_analysis_english'] = geminiAnalysisEnglish;
+        debugPrint('📊 [MLService] Gemini English Analysis found.');
+      }
+      if (geminiAnalysisHindi != null) {
+        result['gemini_analysis_hindi'] = geminiAnalysisHindi;
+        debugPrint('📊 [MLService] Gemini Hindi Analysis found.');
+      }
+
       return result;
     } else {
       debugPrint(
