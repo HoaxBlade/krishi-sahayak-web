@@ -44,6 +44,16 @@ spec:
             configMapKeyRef:
               name: ml-server-config
               key: LOG_LEVEL
+        - name: MEMORY_HEALTH_THRESHOLD # Added for explicit configuration via ConfigMap
+          valueFrom:
+            configMapKeyRef:
+              name: ml-server-config
+              key: MEMORY_HEALTH_THRESHOLD
+        - name: CPU_HEALTH_THRESHOLD # Added for explicit configuration via ConfigMap
+          valueFrom:
+            configMapKeyRef:
+              name: ml-server-config
+              key: CPU_HEALTH_THRESHOLD
         resources:
           requests:
             memory: "512Mi"
@@ -51,6 +61,8 @@ spec:
           limits:
             memory: "2Gi"
             cpu: "1000m"
+        # It is recommended to use specific image tags (e.g., commit hash, version)
+        # instead of 'latest' for production deployments to ensure reproducibility.
         livenessProbe:
           httpGet:
             path: /health

@@ -17,47 +17,60 @@ from config import (
 
 logger = logging.getLogger(__name__)
 
-# Rate limiting storage
-user_requests = defaultdict(deque)
-rate_limit_lock = threading.Lock()
-
-# Request queue for ML processing
-request_queue = deque()
-queue_lock = threading.Lock()
-processing_lock = threading.Lock()
-
 class RateLimiter:
     """Simple rate limiter for user requests"""
     
-    @staticmethod
-    def is_allowed(user_id):
+    def __init__(self):
+        self.user_requests = defaultdict(deque)
+        self.lock = threading.Lock()
+
+    def is_allowed(self, user_id):
         """Check if user is within rate limit"""
         current_time = time.time()
         
-        with rate_limit_lock:
+        with self.lock:
             # Clean old requests
-            while user_requests[user_id] and user_requests[user_id][0] < current_time - RATE_LIMIT_WINDOW:
-                user_requests[user_id].popleft()
+            while self.user_requests[user_id] and self.user_requests[user_id][0] < current_time - RATE_LIMIT_WINDOW:
+                self.user_requests[user_id].popleft()
             
             # Check if under limit
-            if len(user_requests[user_id]) >= RATE_LIMIT_REQUESTS:
+            if len(self.user_requests[user_id]) >= RATE_LIMIT_REQUESTS:
                 return False
             
             # Add current request
-            user_requests[user_id].append(current_time)
+            self.user_requests[user_id].append(current_time)
             return True
     
-    @staticmethod
-    def get_remaining_requests(user_id):
+    def get_remaining_requests(self, user_id):
         """Get remaining requests for user"""
         current_time = time.time()
         
-        with rate_limit_lock:
+        with self.lock:
             # Clean old requests
-            while user_requests[user_id] and user_requests[user_id][0] < current_time - RATE_LIMIT_WINDOW:
-                user_requests[user_id].popleft()
+            while self.user_requests[user_id] and self.user_requests[user_id][0] < current_time - RATE_LIMIT_WINDOW:
+                self.user_requests[user_id].popleft()
             
-            return max(0, RATE_LIMIT_REQUESTS - len(user_requests[user_id]))
+            return max(0, RATE_LIMIT_REQUESTS - len(self.user_requests[user_id]))
+
+class MLQueueManager:
+    """Manages the request queue and processing lock for ML tasks."""
+    def __init__(self):
+        self.request_queue = deque()
+        self.queue_lock = threading.Lock()
+        self.processing_lock = threading.Lock()
+
+    def get_queue_size(self):
+        with self.queue_lock:
+            return len(self.request_queue)
+
+    def is_processing_locked(self):
+        return self.processing_lock.locked()
+
+    def acquire_processing_lock(self):
+        return self.processing_lock.acquire()
+
+    def release_processing_lock(self):
+        self.processing_lock.release()
 
 class SystemMonitor:
     """Monitor system resources"""
@@ -99,11 +112,14 @@ def load_labels():
         for path in LABEL_PATHS:
             if os.path.exists(path):
                 with open(path, 'r') as f:
-                    return [line.strip() for line in f.readlines()]
-        logger.error("No labels.txt found in any expected location")
+                    labels = [line.strip() for line in f.readlines()]
+                    if not labels:
+                        logger.warning(f"Labels file '{path}' found but is empty.")
+                    return labels
+        logger.error("No labels.txt found in any expected location. Returning empty list.")
         return []
     except Exception as e:
-        logger.error(f"Error loading labels: {e}")
+        logger.error(f"Error loading labels: {e}. Returning empty list.")
         return []
 
 def preprocess_image(image_data):

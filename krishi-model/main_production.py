@@ -14,7 +14,7 @@ from werkzeug.exceptions import RequestEntityTooLarge
 
 # Import utilities from ml_utils and config
 import ml_utils
-from ml_utils import RateLimiter, SystemMonitor, load_labels, preprocess_image, analyze_crop_prediction, load_ml_model
+from ml_utils import load_labels, preprocess_image, analyze_crop_prediction, load_ml_model, RateLimiter, SystemMonitor, MLQueueManager
 from config import (
     RATE_LIMIT_REQUESTS, RATE_LIMIT_WINDOW, MAX_FILE_SIZE, IMAGE_SIZE,
     MEMORY_HEALTH_THRESHOLD, CPU_HEALTH_THRESHOLD, FLASK_PORT, FLASK_HOST
@@ -43,6 +43,7 @@ app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
 # Initialize components
 rate_limiter = RateLimiter()
 system_monitor = SystemMonitor()
+ml_queue_manager = MLQueueManager()
 
 def initialize_production_model_and_labels():
     """Initialize model and labels for production server."""
@@ -109,11 +110,10 @@ def detailed_status():
         cpu = system_monitor.get_cpu_usage()
         uptime = time.time() - start_time
         
-        with ml_utils.queue_lock: # Access from ml_utils module
-            queue_size = len(ml_utils.request_queue) # Access from ml_utils module
+        queue_size = ml_queue_manager.get_queue_size()
         
         with rate_limiter.lock: # Use rate_limiter's internal lock
-            active_users = len(ml_utils.user_requests) # Access from ml_utils module
+            active_users = len(rate_limiter.user_requests)
         
         return jsonify({
             'server': {
@@ -138,7 +138,7 @@ def detailed_status():
             },
             'queue': {
                 'size': queue_size,
-                'processing': ml_utils.processing_lock.locked() # Access from ml_utils module
+                'processing': ml_queue_manager.is_processing_locked()
             }
         })
     except Exception as e:
@@ -254,7 +254,7 @@ ml_server_model_loaded {1 if model_loaded else 0}
  
 # HELP ml_server_requests_total Total number of requests
 # TYPE ml_server_requests_total counter
-ml_server_requests_total {sum(len(requests) for requests in ml_utils.user_requests.values())}
+ml_server_requests_total {sum(len(requests) for requests in rate_limiter.user_requests.values())}
 """
         
         return metrics_data, 200, {'Content-Type': 'text/plain'}
@@ -273,6 +273,14 @@ if __name__ == '__main__':
             import gunicorn.app.wsgiapp as wsgi
             logger.info("🚀 Starting with Gunicorn WSGI server...")
             num_workers = int(os.getenv('GUNICORN_WORKERS', '2'))
+            # For memory limits, typically configured via container orchestration (e.g., Kubernetes resource limits)
+            # or by setting ulimit before starting the Gunicorn process.
+            # Example for Kubernetes:
+            # resources:
+            #   limits:
+            #     memory: "2Gi"
+            #   requests:
+            #     memory: "1Gi"
             sys.argv = ['gunicorn', '--bind', f'{FLASK_HOST}:{FLASK_PORT}', '--workers', str(num_workers), '--timeout', '120', '--keep-alive', '2', '--max-requests', '1000', '--max-requests-jitter', '100', 'main_production:app']
             wsgi.run()
         except ImportError:

@@ -45,12 +45,26 @@ flutter pub get
 flutter run
 ```
 
+## Configuration
+ 
+The ML server's behavior can be configured using environment variables, which override default values defined in [`config.py`](krishi-model/config.py:1).
+ 
+Key configurable parameters include:
+- `RATE_LIMIT_REQUESTS`: Maximum requests per user within the `RATE_LIMIT_WINDOW`.
+- `RATE_LIMIT_WINDOW`: Time window in seconds for rate limiting.
+- `MAX_FILE_SIZE`: Maximum allowed size for uploaded image files (in bytes).
+- `PORT`: The port on which the Flask server will run.
+- `CPU_HEALTH_THRESHOLD`: CPU usage percentage threshold for system health checks.
+- `MEMORY_HEALTH_THRESHOLD`: Memory usage percentage threshold for system health checks.
+ 
 ## API Endpoints
-
-- `GET /health` - Check server and model status
-- `POST /analyze_crop` - Analyze crop image (send image as base64)
-- `POST /train` - Retrain the model
-- `GET /labels` - Get available crop labels
+ 
+- `GET /health` - Check server and model status.
+- `GET /status` - Get detailed server status, including system resources, model status, and queue information.
+- `POST /analyze_crop` - Analyze crop image. Accepts image data as a base64 string in a JSON payload or as a file upload (`multipart/form-data`).
+- `POST /train` - Retrain the model (available only on the development server `main.py`).
+- `GET /labels` - Get available crop labels.
+- `GET /metrics` - Prometheus-style metrics endpoint (available only on the production server `main_production.py`).
 
 ## Flutter Integration
 
@@ -79,10 +93,11 @@ The Flutter app now includes:
 - For physical devices, use your computer's IP address instead of localhost
 
 ### Model Loading Issues
-
-- Ensure `model/mobilenetv2_model.h5` exists
-- Check that `labels.txt` is present and readable
-- Verify TensorFlow installation
+ 
+- Ensure `model/mobilenetv2_model.h5` exists in one of the `MODEL_PATHS` defined in [`config.py`](krishi-model/config.py:9).
+- Check that `labels.txt` is present and readable in one of the `LABEL_PATHS` defined in [`config.py`](krishi-model/config.py:17).
+- Verify TensorFlow installation and compatibility.
+- Check server logs for detailed error messages during model loading.
 
 ### Flutter Issues
 
@@ -91,16 +106,19 @@ The Flutter app now includes:
 - Verify camera permissions on device
 
 ## File Structure
-
+ 
 ```
 krishi-model/
-├── main.py                 # Flask server + ML integration
+├── main.py                 # Development Flask server with ML integration and training
+├── main_production.py      # Production Flask/Gunicorn server with ML integration
+├── config.py               # Centralized configuration for the ML pipeline
+├── ml_utils.py             # Utility functions and classes for ML operations, rate limiting, and system monitoring
 ├── requirements.txt        # Python dependencies
-├── test_server.py         # Server testing script
-├── labels.txt             # Crop labels
-├── model/                 # Trained models
-└── utils/                 # Training utilities
-
+├── test_server.py          # Server testing script
+├── labels.txt              # Crop labels
+├── model/                  # Trained models
+└── utils/                  # Training utilities
+ 
 krishi_app/
 ├── lib/
 │   ├── services/
@@ -114,9 +132,10 @@ krishi_app/
 ```
 
 ## Next Steps
-
-- Customize the health determination logic in `main.py`
-- Add more detailed crop analysis features
-- Implement model versioning and updates
-- Add batch processing capabilities
-- Integrate with weather data for better predictions
+ 
+- Further refine health determination logic and thresholds in [`config.py`](krishi-model/config.py:19).
+- Add more detailed crop analysis features.
+- Implement model versioning and updates.
+- Add batch processing capabilities.
+- Integrate with weather data for better predictions.
+- Explore structured logging solutions (e.g., `json_logging`) for production environments.

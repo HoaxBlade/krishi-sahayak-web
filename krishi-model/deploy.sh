@@ -16,7 +16,9 @@ NC='\033[0m' # No Color
 IMAGE_NAME="krishi-sahayak/ml-server"
 IMAGE_TAG="latest"
 NAMESPACE="krishi-sahayak"
-REGISTRY="${CONTAINER_REGISTRY:-gcr.io/my-gcp-project-id-12345}" # Use CONTAINER_REGISTRY env var or default replace my registry with yours link
+# IMPORTANT: Replace 'gcr.io/my-gcp-project-id-12345' with your actual container registry.
+# You can also set the CONTAINER_REGISTRY environment variable.
+REGISTRY="${CONTAINER_REGISTRY:-gcr.io/my-gcp-project-id-12345}"
 
 echo -e "${BLUE}🚀 Starting Krishi Sahayak ML Server Deployment${NC}"
 

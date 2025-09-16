@@ -18,7 +18,7 @@ LABEL_PATHS = ["labels.txt", "notebooks/model/labels.txt", "model/labels.txt"]
 
 # System Health Thresholds
 MEMORY_HEALTH_THRESHOLD = 90
-CPU_HEALTH_THRESHOLD = 95 # main.py uses 95, main_production.py uses 80, using higher for now.
+CPU_HEALTH_THRESHOLD = int(os.getenv('CPU_HEALTH_THRESHOLD', '95')) # Unified threshold, can be overridden by environment variable.
 
 # Image Preprocessing
 IMAGE_SIZE = (224, 224) # Standard for MobileNetV2
