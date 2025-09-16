@@ -284,7 +284,8 @@ if __name__ == '__main__':
             #     memory: "2Gi"
             #   requests:
             #     memory: "1Gi"
-            sys.argv = ['gunicorn', '--bind', f'{FLASK_HOST}:{FLASK_PORT}', '--workers', str(num_workers), '--timeout', '120', '--keep-alive', '2', '--max-requests', '1000', '--max-requests-jitter', '100', 'main_production:app']
+            # Tune num_workers based on CPU cores: (2 * num_cores) + 1 is a common starting point for CPU-bound tasks.
+            sys.argv = ['gunicorn', '--bind', f'{FLASK_HOST}:{FLASK_PORT}', '--workers', str(num_workers), '--timeout', '120', '--keep-alive', '5', '--max-requests', '1000', '--max-requests-jitter', '100', 'main_production:app']
             wsgi.run()
         except ImportError:
             logger.warning("⚠️ Gunicorn not available, falling back to Flask development server")
