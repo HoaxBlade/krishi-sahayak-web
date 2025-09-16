@@ -10,6 +10,7 @@ import 'cache_service.dart';
 import 'firebase_analytics_service.dart';
 import 'dart:io'; // Added for Directory.current
 import 'location_service.dart';
+import 'connectivity_service.dart'; // Import ConnectivityService
 
 class WeatherData {
   final int? id;
@@ -94,6 +95,7 @@ class WeatherService {
   final ConfigService _configService = ConfigService();
   final CacheService _cacheService = CacheService();
   final FirebaseAnalyticsService _analytics = FirebaseAnalyticsService();
+  final ConnectivityService _connectivityService = ConnectivityService(); // Instantiate ConnectivityService
 
   Position? _currentPosition;
   Timer? _refreshTimer;
@@ -179,6 +181,13 @@ class WeatherService {
     try {
       await _ensureInitialized();
 
+      // Check connectivity before making API call
+      final isConnected = await _connectivityService.checkConnectivity(); // Use the instantiated service
+      if (!isConnected) {
+        debugPrint('⚠️ [WeatherService] Offline. Cannot fetch current weather.');
+        return null; // Return null if offline
+      }
+
       if (_currentPosition == null) {
         _currentPosition = await LocationService().getCurrentLocation();
         if (_currentPosition == null) {
@@ -233,6 +242,13 @@ class WeatherService {
   Future<List<WeatherData>> fetchWeatherForecast({int days = 7}) async {
     try {
       await _ensureInitialized();
+
+      // Check connectivity before making API call
+      final isConnected = await _connectivityService.checkConnectivity(); // Use the instantiated service
+      if (!isConnected) {
+        debugPrint('⚠️ [WeatherService] Offline. Cannot fetch weather forecast.');
+        return []; // Return empty list if offline
+      }
 
       if (_currentPosition == null) {
         _currentPosition = await LocationService().getCurrentLocation();
