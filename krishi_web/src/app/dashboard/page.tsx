@@ -9,8 +9,7 @@ import {
   AlertTriangle,
   CheckCircle,
   User,
-  Plus,
-  ShoppingCart
+  Plus
 } from 'lucide-react'
 import Link from 'next/link'
 import { MLService } from '@/lib/mlService'

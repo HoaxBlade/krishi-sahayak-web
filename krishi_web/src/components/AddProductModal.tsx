@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { X, Upload, DollarSign, Calendar, Package } from 'lucide-react'
+import { X } from 'lucide-react'
 
 interface AddProductModalProps {
   isOpen: boolean
@@ -69,7 +69,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
     'per hour'
   ]
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | number | boolean) => {
     if (field.startsWith('specifications.')) {
       const specField = field.split('.')[1]
       setFormData(prev => ({

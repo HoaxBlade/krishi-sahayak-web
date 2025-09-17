@@ -5,7 +5,7 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { 
-  Leaf, ShoppingCart, BarChart3, Cloud, Shield, ArrowRight, Wind, Droplet, Thermometer, Umbrella, CheckCircle 
+  ShoppingCart, BarChart3, Cloud, Shield, ArrowRight, Wind, Droplet, Thermometer, Umbrella, CheckCircle 
 } from "lucide-react"
 import { MLService } from "@/lib/mlService"
 import { WeatherService } from "@/lib/weatherService"
@@ -37,52 +37,88 @@ export default function HomePage() {
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null)
   const [locationError, setLocationError] = useState<string | null>(null)
 
+  // Add global error handler for unhandled promise rejections
+  useEffect(() => {
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.warn('Unhandled promise rejection:', event.reason);
+      event.preventDefault(); // Prevent the default browser behavior
+    };
+
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    
+    return () => {
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, []);
+
   useEffect(() => {
     const fetchLocationAndServices = async () => {
       setLoading(true)
       let lat: number | null = null
       let lon: number | null = null
 
-      if (navigator.geolocation) {
+      // First, try to get location from stored data
+      const storedLocation = localStorage.getItem('userWeatherLocation');
+      if (storedLocation) {
         try {
-          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(
-              resolve, 
-              (error) => {
-                // Handle specific geolocation errors
-                let errorMessage = 'Unknown geolocation error';
-                switch (error.code) {
-                  case error.PERMISSION_DENIED:
-                    errorMessage = 'Location access denied by user';
-                    break;
-                  case error.POSITION_UNAVAILABLE:
-                    errorMessage = 'Location information unavailable';
-                    break;
-                  case error.TIMEOUT:
-                    errorMessage = 'Location request timed out';
-                    break;
-                  default:
-                    errorMessage = error.message || 'Unknown geolocation error';
-                }
-                reject(new Error(errorMessage));
-              }, 
-              { 
-                enableHighAccuracy: true, 
-                timeout: 10000, 
-                maximumAge: 300000 // 5 minutes cache
-              }
-            );
-          });
-          lat = position.coords.latitude;
-          lon = position.coords.longitude;
-          setUserLocation({ latitude: lat, longitude: lon });
-        } catch (error: unknown) {
-          console.error("Geolocation error:", error);
-          const errorMessage = error instanceof Error ? error.message : 'Unknown geolocation error';
-          setLocationError(`Unable to retrieve your location (${errorMessage}). Displaying weather for a default city.`);
+          const { latitude, longitude } = JSON.parse(storedLocation);
+          if (latitude && longitude) {
+            lat = latitude;
+            lon = longitude;
+            setUserLocation({ latitude, longitude });
+            console.log("Using stored location:", { lat, lon });
+          }
+        } catch (error) {
+          console.warn('Failed to parse stored location:', error);
         }
-      } else {
-        setLocationError("Geolocation is not supported by your browser. Displaying weather for a default city.");
+      }
+
+      // If no stored location, try to get current location
+      if (!lat || !lon) {
+        if (navigator.geolocation) {
+          try {
+            const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+              navigator.geolocation.getCurrentPosition(
+                resolve, 
+                (error) => {
+                  // Handle specific geolocation errors
+                  let errorMessage = 'Unknown geolocation error';
+                  switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                      errorMessage = 'Location access denied by user';
+                      break;
+                    case error.POSITION_UNAVAILABLE:
+                      errorMessage = 'Location information unavailable';
+                      break;
+                    case error.TIMEOUT:
+                      errorMessage = 'Location request timed out';
+                      break;
+                    default:
+                      errorMessage = error.message || 'Unknown geolocation error';
+                  }
+                  reject(new Error(errorMessage));
+                }, 
+                { 
+                  enableHighAccuracy: false, // Start with less accurate but faster
+                  timeout: 15000, // Increased timeout
+                  maximumAge: 600000 // 10 minutes cache
+                }
+              );
+            });
+            lat = position.coords.latitude;
+            lon = position.coords.longitude;
+            setUserLocation({ latitude: lat, longitude: lon });
+            console.log("Geolocation successful:", { lat, lon });
+          } catch (error: unknown) {
+            // Handle geolocation errors gracefully without throwing
+            console.warn("Geolocation error:", error);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown geolocation error';
+            setLocationError(`Unable to retrieve your location (${errorMessage}). Displaying weather for a default city.`);
+            // Don't re-throw the error, just continue with fallback
+          }
+        } else {
+          setLocationError("Geolocation is not supported by your browser. Displaying weather for a default city.");
+        }
       }
 
       try {
@@ -113,13 +149,19 @@ export default function HomePage() {
         }
 
       } catch (error) {
-        console.error("Service check failed:", error)
+        console.warn("Service check failed:", error)
         setLocationError(prev => prev || "Failed to fetch weather data.");
       } finally {
         setLoading(false)
       }
     }
-    fetchLocationAndServices()
+    
+    // Wrap the entire function call in try-catch to handle any unhandled errors
+    fetchLocationAndServices().catch((error) => {
+      console.warn("Failed to fetch location and services:", error);
+      setLocationError("Unable to load location and weather data. Please refresh the page.");
+      setLoading(false);
+    });
   }, [])
 
   const features = [
@@ -189,6 +231,9 @@ export default function HomePage() {
               <div>
                 <h3 className="text-xl font-bold text-gray-900">{weather.location}</h3> {/* Adjusted text size */}
                 <p className="text-gray-500">{weather.description}</p> {/* Adjusted text color */}
+                {userLocation && (
+                  <p className="text-xs text-green-600 mt-1">📍 Your current location</p>
+                )}
               </div>
               <div className="text-5xl animate-pulse"> {/* Adjusted text size */}
                 {WeatherService.getInstance().getWeatherIcon(weather.description)}
@@ -200,6 +245,7 @@ export default function HomePage() {
               <WeatherStat icon={<Wind />} label="Wind" value={`${weather.windSpeed} m/s`} />
               <WeatherStat icon={<Umbrella />} label="Rain" value={`${weather.precipitation}mm`} />
             </div>
+            
           </motion.div>
         </section>
       )}

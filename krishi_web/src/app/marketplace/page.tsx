@@ -6,14 +6,12 @@ import { motion } from 'framer-motion'
 import { 
   ShoppingCart, 
   Search, 
-  Filter, 
   Star, 
   MapPin, 
   Phone,
   Heart,
   Share2,
   Calendar,
-  Clock,
   CreditCard
 } from 'lucide-react'
 import ProtectedRoute from '@/components/ProtectedRoute'
