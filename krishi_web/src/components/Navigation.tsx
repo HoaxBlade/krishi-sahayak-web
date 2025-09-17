@@ -47,7 +47,7 @@ export default function Navigation() {
               <div className="flex items-center space-x-1">
                 <span className="text-sm text-gray-500">Powered by:</span>
                 <Image
-                  src="/NIELIT.jpeg"
+                  src="/NIELIT.png"
                   alt="NIELIT Logo"
                   width={40}
                   height={40}
