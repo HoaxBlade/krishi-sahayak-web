@@ -20,7 +20,7 @@ export default function Footer() {
           <div className="flex flex-col items-center space-y-1">
             <span className="text-sm text-gray-400">Powered by:</span>
             <Image
-              src="/NIELIT.jpeg"
+              src="/NIELIT.png"
               alt="NIELIT Logo"
               width={40}
               height={40}
