@@ -8,13 +8,16 @@ import {
   Leaf,
   AlertTriangle,
   CheckCircle,
-  User
+  User,
+  Plus,
+  ShoppingCart
 } from 'lucide-react'
 import Link from 'next/link'
 import { MLService } from '@/lib/mlService'
 import { WeatherService } from '@/lib/weatherService'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { useAuth } from '@/contexts/AuthContext'
+import AddProductModal from '@/components/AddProductModal'
 
 export default function DashboardPage() {
   const { user } = useAuth()
@@ -34,6 +37,7 @@ export default function DashboardPage() {
     timestamp: string
   } | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showAddProductModal, setShowAddProductModal] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -156,15 +160,24 @@ export default function DashboardPage() {
                 Monitor your agricultural operations and AI insights
               </p>
             </div>
-            <Link
-              href="/profile"
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors px-3 py-2 rounded-lg hover:bg-gray-100"
-            >
-              <User className="w-5 h-5" />
-              <span className="text-sm">
-                Hi {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
-              </span>
-            </Link>
+            <div className="flex items-center space-x-3">
+              <button 
+                onClick={() => setShowAddProductModal(true)}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Product
+              </button>
+              <Link
+                href="/profile"
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors px-3 py-2 rounded-lg hover:bg-gray-100"
+              >
+                <User className="w-5 h-5" />
+                <span className="text-sm">
+                  Hi {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
+                </span>
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -309,6 +322,12 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+
+        {/* Add Product Modal */}
+        <AddProductModal 
+          isOpen={showAddProductModal}
+          onClose={() => setShowAddProductModal(false)}
+        />
       </div>
     </div>
     </ProtectedRoute>

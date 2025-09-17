@@ -33,30 +33,46 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const authService = AuthService.getInstance()
+    let mounted = true
     
-    // Get initial session
-    const getInitialSession = async () => {
+    const initializeAuth = async () => {
       try {
+        const authService = AuthService.getInstance()
+        
+        // Get initial session
         const { data: { session } } = await authService.getCurrentSession()
-        setUser(session?.user ?? null)
+        if (mounted) {
+          setUser(session?.user ?? null)
+        }
+
+        // Listen for auth state changes
+        const { data: { subscription } } = authService.onAuthStateChange((user: User | null) => {
+          if (mounted) {
+            setUser(user)
+            setLoading(false)
+          }
+        })
+
+        return () => {
+          if (subscription) {
+            subscription.unsubscribe()
+          }
+        }
       } catch (error) {
-        console.error('Error getting initial session:', error)
-      } finally {
-        setLoading(false)
+        console.error('Error initializing auth:', error)
+        if (mounted) {
+          setLoading(false)
+        }
       }
     }
 
-    getInitialSession()
-
-    // Listen for auth state changes
-    const { data: { subscription } } = authService.onAuthStateChange((user: User | null) => {
-      setUser(user)
-      setLoading(false)
-    })
+    const cleanup = initializeAuth()
 
     return () => {
-      subscription.unsubscribe()
+      mounted = false
+      cleanup.then(cleanupFn => {
+        if (cleanupFn) cleanupFn()
+      })
     }
   }, [])
 

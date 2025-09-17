@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 "use client"
 
 import { useState, useEffect } from "react"
@@ -46,14 +46,40 @@ export default function HomePage() {
       if (navigator.geolocation) {
         try {
           const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+            navigator.geolocation.getCurrentPosition(
+              resolve, 
+              (error) => {
+                // Handle specific geolocation errors
+                let errorMessage = 'Unknown geolocation error';
+                switch (error.code) {
+                  case error.PERMISSION_DENIED:
+                    errorMessage = 'Location access denied by user';
+                    break;
+                  case error.POSITION_UNAVAILABLE:
+                    errorMessage = 'Location information unavailable';
+                    break;
+                  case error.TIMEOUT:
+                    errorMessage = 'Location request timed out';
+                    break;
+                  default:
+                    errorMessage = error.message || 'Unknown geolocation error';
+                }
+                reject(new Error(errorMessage));
+              }, 
+              { 
+                enableHighAccuracy: true, 
+                timeout: 10000, 
+                maximumAge: 300000 // 5 minutes cache
+              }
+            );
           });
           lat = position.coords.latitude;
           lon = position.coords.longitude;
           setUserLocation({ latitude: lat, longitude: lon });
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error("Geolocation error:", error);
-          setLocationError("Unable to retrieve your location. Displaying weather for a default city.");
+          const errorMessage = error instanceof Error ? error.message : 'Unknown geolocation error';
+          setLocationError(`Unable to retrieve your location (${errorMessage}). Displaying weather for a default city.`);
         }
       } else {
         setLocationError("Geolocation is not supported by your browser. Displaying weather for a default city.");

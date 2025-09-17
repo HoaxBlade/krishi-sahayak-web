@@ -129,9 +129,10 @@ export class AuthService {
 
   // Listen to auth state changes
   onAuthStateChange(callback: (user: User | null) => void) {
-    return supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       callback(session?.user ?? null)
     })
+    return { data: { subscription } }
   }
 
   // Reset password
