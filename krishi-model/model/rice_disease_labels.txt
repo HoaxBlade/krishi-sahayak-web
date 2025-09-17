@@ -1,0 +1,4 @@
+Rice___Brown_Spot
+Rice___Healthy
+Rice___Leaf_Blast
+Rice___Neck_Blast

@@ -1,0 +1,3 @@
+Sugarcane_Bacterial Blight
+Sugarcane_Healthy
+Sugarcane_Red Rot
