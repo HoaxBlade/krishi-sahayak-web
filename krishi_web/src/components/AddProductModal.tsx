@@ -87,8 +87,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async () => {
     setLoading(true)
     
     try {
@@ -186,7 +185,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
             </div>
           </div>
 
-          <form onSubmit={handleSubmit}>
+          <div>
             {/* Step 1: Basic Information */}
             {currentStep === 1 && (
               <div className="space-y-4">
@@ -201,7 +200,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                     required
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
                     placeholder="e.g., Organic Tomatoes"
                   />
                 </div>
@@ -215,7 +214,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                     value={formData.description}
                     onChange={(e) => handleInputChange('description', e.target.value)}
                     rows={3}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
                     placeholder="Describe your product..."
                   />
                 </div>
@@ -229,7 +228,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                       required
                       value={formData.category}
                       onChange={(e) => handleInputChange('category', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
                     >
                       <option value="">Select Category</option>
                       {categories.map(cat => (
@@ -246,7 +245,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                       required
                       value={formData.productType}
                       onChange={(e) => handleInputChange('productType', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
                     >
                       <option value="buyable">Buyable</option>
                       <option value="rentable">Rentable</option>
@@ -263,7 +262,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                       required
                       value={formData.unit}
                       onChange={(e) => handleInputChange('unit', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
                     >
                       <option value="">Select Unit</option>
                       {units.map(unit => (
@@ -282,7 +281,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                       min="0"
                       value={formData.stockQuantity}
                       onChange={(e) => handleInputChange('stockQuantity', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
                       placeholder="100"
                     />
                   </div>
@@ -309,7 +308,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                           step="0.01"
                           value={formData.price}
                           onChange={(e) => handleInputChange('price', e.target.value)}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
                           placeholder="120.00"
                         />
                       </div>
@@ -324,7 +323,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                           step="0.01"
                           value={formData.discountPrice}
                           onChange={(e) => handleInputChange('discountPrice', e.target.value)}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
                           placeholder="100.00"
                         />
                       </div>
@@ -339,7 +338,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                         min="1"
                         value={formData.minOrderQuantity}
                         onChange={(e) => handleInputChange('minOrderQuantity', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
                         placeholder="1"
                       />
                     </div>
@@ -357,7 +356,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                           step="0.01"
                           value={formData.rentalPricePerDay}
                           onChange={(e) => handleInputChange('rentalPricePerDay', e.target.value)}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
                           placeholder="2500"
                         />
                       </div>
@@ -372,7 +371,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                           step="0.01"
                           value={formData.rentalPricePerWeek}
                           onChange={(e) => handleInputChange('rentalPricePerWeek', e.target.value)}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
                           placeholder="15000"
                         />
                       </div>
@@ -387,7 +386,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                           step="0.01"
                           value={formData.rentalPricePerMonth}
                           onChange={(e) => handleInputChange('rentalPricePerMonth', e.target.value)}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
                           placeholder="50000"
                         />
                       </div>
@@ -403,7 +402,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                           min="1"
                           value={formData.minRentalDays}
                           onChange={(e) => handleInputChange('minRentalDays', e.target.value)}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
                           placeholder="1"
                         />
                       </div>
@@ -417,7 +416,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                           min="1"
                           value={formData.maxRentalDays}
                           onChange={(e) => handleInputChange('maxRentalDays', e.target.value)}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
                           placeholder="30"
                         />
                       </div>
@@ -446,7 +445,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                           step="0.01"
                           value={formData.depositAmount}
                           onChange={(e) => handleInputChange('depositAmount', e.target.value)}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
                           placeholder="50000"
                         />
                       </div>
@@ -470,7 +469,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                       type="text"
                       value={formData.specifications.variety}
                       onChange={(e) => handleInputChange('specifications.variety', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
                       placeholder="e.g., Cherry, John Deere"
                     />
                   </div>
@@ -483,7 +482,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                       type="text"
                       value={formData.specifications.color}
                       onChange={(e) => handleInputChange('specifications.color', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
                       placeholder="e.g., Red, Green"
                     />
                   </div>
@@ -498,7 +497,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                       type="text"
                       value={formData.specifications.size}
                       onChange={(e) => handleInputChange('specifications.size', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
                       placeholder="e.g., Medium, Large"
                     />
                   </div>
@@ -511,7 +510,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                       type="text"
                       value={formData.specifications.material}
                       onChange={(e) => handleInputChange('specifications.material', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
                       placeholder="e.g., Steel, Organic"
                     />
                   </div>
@@ -557,7 +556,8 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                   </button>
                 ) : (
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={handleSubmit}
                     disabled={loading}
                     className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                   >
@@ -573,7 +573,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                 )}
               </div>
             </div>
-          </form>
+          </div>
         </div>
       </motion.div>
     </div>

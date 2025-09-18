@@ -7,8 +7,8 @@ import { motion } from 'framer-motion'
 import {
   Menu,
   X,
-  Camera,
-  Cloud,
+  Activity,
+  MapPin,
   BarChart3,
   Home,
   LogIn,
@@ -24,8 +24,8 @@ export default function Navigation() {
 
   const navItems = [
     { name: 'Home', href: '/', icon: Home },
-    { name: 'Analyze', href: '/analyze', icon: Camera },
-    { name: 'Weather', href: '/weather', icon: Cloud },
+    { name: 'Stats', href: '/analyze', icon: Activity },
+    { name: 'Requirements', href: '/weather', icon: MapPin },
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
   ]
 

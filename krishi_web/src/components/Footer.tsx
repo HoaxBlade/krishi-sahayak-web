@@ -31,8 +31,8 @@ export default function Footer() {
 
         <div className="flex justify-center space-x-6 mb-8">
           <Link href="/" className="text-gray-300 hover:text-green-500 transition-colors text-sm">Home</Link>
-          <Link href="/analyze" className="text-gray-300 hover:text-green-500 transition-colors text-sm">Analyze</Link>
-          <Link href="/weather" className="text-gray-300 hover:text-green-500 transition-colors text-sm">Weather</Link>
+          <Link href="/analyze" className="text-gray-300 hover:text-green-500 transition-colors text-sm">Stats</Link>
+          <Link href="/weather" className="text-gray-300 hover:text-green-500 transition-colors text-sm">Requirements</Link>
           <Link href="/dashboard" className="text-gray-300 hover:text-green-500 transition-colors text-sm">Dashboard</Link>
         </div>
 

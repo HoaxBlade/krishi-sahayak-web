@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
-  BarChart3, 
   Activity, 
   Leaf,
   AlertTriangle,
@@ -12,7 +11,6 @@ import {
   Plus
 } from 'lucide-react'
 import Link from 'next/link'
-import { MLService } from '@/lib/mlService'
 import { WeatherService } from '@/lib/weatherService'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { useAuth } from '@/contexts/AuthContext'
@@ -20,12 +18,6 @@ import AddProductModal from '@/components/AddProductModal'
 
 export default function DashboardPage() {
   const { user } = useAuth()
-  const [mlStatus, setMlStatus] = useState<{
-    healthy: boolean
-    responseTime: number
-    timestamp: string
-    error?: string
-  } | null>(null)
   const [weather, setWeather] = useState<{
     temperature: number
     humidity: number
@@ -41,7 +33,6 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const mlService = MLService.getInstance()
         const weatherService = WeatherService.getInstance()
         
         let weatherDataPromise;
@@ -59,12 +50,7 @@ export default function DashboardPage() {
           weatherDataPromise = weatherService.getWeatherByCity('Delhi');
         }
 
-        const [mlStatus, weatherData] = await Promise.all([
-          mlService.getServerStatus(),
-          weatherDataPromise
-        ])
-        
-        setMlStatus(mlStatus)
+        const weatherData = await weatherDataPromise
         setWeather(weatherData)
       } catch (error) {
         console.error('Dashboard data fetch failed:', error)
@@ -107,32 +93,6 @@ export default function DashboardPage() {
     }
   ]
 
-  const recentAnalyses = [
-    {
-      id: 1,
-      crop: 'Tomato',
-      status: 'Healthy',
-      confidence: 94,
-      date: '2024-01-15',
-      location: 'Field A'
-    },
-    {
-      id: 2,
-      crop: 'Wheat',
-      status: 'Diseased',
-      confidence: 87,
-      date: '2024-01-14',
-      location: 'Field B'
-    },
-    {
-      id: 3,
-      crop: 'Rice',
-      status: 'Healthy',
-      confidence: 92,
-      date: '2024-01-13',
-      location: 'Field C'
-    }
-  ]
 
   if (loading) {
     return (
@@ -217,89 +177,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-7"> {/* Adjusted gap */}
-          {/* Recent Analyses */}
-          <motion.div
-            className="lg:col-span-2 bg-white rounded-xl shadow-subtle p-5" /* Refined card style */
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <h2 className="text-xl font-semibold text-gray-900 mb-5"> {/* Adjusted text size and margin */}
-              Recent Crop Analyses
-            </h2>
-            
-            <div className="space-y-3"> {/* Adjusted spacing */}
-              {recentAnalyses.map((analysis) => (
-                <motion.div
-                  key={analysis.id}
-                  className="flex items-center justify-between p-3.5 border border-gray-100 rounded-lg"
-                  whileHover={{ scale: 1.01, backgroundColor: "#f0f0f0", boxShadow: "0 5px 10px rgba(0, 0, 0, 0.05)" }}
-                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className={`w-2.5 h-2.5 rounded-full ${
-                      analysis.status === 'Healthy' ? 'bg-green-500' : 'bg-red-500'
-                    }`} />
-                    <div>
-                      <p className="font-medium text-gray-800">{analysis.crop}</p>
-                      <p className="text-xs text-gray-500">{analysis.location}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-gray-800">{analysis.status}</p>
-                    <p className="text-xs text-gray-500">{analysis.confidence}% confidence</p>
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    {analysis.date}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-            
-            <div className="mt-5"> {/* Adjusted margin */}
-              <Link
-                href="/analyze"
-                className="inline-flex items-center text-green-600 hover:text-green-700 font-semibold text-sm transition-all hover:scale-[1.02]"
-              >
-                Analyze New Crop
-                <BarChart3 className="w-3.5 h-3.5 ml-2" />
-              </Link>
-            </div>
-          </motion.div>
-
-          {/* System Status & Weather */}
-          <div className="space-y-5"> {/* Adjusted spacing */}
-            {/* System Status */}
-            <motion.div
-              className="bg-white rounded-xl shadow-subtle p-5"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.08)" }}
-              transition={{ duration: 0.5, type: "spring", stiffness: 100 }}
-            >
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">System Status</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500 text-sm">ML Server</span>
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-2 h-2 rounded-full ${mlStatus?.healthy ? 'bg-green-500' : 'bg-red-500'}`} />
-                    <span className="text-xs font-medium">{mlStatus?.healthy ? 'Online' : 'Offline'}</span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500 text-sm">Weather API</span>
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-2 h-2 rounded-full ${weather ? 'bg-green-500' : 'bg-red-500'}`} />
-                    <span className="text-xs font-medium">{weather ? 'Connected' : 'Disconnected'}</span>
-                  </div>
-                </div>
-                <Link href="/" className="text-sm text-green-600 hover:text-green-700 font-medium mt-2 block transition-all hover:scale-[1.02]">
-                  View Full Status
-                </Link>
-              </div>
-            </motion.div>
-
-            {/* Weather Summary */}
+          {/* Weather Summary */}
             {weather && (
               <motion.div
                 className="bg-white rounded-xl shadow-subtle p-5"
@@ -328,7 +206,6 @@ export default function DashboardPage() {
           onClose={() => setShowAddProductModal(false)}
         />
       </div>
-    </div>
     </ProtectedRoute>
   )
 }

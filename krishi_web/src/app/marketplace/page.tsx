@@ -12,7 +12,10 @@ import {
   Heart,
   Share2,
   Calendar,
-  CreditCard
+  CreditCard,
+  Filter,
+  X,
+  ChevronDown
 } from 'lucide-react'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { useAuth } from '@/contexts/AuthContext'
@@ -30,6 +33,15 @@ export default function MarketplacePage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [showRentalModal, setShowRentalModal] = useState(false)
   const [showAddProductModal, setShowAddProductModal] = useState(false)
+  
+  // Advanced filter states
+  const [showFilters, setShowFilters] = useState(false)
+  const [priceRange, setPriceRange] = useState({ min: '', max: '' })
+  const [location, setLocation] = useState('')
+  const [sortBy, setSortBy] = useState('created_at')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [activeFilters, setActiveFilters] = useState<string[]>([])
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 })
 
   const marketplaceService = MarketplaceService.getInstance()
 
@@ -42,13 +54,24 @@ export default function MarketplacePage() {
           marketplaceService.getProducts({
             category: selectedCategory === 'all' ? undefined : selectedCategory,
             search: searchQuery || undefined,
-            limit: 20
+            minPrice: priceRange.min ? parseFloat(priceRange.min) : undefined,
+            maxPrice: priceRange.max ? parseFloat(priceRange.max) : undefined,
+            location: location || undefined,
+            sortBy,
+            sortOrder,
+            page: pagination.page,
+            limit: 12
           }),
           marketplaceService.getCategories()
         ])
         
         setProducts(productsResponse.products || [])
         setCategories(categoriesResponse.categories || [])
+        setPagination({
+          page: productsResponse.pagination?.page || 1,
+          totalPages: productsResponse.pagination?.totalPages || 1,
+          total: productsResponse.pagination?.total || 0
+        })
         setError(null)
       } catch (err) {
         console.error('Error loading marketplace data:', err)
@@ -59,16 +82,57 @@ export default function MarketplacePage() {
     }
 
     loadData()
-  }, [selectedCategory, searchQuery, marketplaceService])
+  }, [selectedCategory, searchQuery, priceRange, location, sortBy, sortOrder, pagination.page, marketplaceService])
 
   // Handle search with debouncing
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      // Search will be triggered by the useEffect above
+      // Reset to first page when searching
+      setPagination(prev => ({ ...prev, page: 1 }))
     }, 500)
 
     return () => clearTimeout(timeoutId)
   }, [searchQuery])
+
+  // Update active filters
+  useEffect(() => {
+    const filters: string[] = []
+    if (selectedCategory !== 'all') {
+      const categoryName = categories.find(c => c.id === selectedCategory)?.name || selectedCategory
+      filters.push(`Category: ${categoryName}`)
+    }
+    if (priceRange.min) filters.push(`Min Price: ₹${priceRange.min}`)
+    if (priceRange.max) filters.push(`Max Price: ₹${priceRange.max}`)
+    if (location) filters.push(`Location: ${location}`)
+    if (searchQuery) filters.push(`Search: "${searchQuery}"`)
+    setActiveFilters(filters)
+  }, [selectedCategory, priceRange, location, searchQuery, categories])
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    setSearchQuery('')
+    setSelectedCategory('all')
+    setPriceRange({ min: '', max: '' })
+    setLocation('')
+    setSortBy('created_at')
+    setSortOrder('desc')
+    setPagination(prev => ({ ...prev, page: 1 }))
+  }
+
+  // Remove specific filter
+  const removeFilter = (filterToRemove: string) => {
+    if (filterToRemove.startsWith('Category:')) {
+      setSelectedCategory('all')
+    } else if (filterToRemove.startsWith('Min Price:')) {
+      setPriceRange(prev => ({ ...prev, min: '' }))
+    } else if (filterToRemove.startsWith('Max Price:')) {
+      setPriceRange(prev => ({ ...prev, max: '' }))
+    } else if (filterToRemove.startsWith('Location:')) {
+      setLocation('')
+    } else if (filterToRemove.startsWith('Search:')) {
+      setSearchQuery('')
+    }
+  }
 
   // Handle rental booking
   const handleRentalBooking = (product: Product) => {
@@ -109,7 +173,8 @@ export default function MarketplacePage() {
 
           {/* Search and Filter Bar */}
           <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <div className="flex flex-col md:flex-row gap-4">
+            {/* Main Search Row */}
+            <div className="flex flex-col lg:flex-row gap-4 mb-4">
               {/* Search Input */}
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -118,36 +183,181 @@ export default function MarketplacePage() {
                   placeholder="Search products, farmers, or locations..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm placeholder:text-sm text-black placeholder:text-black"
+                  className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm placeholder:text-sm text-black placeholder:text-gray-400"
                 />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
 
-              {/* Category Filter */}
-              <div className="flex gap-2 overflow-x-auto">
+              {/* Filter and Sort Controls */}
+              <div className="flex gap-3">
                 <button
-                  onClick={() => setSelectedCategory('all')}
-                  className={`px-3 py-2 rounded-lg font-medium whitespace-nowrap transition-colors text-sm ${
-                    selectedCategory === 'all'
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`px-4 py-3 rounded-lg font-medium transition-colors text-sm flex items-center gap-2 ${
+                    showFilters || activeFilters.length > 0
                       ? 'bg-green-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  All Products
+                  <Filter className="w-4 h-4" />
+                  Filters
+                  {activeFilters.length > 0 && (
+                    <span className="bg-white text-green-600 text-xs px-2 py-1 rounded-full">
+                      {activeFilters.length}
+                    </span>
+                  )}
                 </button>
-                {categories.map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => setSelectedCategory(category.id)}
-                    className={`px-3 py-2 rounded-lg font-medium whitespace-nowrap transition-colors text-sm ${
-                      selectedCategory === category.id
-                        ? 'bg-green-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
+
+                <div className="relative">
+                  <select
+                    value={`${sortBy}-${sortOrder}`}
+                    onChange={(e) => {
+                      const [newSortBy, newSortOrder] = e.target.value.split('-')
+                      setSortBy(newSortBy)
+                      setSortOrder(newSortOrder as 'asc' | 'desc')
+                    }}
+                    className="appearance-none bg-gray-100 text-gray-700 px-4 py-3 pr-8 rounded-lg font-medium text-sm hover:bg-gray-200 transition-colors cursor-pointer"
                   >
-                    {category.name}
-                  </button>
-                ))}
+                    <option value="created_at-desc">Newest First</option>
+                    <option value="created_at-asc">Oldest First</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                    <option value="rating_avg-desc">Highest Rated</option>
+                    <option value="rating_avg-asc">Lowest Rated</option>
+                    <option value="name-asc">Name: A to Z</option>
+                    <option value="name-desc">Name: Z to A</option>
+                  </select>
+                  <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+                </div>
               </div>
+            </div>
+
+            {/* Active Filters */}
+            {activeFilters.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                <span className="text-sm text-gray-600 font-medium">Active filters:</span>
+                {activeFilters.map((filter, index) => (
+                  <span
+                    key={index}
+                    className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                  >
+                    {filter}
+                    <button
+                      onClick={() => removeFilter(filter)}
+                      className="hover:text-green-600"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+                <button
+                  onClick={clearAllFilters}
+                  className="text-sm text-gray-500 hover:text-gray-700 underline"
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
+
+            {/* Advanced Filters Panel */}
+            {showFilters && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="border-t pt-4 mt-4 mb-4"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Price Range */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Price Range (₹)
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        placeholder="Min"
+                        value={priceRange.min}
+                        onChange={(e) => setPriceRange(prev => ({ ...prev, min: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
+                      />
+                      <input
+                        type="number"
+                        placeholder="Max"
+                        value={priceRange.max}
+                        onChange={(e) => setPriceRange(prev => ({ ...prev, max: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Location */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Location
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="City or State"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
+                    />
+                  </div>
+
+                  {/* Category Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Category
+                    </label>
+                    <select
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
+                    >
+                      <option value="all">All Categories</option>
+                      {categories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Category Pills */}
+            <div className="flex gap-2 overflow-x-auto">
+              <button
+                onClick={() => setSelectedCategory('all')}
+                className={`px-3 py-2 rounded-lg font-medium whitespace-nowrap transition-colors text-sm ${
+                  selectedCategory === 'all'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                All Products
+              </button>
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => setSelectedCategory(category.id)}
+                  className={`px-3 py-2 rounded-lg font-medium whitespace-nowrap transition-colors text-sm ${
+                    selectedCategory === category.id
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {category.name}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -313,6 +523,68 @@ export default function MarketplacePage() {
             </div>
           )}
 
+          {/* Pagination */}
+          {!loading && !error && products.length > 0 && pagination.totalPages > 1 && (
+            <div className="flex justify-center items-center gap-4 mt-8">
+              <button
+                onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
+                disabled={pagination.page === 1}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              
+              <div className="flex items-center gap-2">
+                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                  const pageNum = i + 1
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setPagination(prev => ({ ...prev, page: pageNum }))}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium ${
+                        pagination.page === pageNum
+                          ? 'bg-green-600 text-white'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  )
+                })}
+                {pagination.totalPages > 5 && (
+                  <>
+                    <span className="text-gray-500">...</span>
+                    <button
+                      onClick={() => setPagination(prev => ({ ...prev, page: pagination.totalPages }))}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium ${
+                        pagination.page === pagination.totalPages
+                          ? 'bg-green-600 text-white'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      {pagination.totalPages}
+                    </button>
+                  </>
+                )}
+              </div>
+              
+              <button
+                onClick={() => setPagination(prev => ({ ...prev, page: Math.min(pagination.totalPages, prev.page + 1) }))}
+                disabled={pagination.page === pagination.totalPages}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          )}
+
+          {/* Results Summary */}
+          {!loading && !error && products.length > 0 && (
+            <div className="text-center text-sm text-gray-600 mt-4">
+              Showing {((pagination.page - 1) * 12) + 1} to {Math.min(pagination.page * 12, pagination.total)} of {pagination.total} products
+            </div>
+          )}
+
           {/* No Results */}
           {!loading && !error && products.length === 0 && (
             <div className="text-center py-12">
@@ -320,9 +592,15 @@ export default function MarketplacePage() {
               <h3 className="text-lg font-semibold text-gray-600 mb-2">
                 No products found
               </h3>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 mb-4">
                 Try adjusting your search or filter criteria
               </p>
+              <button
+                onClick={clearAllFilters}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Clear all filters
+              </button>
             </div>
           )}
         </div>
@@ -349,7 +627,7 @@ export default function MarketplacePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Rental Period
                     </label>
-                    <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-black">
                       <option value="daily">Daily</option>
                       <option value="weekly">Weekly</option>
                       <option value="monthly">Monthly</option>
@@ -363,7 +641,7 @@ export default function MarketplacePage() {
                       </label>
                       <input
                         type="date"
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-black"
                         min={new Date().toISOString().split('T')[0]}
                       />
                     </div>
@@ -373,7 +651,7 @@ export default function MarketplacePage() {
                       </label>
                       <input
                         type="date"
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-black"
                         min={new Date().toISOString().split('T')[0]}
                       />
                     </div>
@@ -384,7 +662,7 @@ export default function MarketplacePage() {
                       Delivery Address
                     </label>
                     <textarea
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-black"
                       rows={3}
                       placeholder="Enter your delivery address"
                     />
