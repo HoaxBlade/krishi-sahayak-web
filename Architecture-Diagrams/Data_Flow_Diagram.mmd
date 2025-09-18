@@ -1,0 +1,44 @@
+graph TD
+    subgraph User
+        ActorUser[User]
+    end
+
+    subgraph User Interfaces
+        MobileApp[Mobile App]
+        WebApp[Web App]
+    end
+
+    subgraph Backend Services
+        MLServer[ML Inference Server]
+        Firebase[Firebase Backend]
+        Supabase[Supabase Database]
+        WeatherAPI[External Weather API]
+    end
+
+    subgraph Data Stores
+        MobileLocalStorage[Mobile Local Storage]
+        WebLocalStorage[Web Browser Cache]
+        MLModelStorage[ML Model Storage]
+        TrainingDataStore[Training Data Store]
+    end
+
+    ActorUser -- Interact --> MobileApp
+    ActorUser -- Interact --> WebApp
+
+    MobileApp -- Upload Image --> MLServer
+    MLServer -- Prediction Results --> MobileApp
+    MobileApp -- Request Location --> WeatherAPI
+    WeatherAPI -- Weather Data --> MobileApp
+    MobileApp -- Store Data --> MobileLocalStorage
+    MobileApp -- Send Analytics --> Firebase
+
+    WebApp -- Upload Image --> MLServer
+    MLServer -- Prediction Results --> WebApp
+    WebApp -- Request Location --> WeatherAPI
+    WeatherAPI -- Weather Data --> WebApp
+    WebApp -- Store Data --> WebLocalStorage
+    WebApp -- CRUD Operations --> Supabase
+
+    MLServer -- Access Models --> MLModelStorage
+    MLServer -- Consume --> TrainingDataStore
+    TrainingDataStore -- Used By --> MLServer

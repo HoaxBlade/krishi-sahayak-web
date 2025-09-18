@@ -1,36 +1,38 @@
 graph TD
     subgraph User Interfaces
-        A[krishi_app - Flutter Mobile App]
-        B[krishi_web - Next.js Web App]
+        subgraph Web UI
+            WebApp[Web App]
+            WebLocalStorage[Browser Cache]
+        end
+
+        subgraph Phone App
+            MobileApp[Mobile App]
+            MobileLocalStorage[Local Storage]
+        end
     end
 
     subgraph Backend Services
-        C[krishi-model - ML Inference Server]
-        D[External Weather API]
-        E[Firebase - Analytics & Backend]
-        F[Supabase - Database]
+        MLServer[ML Inference Server]
+        Firebase[Firebase Backend]
+        Supabase[Supabase Database]
+        WeatherAPI[External Weather API]
     end
 
-    A -- HTTP/HTTPS (Image Upload, Status Request) --> C
-    C -- JSON (Prediction Results, Status) --> A
+    MobileApp -- Image Upload, Status Request --> MLServer
+    MLServer -- Prediction Results --> MobileApp
+    MobileApp -- Analytics Events --> Firebase
+    MobileApp -- Location Data --> WeatherAPI
+    MobileApp -- Caching --> MobileLocalStorage
 
-    B -- HTTP/HTTPS (Status Request, Image Upload) --> C
-    C -- JSON (Prediction Results, Status) --> B
+    WebApp -- Image Upload, Status Request --> MLServer
+    MLServer -- Prediction Results --> WebApp
+    WebApp -- Data Operations --> Supabase
+    WebApp -- Location Data --> WeatherAPI
+    WebApp -- Caching --> WebLocalStorage
 
-    A -- HTTP/HTTPS (Location Data) --> D
-    D -- JSON (Weather Data) --> A
+    Firebase -- User Data, Analytics --> MobileApp
+    Supabase -- Data --> WebApp
+    WeatherAPI -- Weather Data --> MobileApp
+    WeatherAPI -- Weather Data --> WebApp
 
-    B -- HTTP/HTTPS (Location Data) --> D
-    D -- JSON (Weather Data) --> B
-
-    A -- Firebase SDK (Analytics Events) --> E
-    E -- Data --> A
-
-    B -- HTTP/HTTPS (Data Operations) --> F
-    F -- Data --> B
-
-    A -- Local Storage (SQLite, Cache) --> A
-    B -- Local Storage (Browser Cache) --> B
-
-    C -- Model Files, Labels --> C
-    C -- Training Data --> C
+    MLServer -- Training Data --> MLServer

@@ -1,0 +1,26 @@
+graph TD
+    subgraph Data & Model Development
+        A[Data Collection and Preprocessing] --> B(Feature Engineering)
+        B --> C(Model Training)
+        C --> D{Model Evaluation and Validation}
+        D -- Pass --> E[Model Registry]
+        D -- Fail --> C
+    end
+
+    subgraph CI/CD Pipeline
+        E --> F[Model Versioning]
+        F --> G[CI Trigger]
+        G --> H(Build and Test ML Code)
+        H --> I(Containerize ML Model)
+        I --> J[Push to Container Registry]
+    end
+
+    subgraph Deployment & Monitoring
+        J --> K[CD Trigger]
+        K --> L(Deploy to Kubernetes/Serving Platform)
+        L --> M[ML Model Endpoint]
+        M --> N(Monitoring and Alerting)
+        N --> O{Performance Degradation?}
+        O -- Yes --> A
+        O -- No --> M
+    end

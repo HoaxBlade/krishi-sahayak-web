@@ -1,0 +1,68 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam ranksep 50
+skinparam nodesep 40
+
+skinparam actor {
+  BackgroundColor White
+  BorderColor Black
+  FontSize 14
+  FontColor Black
+}
+
+' === Actors ===
+actor User #LightBlue
+actor Admin #LightCoral
+actor Vendor #LightGreen
+
+' ===== Crop Analysis =====
+package "Crop Analysis System" {
+    package "Analysis Features" {
+        (Upload Image for Analysis) as UC1
+        (View Crop Analysis Results) as UC2
+        (Get Weather Information) as UC3
+    }
+
+    package "User & Offline Features" {
+        (Manage User Profile) as UC4
+        (Access Offline Features) as UC5
+        (Synchronize Offline Data) as UC6
+    }
+}
+
+' ===== Admin Features =====
+package "Admin Console" {
+    (Manage ML Models) as UC7
+    (Monitor System Performance) as UC8
+}
+
+' ===== Marketplace =====
+package "Marketplace" {
+    (Buy Products) as UC11
+    (Sell Products) as UC10
+    (View Vendor Stats) as UC9
+}
+
+' === User Connections ===
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+User --> UC11
+
+' === Admin Connections ===
+Admin --> UC7
+Admin --> UC8
+
+' === Vendor Connections ===
+Vendor --> UC9
+Vendor --> UC10
+
+' === Relationships ===
+UC1 --> UC2 : <<include>>
+UC5 --> UC6 : <<extend>>
+@enduml

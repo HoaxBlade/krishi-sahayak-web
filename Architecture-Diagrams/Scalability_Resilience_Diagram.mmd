@@ -1,0 +1,36 @@
+graph TD
+    subgraph User Access & Load Distribution
+        A[Load Balancer] --> B[Web App]
+        A --> C[Mobile App API Gateway]
+    end
+
+    subgraph Scalable Application Services
+        B --> D[Web App Instances]
+        C --> E[Mobile App Backend]
+        E --> F[ML Inference Server]
+    end
+
+    subgraph Data Persistence & External Services
+        F --> G[Kubernetes Cluster]
+        D --> H[Supabase Database]
+        E --> H
+        E --> I[Firebase Backend]
+    end
+
+    subgraph Operational Resilience & Monitoring
+        J[Auto-Scaling Groups]
+        K[Health Checks]
+        L[Monitoring & Alerts]
+        M[Backup & Restore]
+        N[Disaster Recovery]
+    end
+
+    D -- Triggers --> J
+    E -- Triggers --> J
+    G -- Triggers --> J
+
+    J -- Provides --> K
+    K -- Informs --> L
+    L -- Notifies --> Ops
+    H -- Ensures --> M
+    M -- Supports --> N

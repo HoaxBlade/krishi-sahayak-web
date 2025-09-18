@@ -1,0 +1,46 @@
+graph TD
+    subgraph krishi_app
+        MobileUI[Mobile UI]
+        MobileServices[Mobile Services]
+        LocalML[Local ML Service]
+        MobileDB[Local SQLite DB]
+    end
+
+    subgraph krishi_web
+        WebUI[Web UI]
+        WebServices[Web Services]
+        BrowserCache[Browser Cache]
+    end
+
+    subgraph krishi-model
+        MLAPI[ML API Endpoint]
+        MLModels[ML Models]
+        DataUtils[Data Utilities]
+    end
+
+    subgraph ExternalServices
+        Firebase[Firebase]
+        Supabase[Supabase]
+        WeatherAPI[External Weather API]
+    end
+
+    MobileUI -- Uses --> MobileServices
+    MobileServices -- Interacts With --> LocalML
+    MobileServices -- Stores/Retrieves --> MobileDB
+    MobileServices -- Calls --> MLAPI
+    MobileServices -- Calls --> WeatherAPI
+    MobileServices -- Uses --> Firebase
+
+    WebUI -- Uses --> WebServices
+    WebServices -- Caches --> BrowserCache
+    WebServices -- Calls --> MLAPI
+    WebServices -- Calls --> WeatherAPI
+    WebServices -- Interacts With --> Supabase
+
+    MLAPI -- Serves --> MLModels
+    MLModels -- Processes --> DataUtils
+
+    Firebase -- Provides --> MobileServices
+    Supabase -- Provides --> WebServices
+    WeatherAPI -- Provides --> MobileServices
+    WeatherAPI -- Provides --> WebServices
