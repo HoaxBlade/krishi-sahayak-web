@@ -45,35 +45,8 @@ export class MLService {
   }
 
   async checkServerHealth(): Promise<boolean> {
-    try {
-      const url = USE_API_ROUTES ? '/api/ml/health' : `${this.baseUrl}/health`
-      console.log('Checking ML Server health at:', url)
-      
-      const response = await axios.get(url, {
-        timeout: 15000,
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'User-Agent': 'Krishi-Sahayak-Web/1.0.0'
-        }
-      })
-      console.log('ML Server health response:', response.status, response.data)
-      
-      // Check if response is healthy
-      if (response.status === 200 && response.data && response.data.data?.status === 'healthy') {
-        return true
-      }
-      return false
-    } catch (error) {
-      const axiosError = error as AxiosError
-      console.error('ML Server health check failed:', {
-        url: USE_API_ROUTES ? '/api/ml/health' : this.baseUrl,
-        error: axiosError.message || String(error),
-        code: axiosError.code,
-        response: axiosError.response?.data
-      })
-      return false
-    }
+    const status = await this.getServerStatus()
+    return status.healthy
   }
 
   async analyzeCropHealth(imageFile: File): Promise<MLAnalysisResult> {
@@ -115,10 +88,34 @@ export class MLService {
     let error: string | undefined
 
     try {
-      healthy = await this.checkServerHealth()
+      // Use the correct URL for health check
+      const url = USE_API_ROUTES ? '/api/ml/health' : `${this.baseUrl}/health`
+      console.log('Checking ML Server health at:', url)
+      
+      const response = await axios.get(url, {
+        timeout: 15000,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'User-Agent': 'Krishi-Sahayak-Web/1.0.0'
+        }
+      })
+      
+      console.log('ML Server health response:', response.status, response.data)
+      
+      // Check if response is healthy
+      if (response.status === 200 && response.data && response.data.data?.status === 'healthy') {
+        healthy = true
+      }
     } catch (err) {
+      const axiosError = err as AxiosError
       error = 'ML Server is currently unavailable'
-      console.warn('ML Server status check failed:', err)
+      console.warn('ML Server status check failed:', {
+        url: USE_API_ROUTES ? '/api/ml/health' : this.baseUrl,
+        error: axiosError.message || String(err),
+        code: axiosError.code,
+        response: axiosError.response?.data
+      })
     }
 
     const responseTime = Date.now() - startTime
