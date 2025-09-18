@@ -5,7 +5,7 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { 
-  ShoppingCart, BarChart3, Cloud, Shield, ArrowRight, Wind, Droplet, Thermometer, Umbrella, CheckCircle 
+  ShoppingCart, BarChart3, Cloud, Shield, ArrowRight, Wind, Droplet, Thermometer, Umbrella, CheckCircle, Download
 } from "lucide-react"
 import { MLService } from "@/lib/mlService"
 import { WeatherService } from "@/lib/weatherService"
@@ -217,10 +217,10 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
+    
       {/* Weather */}
       {weather && (
-        <section className="relative py-12 z-10">
+        <section className="relative py-4 z-10">
           <motion.div
             className="backdrop-blur-xl bg-white/60 border border-gray-100 rounded-2xl shadow-subtle p-7 max-w-sm mx-auto"
             initial={{ opacity: 0, y: 50 }}
@@ -251,8 +251,17 @@ export default function HomePage() {
         </section>
       )}
 
+      {/* Incubated By Section */}
+      <section className="relative py-8 pt-16 pb-8 z-10 bg-gradient-to-br from-green-50 via-blue-50 to-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-lg text-gray-600 font-medium mb-1">Incubated By:</p>
+          <img src="/NIELIT.png" alt="NIELIT Logo" className="mx-auto h-16" />
+          <p className="text-sm text-gray-500 mt-1">An initiative by NIELIT</p>
+        </div>
+      </section>
+
       {/* System Status Section */}
-      <section className="relative py-12 bg-gray-50 z-10">
+      <section className="relative py-5 bg-gray-50 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold text-gray-900 mb-3">System Status</h2>
@@ -309,14 +318,20 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Incubated By Section */}
-      <section className="relative py-8 bg-white z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-lg text-gray-600 font-medium mb-4">Incubated By:</p>
-          <img src="/NIELIT.png" alt="NIELIT Logo" className="mx-auto h-16" />
-        </div>
-      </section>
+      {/* Floating Android Download Button */}
+      <motion.a
+        href="/path/to/your/app.apk" // Placeholder for the actual APK path
+        download
+        className="fixed bottom-8 right-8 bg-green-600 text-white p-4 rounded-full shadow-lg flex items-center justify-center z-50 cursor-pointer"
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, delay: 1 }}
+        whileHover={{ scale: 1.1, boxShadow: "0 15px 30px rgba(0, 0, 0, 0.2)" }}
+        whileTap={{ scale: 0.9 }}
+        title="Download Android App"
+      >
+        <Download className="w-7 h-7" />
+      </motion.a>
     </div>
   )
 }
@@ -350,3 +365,5 @@ function StatusCard({ title, status, extra, healthy, delay = 0 }: { title: strin
     </motion.div>
   )
 }
+
+

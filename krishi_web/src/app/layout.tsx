@@ -17,11 +17,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Krishi Sahayak - Smart Farming with AI",
+  title: "Krishi Sahayak",
   description: "Revolutionizing agriculture with AI-powered crop analysis and weather insights.",
   icons: {
-    icon: '/applogo.png',
-    apple: '/applogo.png',
+    icon: '/webicon.png',
+    apple: '/webicon.png',
   },
 };
 
