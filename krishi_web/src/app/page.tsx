@@ -205,14 +205,15 @@ export default function HomePage() {
             >
               Explore Marketplace <ArrowRight className="ml-2 w-5 h-5" />
             </motion.a>
-            <motion.button
+            <motion.a
+              href="/learn-more"
               className="border border-green-600 text-green-700 px-7 py-3.5 rounded-xl text-base font-medium shadow-sm"
               whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.08)" }}
               whileTap={{ scale: 0.98 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
               Learn More
-            </motion.button>
+            </motion.a>
           </div>
         </div>
       </section>
@@ -309,6 +310,13 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Incubated By Section */}
+      <section className="relative py-8 bg-white z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-lg text-gray-600 font-medium mb-4">Incubated By:</p>
+          <img src="/NIELIT.png" alt="NIELIT Logo" className="mx-auto h-16" />
+        </div>
+      </section>
     </div>
   )
 }

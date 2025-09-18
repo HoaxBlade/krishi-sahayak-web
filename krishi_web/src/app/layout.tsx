@@ -20,8 +20,8 @@ export const metadata: Metadata = {
   title: "Krishi Sahayak - Smart Farming with AI",
   description: "Revolutionizing agriculture with AI-powered crop analysis and weather insights.",
   icons: {
-    icon: '/logo.jpg',
-    apple: '/logo.jpg',
+    icon: '/applogo.png',
+    apple: '/applogo.png',
   },
 };
 

@@ -31,19 +31,25 @@ export default function Navigation() {
 
   return (
     <nav className="bg-white shadow-subtle border-b border-gray-100 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-3"> {/* Adjusted padding */}
+      <div className="max-w-full mx-auto px-4">
+        <div className="flex justify-between items-center"> {/* Adjusted padding */}
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3">
             <Image
               src="/logo.jpg"
               alt="Krishi Sahayak Logo"
-              width={50}
-              height={50}
+              width={70}
+              height={70}
               className="rounded-full object-cover"
             />
-            <div className="flex flex-col items-start">
-              <span className="text-xl font-bold text-gray-600">Krishi Sahayak</span>
+            <div className="flex flex-col justify-center items-start">
+              <Image
+                src="/name.png"
+                alt="Krishi Sahayak"
+                width={150}
+                height={250}
+                className="object-contain pt-4"
+              />
               <div className="flex items-center space-x-1">
                 <span className="text-sm text-gray-500">Powered by:</span>
                 <Image

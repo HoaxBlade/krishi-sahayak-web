@@ -22,8 +22,8 @@ export default function Footer() {
             <Image
               src="/NIELIT.png"
               alt="NIELIT Logo"
-              width={40}
-              height={40}
+              width={50}
+              height={50}
               className="object-contain transition-transform hover:scale-[1.03]"
             />
           </div>
