@@ -12,30 +12,20 @@ import {
   TrendingUp,
   Server,
   Zap,
-  Shield
+  Shield,
+  User
 } from 'lucide-react'
 import { MLService } from '@/lib/mlService'
 
 export default function AnalyzePage() {
-  // COMMENTED OUT: Original analysis functionality
-  // const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  // const [preview, setPreview] = useState<string | null>(null)
-  // const [analysis, setAnalysis] = useState<MLAnalysisResult | null>(null)
-  // const [loading, setLoading] = useState(false)
-  // const [error, setError] = useState<string | null>(null)
-  // const [displayLanguage, setDisplayLanguage] = useState<DisplayLanguage>('hindi'); // Default to Hindi
-  // const fileInputRef = useRef<HTMLInputElement>(null)
-
   // NEW: ML Model Performance Stats
   const [modelStats, setModelStats] = useState({
-    accuracy: 0,
-    totalAnalyses: 0,
+    activeUsers: 0,
     avgResponseTime: 0,
-    uptime: 0,
+    downtime: 0,
     lastUpdated: '',
     trends: {
-      accuracyChange: 0,
-      analysesChange: 0,
+      activeUsersChange: 0,
       responseTimeChange: 0,
     }
   })
@@ -57,52 +47,6 @@ export default function AnalyzePage() {
   const [error, setError] = useState<string | null>(null)
   const [isClient, setIsClient] = useState(false)
   
-  // Loading state is used in fetchModelStats function
-
-  // COMMENTED OUT: Original analysis functions
-  // const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = event.target.files?.[0]
-  //   if (file) {
-  //     setSelectedFile(file)
-  //     setError(null)
-  //     setAnalysis(null)
-  //     setDisplayLanguage('hindi'); // Reset language on new file select
-      
-  //     // Create preview
-  //     const reader = new FileReader()
-  //     reader.onload = (e) => {
-  //       setPreview(e.target?.result as string)
-  //     }
-  //     reader.readAsDataURL(file)
-  //   }
-  // }
-
-  // const handleAnalyze = async () => {
-  //   if (!selectedFile) return
-
-  //   setLoading(true)
-  //   setError(null)
-
-  //   try {
-  //     const mlService = MLService.getInstance()
-      
-  //     // Check if ML server is available first
-  //     const isHealthy = await mlService.checkServerHealth()
-  //     if (!isHealthy) {
-  //       setError('ML Server is currently offline. Please try again later.')
-  //       return
-  //     }
-      
-  //     const result = await mlService.analyzeCropHealth(selectedFile)
-  //     setAnalysis(result)
-  //   } catch (err) {
-  //     setError('Failed to analyze image. Please check your connection and try again.')
-  //     console.error('Analysis error:', err)
-  //   } finally {
-  //     setLoading(false)
-  //   }
-  // }
-
   // NEW: ML Model Performance Functions
   const fetchModelStats = async () => {
     setLoading(true)
@@ -191,14 +135,12 @@ export default function AnalyzePage() {
       const data = await response.json()
       
       setModelStats({
-        accuracy: Math.round((data.accuracy || 0) * 10) / 10, // Round to 1 decimal
-        totalAnalyses: data.totalAnalyses || 0,
+        activeUsers: data.activeUsers || 0,
         avgResponseTime: Math.round((data.avgResponseTime || 0) * 10) / 10, // Round to 1 decimal
-        uptime: Math.round((data.uptime || 0) * 10) / 10, // Round to 1 decimal
+        downtime: Math.round((data.downtime || 0) * 10) / 10, // Round to 1 decimal
         lastUpdated: new Date().toISOString(),
         trends: {
-          accuracyChange: data.trends?.accuracyChange || 0,
-          analysesChange: data.trends?.analysesChange || 0,
+          activeUsersChange: data.trends?.activeUsersChange || 0,
           responseTimeChange: data.trends?.responseTimeChange || 0,
         }
       })
@@ -219,34 +161,7 @@ export default function AnalyzePage() {
       fetchRecentAnalyses()
     }, 30000)
     return () => clearInterval(interval)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // COMMENTED OUT: Original analysis helper functions
-  // const getHealthColor = (status: string) => {
-  //   switch (status.toLowerCase()) {
-  //     case 'healthy':
-  //       return 'text-green-600 bg-green-100'
-  //     case 'diseased':
-  //       return 'text-red-600 bg-red-100'
-  //     case 'stressed':
-  //       return 'text-yellow-600 bg-yellow-100'
-  //     default:
-  //       return 'text-gray-600 bg-gray-100'
-  //   }
-  // }
-
-  // const getHealthIcon = (status: string) => {
-  //   switch (status.toLowerCase()) {
-  //     case 'healthy':
-  //       return <CheckCircle className="w-6 h-6 text-green-600" />
-  //     case 'diseased':
-  //       return <AlertTriangle className="w-6 h-6 text-red-600" />
-  //     case 'stressed':
-  //       return <AlertTriangle className="w-6 h-6 text-yellow-600" />
-  //     default:
-  //       return <Leaf className="w-6 h-6 text-gray-600" />
-  //   }
-  // }
+  }, [])
 
   // NEW: ML Model Performance Helper Functions
   const getStatusColor = (status: string) => {
@@ -352,55 +267,29 @@ export default function AnalyzePage() {
         </motion.div>
 
         {/* Performance Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <motion.div
-            className="bg-white rounded-xl shadow-lg p-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <Target className="w-6 h-6 text-green-600" />
-              </div>
-              <TrendingUp className="w-5 h-5 text-green-500" />
-            </div>
-            <h3 className="text-sm font-medium text-gray-600 mb-1">Model Accuracy</h3>
-            <p className="text-3xl font-bold text-gray-900">
-              {loading ? '...' : `${modelStats.accuracy}%`}
-            </p>
-            <p className={`text-xs mt-1 ${
-              modelStats.trends.accuracyChange > 0 ? 'text-green-500' : 
-              modelStats.trends.accuracyChange < 0 ? 'text-red-500' : 'text-gray-500'
-            }`}>
-              {loading ? 'Loading...' : 
-                `${modelStats.trends.accuracyChange > 0 ? '+' : ''}${modelStats.trends.accuracyChange.toFixed(1)}% from last check`
-              }
-            </p>
-          </motion.div>
-
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               <motion.div
             className="bg-white rounded-xl shadow-lg p-6"
             initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
           >
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-blue-100 rounded-lg">
-                <BarChart3 className="w-6 h-6 text-blue-600" />
+                <User className="w-6 h-6 text-blue-600" />
               </div>
               <TrendingUp className="w-5 h-5 text-blue-500" />
             </div>
-            <h3 className="text-sm font-medium text-gray-600 mb-1">Total Analyses</h3>
+            <h3 className="text-sm font-medium text-gray-600 mb-1">Number of Active Users</h3>
             <p className="text-3xl font-bold text-gray-900">
-              {loading ? '...' : modelStats.totalAnalyses.toLocaleString()}
+              {loading ? '...' : modelStats.activeUsers.toLocaleString()}
             </p>
             <p className={`text-xs mt-1 ${
-              modelStats.trends.analysesChange > 0 ? 'text-green-500' : 
-              modelStats.trends.analysesChange < 0 ? 'text-red-500' : 'text-gray-500'
+              modelStats.trends.activeUsersChange > 0 ? 'text-green-500' :
+              modelStats.trends.activeUsersChange < 0 ? 'text-red-500' : 'text-gray-500'
             }`}>
-              {loading ? 'Loading...' : 
-                `+${modelStats.trends.analysesChange} since last check`
+              {loading ? 'Loading...' :
+                `+${modelStats.trends.activeUsersChange} since last check`
               }
             </p>
               </motion.div>
@@ -409,7 +298,7 @@ export default function AnalyzePage() {
             className="bg-white rounded-xl shadow-lg p-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
           >
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-purple-100 rounded-lg">
@@ -422,10 +311,10 @@ export default function AnalyzePage() {
               {loading ? '...' : `${modelStats.avgResponseTime}s`}
             </p>
             <p className={`text-xs mt-1 ${
-              modelStats.trends.responseTimeChange < 0 ? 'text-green-500' : 
+              modelStats.trends.responseTimeChange < 0 ? 'text-green-500' :
               modelStats.trends.responseTimeChange > 0 ? 'text-red-500' : 'text-gray-500'
             }`}>
-              {loading ? 'Loading...' : 
+              {loading ? 'Loading...' :
                 `${modelStats.trends.responseTimeChange > 0 ? '+' : ''}${modelStats.trends.responseTimeChange.toFixed(1)}s change`
               }
             </p>
@@ -435,17 +324,17 @@ export default function AnalyzePage() {
             className="bg-white rounded-xl shadow-lg p-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
           >
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-orange-100 rounded-lg">
                 <Shield className="w-6 h-6 text-orange-600" />
               </div>
               <TrendingUp className="w-5 h-5 text-orange-500" />
-                  </div>
-            <h3 className="text-sm font-medium text-gray-600 mb-1">Uptime</h3>
+                   </div>
+            <h3 className="text-sm font-medium text-gray-600 mb-1">Downtime</h3>
             <p className="text-3xl font-bold text-gray-900">
-              {loading ? '...' : `${modelStats.uptime}%`}
+              {loading ? '...' : `${modelStats.downtime}%`}
             </p>
             <p className="text-xs text-gray-500 mt-1">
               {loading ? 'Loading...' : 'Last 30 days'}
@@ -585,26 +474,13 @@ export default function AnalyzePage() {
           </h2>
           
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-gray-700">
-                  Model accuracy: {loading ? '...' : `${modelStats.accuracy}%`}
-                  {!loading && modelStats.trends.accuracyChange > 0 && ' (improved)'}
-                  {!loading && modelStats.trends.accuracyChange < 0 && ' (decreased)'}
-                </span>
-              </div>
-              <span className="text-xs text-gray-500">
-                {isClient && modelStats.lastUpdated ? new Date(modelStats.lastUpdated).toLocaleTimeString() : 'Loading...'}
-              </span>
-                </div>
 
             <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
               <div className="flex items-center space-x-3">
                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                 <span className="text-sm text-gray-700">
-                  Total analyses: {loading ? '...' : modelStats.totalAnalyses.toLocaleString()}
-                  {!loading && modelStats.trends.analysesChange > 0 && ` (+${modelStats.trends.analysesChange} new)`}
+                  Active users: {loading ? '...' : modelStats.activeUsers.toLocaleString()}
+                  {!loading && modelStats.trends.activeUsersChange > 0 && ` (+${modelStats.trends.activeUsersChange} new)`}
                 </span>
               </div>
               <span className="text-xs text-gray-500">
@@ -629,15 +505,15 @@ export default function AnalyzePage() {
             <div className="flex items-center justify-between p-4 bg-orange-50 rounded-lg">
               <div className="flex items-center space-x-3">
                 <div className={`w-2 h-2 rounded-full ${
-                  serverHealth.status === 'healthy' ? 'bg-green-500' : 
+                  serverHealth.status === 'healthy' ? 'bg-green-500' :
                   serverHealth.status === 'unhealthy' ? 'bg-red-500' : 'bg-yellow-500'
                 }`}></div>
                 <span className="text-sm text-gray-700">
-                  Server status: {serverHealth.status} ({serverHealth.responseTime}ms)
+                  Backend Downtime: {loading ? '...' : `${modelStats.downtime}%`}
                 </span>
               </div>
               <span className="text-xs text-gray-500">
-                {isClient && serverHealth.lastCheck ? new Date(serverHealth.lastCheck).toLocaleTimeString() : 'Loading...'}
+                {isClient && modelStats.lastUpdated ? new Date(modelStats.lastUpdated).toLocaleTimeString() : 'Loading...'}
               </span>
             </div>
           </div>
