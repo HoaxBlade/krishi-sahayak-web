@@ -8,12 +8,13 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
 from tensorflow.keras.applications import MobileNetV2
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
-from data_utils import get_crop_labels, create_image_generators, IMAGE_SIZE, BATCH_SIZE, DATA_DIR
+from data_utils import get_crop_labels, create_image_generators, IMAGE_SIZE, BATCH_SIZE
 
 # Define constants
 EPOCHS_HEAD = 20
 EPOCHS_FINE_TUNE = 80
 FINE_TUNE_AT = 100 # Unfreeze layers from this point onwards
+DATA_DIR = 'krishi-model/SplitData_Crop'
 MODEL_SAVE_PATH = 'krishi-model/saved_models/crop_detector_model.h5'
 LABELS_PATH = 'krishi-model/model/crop_type_labels.txt'
 

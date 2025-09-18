@@ -4,10 +4,21 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 IMAGE_SIZE = (128, 128)
 BATCH_SIZE = 32
-DATA_DIR = 'krishi-model/SplitData'
+DEFAULT_DATA_DIR = 'krishi-model/SplitData'
+CROP_LABELS_FILE = 'krishi-model/model/crop_type_labels.txt'
 
-def get_crop_labels(data_dir=DATA_DIR):
-    """Extracts unique crop types from the dataset directory names."""
+def get_crop_labels():
+    """Reads crop types from a predefined labels file."""
+    if not os.path.exists(CROP_LABELS_FILE):
+        print(f"Warning: Crop labels file not found at {CROP_LABELS_FILE}. Falling back to directory scanning.")
+        return _get_crop_labels_from_dirs(DEFAULT_DATA_DIR) # Fallback to old method
+
+    with open(CROP_LABELS_FILE, 'r') as f:
+        crop_types = [line.strip() for line in f if line.strip()]
+    return sorted(list(set(crop_types)))
+
+def _get_crop_labels_from_dirs(data_dir):
+    """Helper function to extract unique crop types from the dataset directory names."""
     crop_types = set()
     for split in ['train', 'val', 'test']:
         split_path = os.path.join(data_dir, split)
@@ -17,7 +28,7 @@ def get_crop_labels(data_dir=DATA_DIR):
                 crop_types.add(crop_type)
     return sorted(list(crop_types))
 
-def get_disease_labels_for_crop(crop_type, data_dir=DATA_DIR):
+def get_disease_labels_for_crop(crop_type, data_dir=DEFAULT_DATA_DIR):
     """Extracts disease labels for a specific crop type."""
     disease_labels = set()
     for split in ['train', 'val', 'test']:
@@ -44,7 +55,7 @@ def create_image_generators(image_size=IMAGE_SIZE, batch_size=BATCH_SIZE):
     return train_datagen, val_test_datagen, val_test_datagen
 
 def create_data_generators(
-    data_dir=DATA_DIR,
+    data_dir=DEFAULT_DATA_DIR,
     target_size=IMAGE_SIZE,
     batch_size=BATCH_SIZE,
     class_mode='categorical',

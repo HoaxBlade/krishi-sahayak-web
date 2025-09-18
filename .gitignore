@@ -2,9 +2,24 @@
 krishi-model/SplitData/
 krishi-model/SplitData_Crop/
 
-# Old data ignore patterns (removed as DVC will manage these)
-# **/*SplitData_CropType
-# **/*SplitData_Disease_Specific
+# Data and environment directories
+**/*__MACOSX/
+**/*__MACOSX/*
+**/*__MACOSX
+**/*_MACOSX/
+**/*_MACOSX/*
+**/*_MACOSX
+**/*.DS_Store
+**/*.DS_Store?
+**/*.Spotlight-V100
+**/*.Trashes
+**/*.db
+**/*.faiss
+**/*.sqlite3*
+**/*.sqlitedb*
+**/*Data
+**/*SplitData_CropType
+**/*SplitData_Disease_Specific
 **/*.zip
 **/*venv
 **/__pycache__
