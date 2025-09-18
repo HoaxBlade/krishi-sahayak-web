@@ -26,6 +26,9 @@ CPU_HEALTH_THRESHOLD = int(os.getenv('CPU_HEALTH_THRESHOLD', '95')) # Unified th
 # Image Preprocessing
 IMAGE_SIZE = (224, 224) # Standard for MobileNetV2
 
+# Prediction Confidence Threshold
+CONFIDENCE_THRESHOLD = float(os.getenv('CONFIDENCE_THRESHOLD', '0.7')) # Default to 70%
+
 # Server Configuration
 FLASK_PORT = int(os.getenv('PORT', 5000)) # Default to 5000 for production, 5001 for development
 FLASK_HOST = '0.0.0.0'

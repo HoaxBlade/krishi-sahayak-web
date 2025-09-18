@@ -16,7 +16,7 @@ import asyncio # For asynchronous API calls
 from config import (
     RATE_LIMIT_REQUESTS, RATE_LIMIT_WINDOW, MODEL_PATHS, LABEL_PATHS,
     MEMORY_HEALTH_THRESHOLD, CPU_HEALTH_THRESHOLD, IMAGE_SIZE, MAX_FILE_SIZE,
-    GEMINI_API_KEY # Import the Gemini API key
+    GEMINI_API_KEY, CONFIDENCE_THRESHOLD # Import the Gemini API key and CONFIDENCE_THRESHOLD
 )
 
 logger = logging.getLogger(__name__)
@@ -280,25 +280,32 @@ def analyze_crop_prediction(model_or_interpreter, image_data, labels, is_tflite_
             predictions = model.predict(processed_image, verbose=0)
             logger.info(f"Keras model prediction completed: shape={predictions.shape}")
         
-        # Get the predicted class
-        predicted_class = np.argmax(predictions[0])
+        # Get the predicted class and confidence
+        predicted_class_idx = np.argmax(predictions[0])
         confidence = np.max(predictions[0])
         
-        # Get the predicted label
-        predicted_label = labels[predicted_class] if predicted_class < len(labels) else "Unknown"
-        
-        # Determine if crop is healthy (assuming labels ending with "Healthy" are healthy)
-        is_healthy = predicted_label.endswith("Healthy")
+        # Apply confidence threshold
+        if confidence < CONFIDENCE_THRESHOLD:
+            predicted_label = "Unknown"
+            is_healthy = False
+            predicted_class_idx = -1 # Indicate unknown class
+            logger.warning(f"Prediction confidence ({confidence:.4f}) below threshold ({CONFIDENCE_THRESHOLD:.4f}). Classified as 'Unknown'.")
+        else:
+            # Get the predicted label
+            predicted_label = labels[predicted_class_idx] if predicted_class_idx < len(labels) else "Unknown"
+            
+            # Determine if crop is healthy (assuming labels ending with "Healthy" are healthy)
+            is_healthy = predicted_label.endswith("Healthy")
         
         logger.info(f"Prediction results:")
-        logger.info(f"  - Predicted class: {predicted_class}")
+        logger.info(f"  - Predicted class: {predicted_class_idx}")
         logger.info(f"  - Predicted label: {predicted_label}")
         logger.info(f"  - Confidence: {confidence:.4f}")
         logger.info(f"  - Is healthy: {is_healthy}")
         logger.info(f"  - All predictions: {predictions[0].tolist()}")
         
         return {
-            'prediction_class': int(predicted_class),
+            'prediction_class': int(predicted_class_idx),
             'crop_type': predicted_label,
             'confidence': float(confidence),
             'is_healthy': is_healthy,
