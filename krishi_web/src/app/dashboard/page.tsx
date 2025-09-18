@@ -3,96 +3,171 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
-  Activity, 
-  Leaf,
+  Package, 
+  ShoppingCart, 
+  Users, 
   AlertTriangle,
-  CheckCircle,
-  User,
-  Plus
+  DollarSign,
+  MessageSquare,
+  Bell,
+  Plus,
+  ArrowUpRight,
+  Calendar,
+  Clock,
+  Wrench
 } from 'lucide-react'
 import Link from 'next/link'
-import { WeatherService } from '@/lib/weatherService'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { useAuth } from '@/contexts/AuthContext'
 import AddProductModal from '@/components/AddProductModal'
 
+interface DashboardStats {
+  total_orders: number
+  pending_orders: number
+  completed_orders: number
+  total_revenue: number
+  monthly_revenue: number
+  total_products: number
+  active_products: number
+  low_stock_products: number
+  total_customers: number
+  new_customers_this_month: number
+  average_order_value: number
+  total_rentals: number
+  active_rentals: number
+  pending_rentals: number
+  completed_rentals: number
+  total_rental_revenue: number
+  monthly_rental_revenue: number
+}
+
+interface RecentOrder {
+  id: string
+  order_number: string
+  status: string
+  total_amount: number
+  created_at: string
+  order_items: Array<{
+    id: string
+    quantity: number
+    unit_price: number
+    products: {
+      id: string
+      name: string
+      images: string[]
+    }
+  }>
+}
+
+interface PendingRequest {
+  id: string
+  request_type: string
+  subject: string
+  status: string
+  priority: string
+  created_at: string
+}
+
+interface Notification {
+  id: string
+  type: string
+  title: string
+  message: string
+  is_read: boolean
+  action_url?: string
+  created_at: string
+}
+
+interface LowStockProduct {
+  id: string
+  name: string
+  stock_quantity: number
+  images: string[]
+}
+
+interface RentalBooking {
+  id: string
+  start_date: string
+  end_date: string
+  status: string
+  total_amount: number
+  total_days: number
+  rental_rate_type: string
+  created_at: string
+  products: {
+    id: string
+    name: string
+    images: string[]
+  }
+}
+
 export default function DashboardPage() {
   const { user } = useAuth()
-  const [weather, setWeather] = useState<{
-    temperature: number
-    humidity: number
-    precipitation: number
-    windSpeed: number
-    description: string
-    location: string
-    timestamp: string
-  } | null>(null)
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([])
+  const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([])
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [lowStockProducts, setLowStockProducts] = useState<LowStockProduct[]>([])
+  const [rentalBookings, setRentalBookings] = useState<RentalBooking[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddProductModal, setShowAddProductModal] = useState(false)
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const weatherService = WeatherService.getInstance()
-        
-        let weatherDataPromise;
-        const storedLocation = localStorage.getItem('userWeatherLocation');
-        if (storedLocation) {
-          const { latitude, longitude, location } = JSON.parse(storedLocation);
-          if (latitude && longitude) {
-            weatherDataPromise = weatherService.getWeatherByCoordinates(latitude, longitude);
-          } else if (location) {
-            weatherDataPromise = weatherService.getWeatherByCity(location);
-          } else {
-            weatherDataPromise = weatherService.getWeatherByCity('Delhi');
-          }
-        } else {
-          weatherDataPromise = weatherService.getWeatherByCity('Delhi');
-        }
-
-        const weatherData = await weatherDataPromise
-        setWeather(weatherData)
-      } catch (error) {
-        console.error('Dashboard data fetch failed:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchData()
+    fetchDashboardData()
   }, [])
 
-  const stats = [
-    {
-      title: 'Crops Analyzed',
-      value: '1,247',
-      change: '+12%',
-      changeType: 'positive',
-      icon: Leaf
-    },
-    {
-      title: 'Healthy Crops',
-      value: '89%',
-      change: '+5%',
-      changeType: 'positive',
-      icon: CheckCircle
-    },
-    {
-      title: 'Diseases Detected',
-      value: '23',
-      change: '-8%',
-      changeType: 'negative',
-      icon: AlertTriangle
-    },
-    {
-      title: 'Active Users',
-      value: '456',
-      change: '+18%',
-      changeType: 'positive',
-      icon: Activity
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/supplier/dashboard')
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard data')
+      }
+      const data = await response.json()
+      
+      setStats(data.stats)
+      setRecentOrders(data.recentOrders)
+      setPendingRequests(data.pendingRequests)
+      setNotifications(data.notifications)
+      setLowStockProducts(data.lowStockProducts)
+      setRentalBookings(data.rentalBookings)
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error)
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
 
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'pending': return 'text-yellow-600 bg-yellow-100'
+      case 'confirmed': return 'text-blue-600 bg-blue-100'
+      case 'shipped': return 'text-purple-600 bg-purple-100'
+      case 'delivered': return 'text-green-600 bg-green-100'
+      case 'cancelled': return 'text-red-600 bg-red-100'
+      default: return 'text-gray-600 bg-gray-100'
+    }
+  }
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority.toLowerCase()) {
+      case 'urgent': return 'text-red-600 bg-red-100'
+      case 'high': return 'text-orange-600 bg-orange-100'
+      case 'medium': return 'text-yellow-600 bg-yellow-100'
+      case 'low': return 'text-green-600 bg-green-100'
+      default: return 'text-gray-600 bg-gray-100'
+    }
+  }
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'new_order': return <ShoppingCart className="w-4 h-4" />
+      case 'low_stock': return <AlertTriangle className="w-4 h-4" />
+      case 'new_request': return <MessageSquare className="w-4 h-4" />
+      case 'payment_received': return <DollarSign className="w-4 h-4" />
+      default: return <Bell className="w-4 h-4" />
+    }
+  }
 
   if (loading) {
     return (
@@ -108,105 +183,341 @@ export default function DashboardPage() {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-7"> {/* Adjusted margin */}
-          <div className="flex justify-between items-start mb-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2"> {/* Adjusted text size and margin */}
-                Farming Dashboard
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Supplier Dashboard
               </h1>
-              <p className="text-lg text-gray-600"> {/* Adjusted text size */}
-                Monitor your agricultural operations and AI insights
+              <p className="text-lg text-gray-600">
+                Manage your agricultural supply business
               </p>
             </div>
-            <div className="flex items-center space-x-3">
-              <button 
+            <div className="flex items-center space-x-4">
+              <span className="text-gray-600">Hi {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Supplier'}</span>
+              <button
                 onClick={() => setShowAddProductModal(true)}
-                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center"
+                className="bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
               >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Product
+                <Plus className="w-4 h-4" />
+                <span>Add Product</span>
               </button>
-              <Link
-                href="/profile"
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors px-3 py-2 rounded-lg hover:bg-gray-100"
-              >
-                <User className="w-5 h-5" />
-                <span className="text-sm">
-                  Hi {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
-                </span>
-              </Link>
             </div>
           </div>
-        </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-7"> {/* Adjusted gap and margin */}
-          {stats.map((stat, index) => (
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
             <motion.div
-              key={stat.title}
-              className="bg-white rounded-xl shadow-subtle p-5"
+              className="bg-white rounded-xl shadow-lg p-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.08)" }}
-              transition={{ duration: 0.5, delay: index * 0.1, type: "spring", stiffness: 100 }}
+              transition={{ duration: 0.5 }}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-gray-500">{stat.title}</p> {/* Adjusted text size and color */}
-                  <p className="text-2xl font-semibold text-gray-800">{stat.value}</p> {/* Adjusted text size and weight */}
+                  <p className="text-sm font-medium text-gray-600">Total Orders</p>
+                  <p className="text-3xl font-bold text-gray-900">{stats?.total_orders || 0}</p>
                 </div>
-                <div className={`p-2.5 rounded-full ${ /* Adjusted padding */
-                  stat.changeType === 'positive' ? 'bg-green-100' : 'bg-red-100'
-                }`}>
-                  <stat.icon className={`w-5 h-5 ${ /* Adjusted icon size */
-                    stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
-                  }`} />
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <ShoppingCart className="w-6 h-6 text-blue-600" />
                 </div>
               </div>
-              <div className="mt-3 flex items-center"> {/* Adjusted margin */}
-                <span className={`text-xs font-medium ${ /* Adjusted text size */
-                  stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  {stat.change}
-                </span>
-                <span className="text-xs text-gray-400 ml-2">from last month</span> {/* Adjusted text size and color */}
+              <div className="mt-4 flex items-center">
+                <ArrowUpRight className="w-4 h-4 text-green-500 mr-1" />
+                <span className="text-sm text-green-600">{stats?.pending_orders || 0} pending</span>
               </div>
             </motion.div>
-          ))}
-        </div>
 
-        <div className="grid lg:grid-cols-3 gap-7"> {/* Adjusted gap */}
-          {/* Weather Summary */}
-            {weather && (
-              <motion.div
-                className="bg-white rounded-xl shadow-subtle p-5"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.08)" }}
-                transition={{ duration: 0.5, delay: 0.1, type: "spring", stiffness: 100 }}
-              >
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Current Weather</h3>
-                <div className="text-center mb-3">
-                  <p className="text-xl font-bold text-gray-900">{weather.temperature}°C</p>
-                  <p className="text-gray-500 capitalize text-sm">{weather.description}</p>
-                  <p className="text-xs text-gray-400">{weather.location}</p>
+            <motion.div
+              className="bg-white rounded-xl shadow-lg p-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+                  <p className="text-3xl font-bold text-gray-900">₹{(stats?.total_revenue || 0).toLocaleString()}</p>
                 </div>
-                <Link href="/weather" className="text-sm text-green-600 hover:text-green-700 font-medium mt-2 block transition-all hover:scale-[1.02]">
-                  View Full Forecast
-                </Link>
-              </motion.div>
-            )}
-          </div>
-        </div>
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <DollarSign className="w-6 h-6 text-green-600" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center">
+                <ArrowUpRight className="w-4 h-4 text-green-500 mr-1" />
+                <span className="text-sm text-green-600">₹{(stats?.monthly_revenue || 0).toLocaleString()} this month</span>
+              </div>
+            </motion.div>
 
-        {/* Add Product Modal */}
-        <AddProductModal 
-          isOpen={showAddProductModal}
-          onClose={() => setShowAddProductModal(false)}
-        />
+            <motion.div
+              className="bg-white rounded-xl shadow-lg p-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Products</p>
+                  <p className="text-3xl font-bold text-gray-900">{stats?.total_products || 0}</p>
+                </div>
+                <div className="p-3 bg-purple-100 rounded-lg">
+                  <Package className="w-6 h-6 text-purple-600" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center">
+                <span className="text-sm text-gray-600">{stats?.active_products || 0} active</span>
+              </div>
+            </motion.div>
+
+            <motion.div
+              className="bg-white rounded-xl shadow-lg p-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Customers</p>
+                  <p className="text-3xl font-bold text-gray-900">{stats?.total_customers || 0}</p>
+                </div>
+                <div className="p-3 bg-orange-100 rounded-lg">
+                  <Users className="w-6 h-6 text-orange-600" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center">
+                <ArrowUpRight className="w-4 h-4 text-green-500 mr-1" />
+                <span className="text-sm text-green-600">{stats?.new_customers_this_month || 0} new this month</span>
+              </div>
+            </motion.div>
+
+            <motion.div
+              className="bg-white rounded-xl shadow-lg p-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Rentals</p>
+                  <p className="text-3xl font-bold text-gray-900">{stats?.total_rentals || 0}</p>
+                </div>
+                <div className="p-3 bg-purple-100 rounded-lg">
+                  <Calendar className="w-6 h-6 text-purple-600" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center">
+                <ArrowUpRight className="w-4 h-4 text-green-500 mr-1" />
+                <span className="text-sm text-green-600">{stats?.active_rentals || 0} active</span>
+              </div>
+            </motion.div>
+
+            <motion.div
+              className="bg-white rounded-xl shadow-lg p-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Rental Revenue</p>
+                  <p className="text-3xl font-bold text-gray-900">₹{(stats?.total_rental_revenue || 0).toLocaleString()}</p>
+                </div>
+                <div className="p-3 bg-indigo-100 rounded-lg">
+                  <Wrench className="w-6 h-6 text-indigo-600" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center">
+                <ArrowUpRight className="w-4 h-4 text-green-500 mr-1" />
+                <span className="text-sm text-green-600">₹{(stats?.monthly_rental_revenue || 0).toLocaleString()} this month</span>
+              </div>
+            </motion.div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Recent Orders */}
+            <motion.div
+              className="lg:col-span-2 bg-white rounded-xl shadow-lg p-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+                  <ShoppingCart className="w-6 h-6 mr-2 text-blue-600" />
+                  Recent Orders
+                </h2>
+                <Link href="/marketplace/orders" className="text-green-600 hover:text-green-700 text-sm font-medium">
+                  View All
+                </Link>
+              </div>
+              
+              <div className="space-y-4">
+                {recentOrders.length > 0 ? recentOrders.map((order) => (
+                  <motion.div
+                    key={order.id}
+                    className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50"
+                    whileHover={{ scale: 1.01 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <ShoppingCart className="w-5 h-5 text-gray-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">{order.order_number}</p>
+                        <p className="text-sm text-gray-500">
+                          {order.order_items.length} item{order.order_items.length !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium text-gray-900">₹{order.total_amount.toLocaleString()}</p>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                        {order.status}
+                      </span>
+                    </div>
+                  </motion.div>
+                )) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <ShoppingCart className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    <p>No recent orders</p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Pending Requests */}
+              <motion.div
+                className="bg-white rounded-xl shadow-lg p-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+              >
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <MessageSquare className="w-5 h-5 mr-2 text-orange-600" />
+                  Pending Requests
+                </h3>
+                
+                <div className="space-y-3">
+                  {pendingRequests.length > 0 ? pendingRequests.map((request) => (
+                    <div key={request.id} className="p-3 border border-gray-100 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-900">{request.subject}</span>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(request.priority)}`}>
+                          {request.priority}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 capitalize">{request.request_type.replace('_', ' ')}</p>
+                    </div>
+                  )) : (
+                    <p className="text-sm text-gray-500">No pending requests</p>
+                  )}
+                </div>
+              </motion.div>
+
+              {/* Low Stock Alert */}
+              {lowStockProducts.length > 0 && (
+                <motion.div
+                  className="bg-white rounded-xl shadow-lg p-6"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.6 }}
+                >
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <AlertTriangle className="w-5 h-5 mr-2 text-red-600" />
+                    Low Stock Alert
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    {lowStockProducts.map((product) => (
+                      <div key={product.id} className="p-3 border border-red-100 rounded-lg bg-red-50">
+                        <p className="text-sm font-medium text-gray-900">{product.name}</p>
+                        <p className="text-xs text-red-600">Only {product.stock_quantity} left</p>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Notifications */}
+              <motion.div
+                className="bg-white rounded-xl shadow-lg p-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.7 }}
+              >
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <Bell className="w-5 h-5 mr-2 text-blue-600" />
+                  Notifications
+                </h3>
+                
+                <div className="space-y-3">
+                  {notifications.length > 0 ? notifications.map((notification) => (
+                    <div key={notification.id} className="p-3 border border-gray-100 rounded-lg">
+                      <div className="flex items-start space-x-3">
+                        <div className="flex-shrink-0">
+                          {getNotificationIcon(notification.type)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900">{notification.title}</p>
+                          <p className="text-xs text-gray-500">{notification.message}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )) : (
+                    <p className="text-sm text-gray-500">No new notifications</p>
+                  )}
+                </div>
+              </motion.div>
+
+              {/* Rental Bookings */}
+              <motion.div
+                className="bg-white rounded-xl shadow-lg p-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.8 }}
+              >
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <Calendar className="w-5 h-5 mr-2 text-purple-600" />
+                  Recent Rentals
+                </h3>
+                
+                <div className="space-y-3">
+                  {rentalBookings.length > 0 ? rentalBookings.map((rental) => (
+                    <div key={rental.id} className="p-3 border border-gray-100 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-900">{rental.products.name}</span>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(rental.status)}`}>
+                          {rental.status}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>{rental.total_days} days</span>
+                        <span>₹{rental.total_amount.toLocaleString()}</span>
+                      </div>
+                      <div className="flex items-center text-xs text-gray-500 mt-1">
+                        <Clock className="w-3 h-3 mr-1" />
+                        <span>{new Date(rental.start_date).toLocaleDateString()} - {new Date(rental.end_date).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  )) : (
+                    <p className="text-sm text-gray-500">No recent rentals</p>
+                  )}
+                </div>
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Add Product Modal */}
+          <AddProductModal 
+            isOpen={showAddProductModal}
+            onClose={() => setShowAddProductModal(false)}
+          />
+        </div>
       </div>
     </ProtectedRoute>
   )
 }
-

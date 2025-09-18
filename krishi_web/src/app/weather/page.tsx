@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { 
-  MapPin, 
+  MapPin,
   TrendingUp, 
   Package,
   Users,
@@ -255,8 +255,8 @@ export default function RequirementsPage() {
             </select>
 
             {/* Clear Filters */}
-            <button
-              onClick={() => {
+              <button
+                onClick={() => {
                 setSelectedRegion('All')
                 setSelectedSeason('All')
                 setSearchQuery('')
@@ -265,7 +265,7 @@ export default function RequirementsPage() {
             >
               <Filter className="w-4 h-4 mr-2" />
               Clear
-            </button>
+              </button>
           </div>
         </motion.div>
 
@@ -306,7 +306,7 @@ export default function RequirementsPage() {
                       <div className="flex items-center">
                         <MapPin className="w-4 h-4 text-gray-400 mr-2" />
                         <span className="font-medium text-gray-900">{req.region}</span>
-                      </div>
+        </div>
                     </td>
                     <td className="py-4 px-4">
                       <span className="text-gray-900">{req.cropType}</span>
@@ -331,7 +331,7 @@ export default function RequirementsPage() {
                       <div className="flex items-center">
                         <Users className="w-4 h-4 text-gray-400 mr-1" />
                         <span className="text-gray-900">{req.farmerCount}</span>
-                      </div>
+          </div>
                     </td>
                   </motion.tr>
                 ))}
@@ -341,16 +341,16 @@ export default function RequirementsPage() {
         </motion.div>
 
         {/* Equipment Requirements */}
-        <motion.div
+            <motion.div 
           className="bg-white rounded-xl shadow-lg p-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
             <Package className="w-6 h-6 mr-2 text-blue-600" />
             Equipment Requirements
-          </h2>
+                  </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredEquipment.map((equipment) => (
@@ -365,32 +365,32 @@ export default function RequirementsPage() {
                   <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getDemandColor(equipment.demandLevel)}`}>
                     {equipment.demandLevel}
                   </span>
-                </div>
-                
+              </div>
+
                 <div className="space-y-2">
                   <div className="flex items-center text-sm text-gray-600">
                     <MapPin className="w-4 h-4 mr-2" />
                     {equipment.region}
-                  </div>
-                  
+                </div>
+
                   <div className="flex items-center text-sm text-gray-600">
                     <Calendar className="w-4 h-4 mr-2" />
                     {equipment.season}
-                  </div>
-                  
+                </div>
+
                   <div className="flex items-center text-sm text-gray-600">
                     <TrendingUp className="w-4 h-4 mr-2" />
                     ₹{equipment.rentalPrice.toLocaleString()}/day
-                  </div>
-                  
+                </div>
+
                   <div className="flex items-center text-sm">
                     <span className="mr-2">Availability:</span>
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getAvailabilityColor(equipment.availability)}`}>
                       {equipment.availability}
                     </span>
-                  </div>
                 </div>
-              </motion.div>
+              </div>
+            </motion.div>
             ))}
           </div>
         </motion.div>
