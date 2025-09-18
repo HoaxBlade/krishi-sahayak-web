@@ -1,6 +1,10 @@
-**/*Data
-**/*SplitData_CropType
-**/*SplitData_Disease_Specific
+# DVC-tracked data directories
+krishi-model/SplitData/
+krishi-model/SplitData_Crop/
+
+# Old data ignore patterns (removed as DVC will manage these)
+# **/*SplitData_CropType
+# **/*SplitData_Disease_Specific
 **/*.zip
 **/*venv
 **/__pycache__
