@@ -76,3 +76,16 @@ krishi-model/SplitData_Crop/
 **/.env.production
 **/.env.staging
 **/create_env.sh
+
+# macOS metadata files and system files
+**/._*
+**/.AppleDouble
+**/.LSOverride
+**/Icon?
+**/.DocumentRevisions-V100
+**/.fseventsd
+**/.Spotlight-V100
+**/.TemporaryItems
+**/.Trashes
+**/.VolumeIcon.icns
+**/.com.apple.timemachine.donotpresent
