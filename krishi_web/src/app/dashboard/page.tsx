@@ -185,7 +185,7 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {/* Header */}
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 Supplier Dashboard
@@ -194,11 +194,11 @@ export default function DashboardPage() {
                 Manage your agricultural supply business
               </p>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-600">Hi {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Supplier'}</span>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+              <span className="text-gray-600 text-sm sm:text-base">Hi {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Supplier'}</span>
               <button
                 onClick={() => setShowAddProductModal(true)}
-                className="bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
+                className="w-full sm:w-auto bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Product</span>
@@ -207,7 +207,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 mb-8">
             <motion.div
               className="bg-white rounded-xl shadow-lg p-6"
               initial={{ opacity: 0, y: 20 }}
@@ -334,7 +334,7 @@ export default function DashboardPage() {
             </motion.div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
             {/* Recent Orders */}
             <motion.div
               className="lg:col-span-2 bg-white rounded-xl shadow-lg p-6"
@@ -356,7 +356,7 @@ export default function DashboardPage() {
                 {recentOrders.length > 0 ? recentOrders.map((order) => (
                   <motion.div
                     key={order.id}
-                    className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50"
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 space-y-2 sm:space-y-0"
                     whileHover={{ scale: 1.01 }}
                     transition={{ type: "spring", stiffness: 400, damping: 10 }}
                   >

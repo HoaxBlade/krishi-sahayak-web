@@ -215,7 +215,7 @@ export default function AnalyzePage() {
 
         {/* Server Health Status */}
           <motion.div
-          className="bg-white rounded-xl shadow-lg p-6 mb-8"
+          className={`bg-white rounded-xl shadow-lg p-6 mb-8 ${serverHealth.status === 'healthy' ? 'glow-green' : 'glow-red'}`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -418,7 +418,7 @@ export default function AnalyzePage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-black text-sm">ML Server</span>
-              <div className="flex items-center space-x-2">
+              <div className={`flex items-center space-x-2 ${serverHealth.status === 'healthy' ? 'glow-green' : 'glow-red'}`}>
                 <div className={`w-2 h-2 rounded-full ${serverHealth.status === 'healthy' ? 'bg-green-500' : 'bg-red-500'}`} />
                 <span className="text-xs font-medium text-black">{serverHealth.status === 'healthy' ? 'Online' : 'Offline'}</span>
               </div>

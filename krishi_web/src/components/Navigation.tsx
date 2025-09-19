@@ -30,7 +30,7 @@ export default function Navigation() {
   ]
 
   return (
-    <nav className="bg-white shadow-subtle border-b border-gray-100 sticky top-0 z-50">
+    <nav className={`shadow-subtle border-b border-gray-100 sticky top-0 z-50 min-h-[80px] ${isOpen ? 'bg-white bg-opacity-80 backdrop-blur-lg' : 'bg-white'}`}>
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 focus:z-50 focus:bg-green-600 focus:text-white focus:p-3 focus:rounded-br-lg">Skip to main content</a>
       <div className="max-w-full mx-auto px-4">
         <div className="flex justify-between items-center">
@@ -125,7 +125,7 @@ export default function Navigation() {
         {isOpen && (
           <motion.div
             id="mobile-menu"
-            className="md:hidden py-2 border-t border-gray-200"
+            className="md:hidden py-2 border-t border-gray-200 backdrop-blur-lg bg-white bg-opacity-80"
             initial={{ opacity: 0, maxHeight: 0 }}
             animate={{ opacity: 1, maxHeight: '300px' }}
             exit={{ opacity: 0, maxHeight: 0 }}

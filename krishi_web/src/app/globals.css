@@ -18,6 +18,26 @@
     --background: #0a0a0a;
     --foreground: #ededed;
   }
+  
+  /* Glow effect for status cards */
+  .glow-green {
+    box-shadow: 0 0 15px rgba(22, 163, 74, 0.6); /* green-600 with opacity */
+    transition: box-shadow 0.3s ease-in-out;
+  }
+  
+  .glow-red {
+    box-shadow: 0 0 15px rgba(220, 38, 38, 0.6); /* red-600 with opacity */
+    transition: box-shadow 0.3s ease-in-out;
+  }
+  
+  .backdrop-blur-sm {
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important; /* For Safari support */
+  }
+}
+
+.backdrop-blur-sm {
+  backdrop-filter: blur(4px);
 }
 
 body {
