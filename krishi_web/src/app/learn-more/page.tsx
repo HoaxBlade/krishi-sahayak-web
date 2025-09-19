@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Users, Target, Zap, ArrowLeft } from 'lucide-react';
+import { Users, Target, Zap, ArrowLeft, Plane } from 'lucide-react';
 import Link from 'next/link';
 
 const LearnMorePage: React.FC = () => {
@@ -56,7 +56,7 @@ const LearnMorePage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
           >
-            Krishi Sahayak is revolutionizing farming through advanced AI,
+            Krishi Sahayak is revolutionizing farming through advanced drone technologies and AI,
             providing intelligent solutions for sustainable growth and a prosperous future.
           </motion.p>
         </div>
@@ -80,6 +80,23 @@ const LearnMorePage: React.FC = () => {
           </p>
         </motion.section>
 
+       {/* Drone Technologies Section */}
+       <motion.section
+         className="mb-20 text-center"
+         initial={{ opacity: 0, y: 50 }}
+         whileInView={{ opacity: 1, y: 0 }}
+         viewport={{ once: true }}
+         transition={{ duration: 0.8 }}
+       >
+         <div className="inline-block bg-gradient-to-br from-green-600 to-blue-600 text-white p-6 rounded-full mb-8 shadow-2xl">
+           <Plane className="w-12 h-12" />
+         </div>
+         <h2 className="text-4xl md:text-5xl font-extrabold mb-7 text-blue-700 tracking-tight drop-shadow-sm">Drone Technologies in Agriculture</h2>
+         <p className="text-xl md:text-2xl max-w-4xl mx-auto leading-relaxed text-gray-700 font-light">
+           Krishi Sahayak leverages cutting-edge drone technologies to revolutionize farming practices. Our platform facilitates a marketplace for buying, selling, and renting agricultural drones and related services. These drones are instrumental in aerial imaging for crop health monitoring, precise pesticide and fertilizer application, and efficient field mapping, leading to optimized resource management and increased yields.
+         </p>
+       </motion.section>
+
         {/* Our Incubator Section */}
         <motion.section
           className="mb-20 bg-white p-10 md:p-20 rounded-3xl shadow-3xl border border-gray-100 transform hover:scale-[1.01] transition-transform duration-500 ease-in-out"
@@ -93,7 +110,7 @@ const LearnMorePage: React.FC = () => {
               <Image src="/NIELIT.png" alt="NIELIT Odisha" width={250} height={250} className="rounded-lg" />
             </div>
             <div className="md:w-2/3">
-              <div className="inline-block bg-gradient-to-br from-green-600 to-blue-600 text-white p-6 rounded-full mb-8 shadow-2xl">
+              <div className="hidden md:inline-block bg-gradient-to-br from-green-600 to-blue-600 text-white p-6 rounded-full mb-8 shadow-2xl">
                 <Zap className="w-12 h-12" />
               </div>
               <h2 className="text-4xl md:text-5xl font-extrabold mb-7 text-gray-900 tracking-tight drop-shadow-sm">Our Incubator: Nurturing Innovation</h2>
@@ -110,7 +127,7 @@ const LearnMorePage: React.FC = () => {
           <div className="inline-block bg-gradient-to-br from-green-600 to-blue-600 text-white p-6 rounded-full mb-8 shadow-2xl">
             <Users className="w-12 h-12" />
           </div>
-          <h2 className="text-4xl md:text-5xl font-extrabold mb-20 text-gray-900 tracking-tight drop-shadow-sm">Meet Our Visionary Sahayaks</h2>
+          <h2 className="text-4xl md:text-5xl font-extrabold mb-20 text-gray-900 tracking-tight drop-shadow-sm">Meet Your Sahayaks</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-16 gap-x-10">
             {founders.map((founder, index) => (
               <motion.div

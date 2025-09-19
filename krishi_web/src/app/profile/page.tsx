@@ -89,10 +89,10 @@ export default function ProfilePage() {
                   <Mail className="w-5 h-5 text-gray-400" />
                   <div>
                     <p className="text-sm font-medium text-gray-500">Email</p>
-                    <p className="text-gray-900">{user?.email}</p>
+                    <p className="text-gray-900 break-all">{user?.email}</p>
                   </div>
                 </div>
-                <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">Verified</span>
+                <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded flex-shrink-0 ml-2">Verified</span>
               </div>
 
               {/* Full Name */}

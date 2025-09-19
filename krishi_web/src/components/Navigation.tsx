@@ -12,7 +12,8 @@ import {
   BarChart3,
   Home,
   LogIn,
-  User
+  User,
+  Plane
 } from 'lucide-react'
 import Image from 'next/image'
 import { useAuth } from '@/contexts/AuthContext'
@@ -25,12 +26,13 @@ export default function Navigation() {
   const navItems = [
     { name: 'Home', href: '/', icon: Home },
     { name: 'Stats', href: '/analyze', icon: Activity },
-    { name: 'Requirements', href: '/weather', icon: MapPin },
+    { name: 'Drone Marketplace', href: '/marketplace', icon: Plane },
+    { name: 'Weather', href: '/weather', icon: MapPin },
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
   ]
 
   return (
-    <nav className={`shadow-subtle border-b border-gray-100 sticky top-0 z-50 min-h-[80px] ${isOpen ? 'bg-white bg-opacity-80 backdrop-blur-lg' : 'bg-white'}`}>
+    <nav className="shadow-subtle border-b border-gray-100 sticky top-0 z-50 min-h-[80px] bg-white">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 focus:z-50 focus:bg-green-600 focus:text-white focus:p-3 focus:rounded-br-lg">Skip to main content</a>
       <div className="max-w-full mx-auto px-4">
         <div className="flex justify-between items-center">
@@ -43,13 +45,14 @@ export default function Navigation() {
               height={70}
               className="rounded-full object-cover"
             />
-            <div className="flex flex-col justify-center items-start">
+            <div className="flex flex-col justify-center items-start pt-2">
               <Image
                 src="/name.png"
                 alt="Krishi Sahayak"
                 width={150}
                 height={250}
-                className="object-contain pt-4"
+                className="object-contain flex-shrink-0"
+                priority
               />
               <div className="flex items-center space-x-1">
                 <span className="text-sm text-gray-500">Powered by:</span>
@@ -125,10 +128,10 @@ export default function Navigation() {
         {isOpen && (
           <motion.div
             id="mobile-menu"
-            className="md:hidden py-2 border-t border-gray-200 backdrop-blur-lg bg-white bg-opacity-80"
-            initial={{ opacity: 0, maxHeight: 0 }}
-            animate={{ opacity: 1, maxHeight: '300px' }}
-            exit={{ opacity: 0, maxHeight: 0 }}
+            className="md:hidden py-2 border-t border-gray-200 bg-white"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
           >
             <div className="space-y-1">

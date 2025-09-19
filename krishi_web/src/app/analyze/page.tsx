@@ -120,36 +120,25 @@ export default function AnalyzePage() {
 
   const fetchModelPerformanceData = async () => {
     try {
-      // Fetch from ML performance API endpoint
-      const response = await fetch('/api/ml/performance', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch performance data')
-      }
-
-      const data = await response.json()
+      const mlService = MLService.getInstance();
+      const data = await mlService.getModelPerformance();
       
       setModelStats({
         activeUsers: data.activeUsers || 0,
-        avgResponseTime: Math.round((data.avgResponseTime || 0) * 10) / 10, // Round to 1 decimal
-        downtime: Math.round((data.downtime || 0) * 10) / 10, // Round to 1 decimal
-        lastUpdated: new Date().toISOString(),
+        avgResponseTime: data.avgResponseTime || 0,
+        downtime: data.downtime || 0,
+        lastUpdated: data.lastUpdated || new Date().toISOString(),
         trends: {
           activeUsersChange: data.trends?.activeUsersChange || 0,
           responseTimeChange: data.trends?.responseTimeChange || 0,
         }
-      })
+      });
     } catch (error) {
-      console.error('Failed to fetch performance data:', error)
-      setError('Unable to fetch real-time data. Showing cached information.')
+      console.error('Failed to fetch performance data:', error);
+      setError('Unable to fetch real-time data. Showing cached information.');
       // Keep previous data if available, don't reset to 0
     }
-  }
+  };
 
   useEffect(() => {
     setIsClient(true)
@@ -195,10 +184,10 @@ export default function AnalyzePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-10">
           <h1 className="text-3xl font-bold text-gray-900 mb-3">
-            ML Model Performance Stats
+            Advanced Agricultural Analytics
           </h1>
           <p className="text-lg text-gray-600">
-            Real-time monitoring of AI crop health analysis model performance
+            Real-time monitoring of AI models and drone data for comprehensive crop health analysis
           </p>
           {loading && (
             <div className="mt-4 flex items-center justify-center">
@@ -263,6 +252,24 @@ export default function AnalyzePage() {
                 Every 30s
               </p>
             </div>
+          </div>
+        </motion.div>
+        {/* Drone Data Integration */}
+        <motion.div
+          className="bg-white rounded-xl shadow-lg p-6 mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.05 }}
+        >
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+            <Zap className="w-6 h-6 mr-2 text-yellow-600" />
+            Drone Data Integration
+          </h2>
+          <p className="text-gray-600 mb-4">
+            Seamlessly integrate and analyze data from your agricultural drones for enhanced insights.
+          </p>
+          <div className="h-32 bg-gray-50 rounded-lg flex items-center justify-center">
+            <p className="text-gray-500">Drone data visualization coming soon</p>
           </div>
         </motion.div>
 

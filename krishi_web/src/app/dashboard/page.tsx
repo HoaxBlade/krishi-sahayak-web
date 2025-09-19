@@ -103,40 +103,64 @@ interface RentalBooking {
 
 export default function DashboardPage() {
   const { user } = useAuth()
-  const [stats, setStats] = useState<DashboardStats | null>(null)
-  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([])
-  const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([])
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [lowStockProducts, setLowStockProducts] = useState<LowStockProduct[]>([])
-  const [rentalBookings, setRentalBookings] = useState<RentalBooking[]>([])
-  const [loading, setLoading] = useState(true)
-  const [showAddProductModal, setShowAddProductModal] = useState(false)
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [lowStockProducts, setLowStockProducts] = useState<LowStockProduct[]>([]);
+  const [rentalBookings, setRentalBookings] = useState<RentalBooking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddProductModal, setShowAddProductModal] = useState(false);
+
+  // Cache for dashboard data
+  const dashboardCacheKey = 'dashboardData';
+  const DASHBOARD_CACHE_DURATION = 1000 * 60 * 2; // Cache for 2 minutes
 
   useEffect(() => {
-    fetchDashboardData()
-  }, [])
+    fetchDashboardData();
+  }, []);
 
   const fetchDashboardData = async () => {
-    try {
-      setLoading(true)
-      const response = await fetch('/api/supplier/dashboard')
-      if (!response.ok) {
-        throw new Error('Failed to fetch dashboard data')
+    setLoading(true);
+    const now = Date.now();
+    const cachedData = localStorage.getItem(dashboardCacheKey);
+
+    if (cachedData) {
+      const { data, timestamp } = JSON.parse(cachedData);
+      if (now - timestamp < DASHBOARD_CACHE_DURATION) {
+        console.log('Returning dashboard data from cache.');
+        setStats(data.stats);
+        setRecentOrders(data.recentOrders);
+        setPendingRequests(data.pendingRequests);
+        setNotifications(data.notifications);
+        setLowStockProducts(data.lowStockProducts);
+        setRentalBookings(data.rentalBookings);
+        setLoading(false);
+        return;
       }
-      const data = await response.json()
-      
-      setStats(data.stats)
-      setRecentOrders(data.recentOrders)
-      setPendingRequests(data.pendingRequests)
-      setNotifications(data.notifications)
-      setLowStockProducts(data.lowStockProducts)
-      setRentalBookings(data.rentalBookings)
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error)
-    } finally {
-      setLoading(false)
     }
-  }
+
+    try {
+      const response = await fetch('/api/supplier/dashboard');
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard data');
+      }
+      const data = await response.json();
+      
+      setStats(data.stats);
+      setRecentOrders(data.recentOrders);
+      setPendingRequests(data.pendingRequests);
+      setNotifications(data.notifications);
+      setLowStockProducts(data.lowStockProducts);
+      setRentalBookings(data.rentalBookings);
+
+      localStorage.setItem(dashboardCacheKey, JSON.stringify({ data, timestamp: now }));
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {

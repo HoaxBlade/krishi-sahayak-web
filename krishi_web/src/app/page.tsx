@@ -6,7 +6,7 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { 
-  ShoppingCart, BarChart3, Cloud, Shield, ArrowRight, Wind, Droplet, Thermometer, Umbrella, CheckCircle, Download
+  ShoppingCart, BarChart3, Cloud, Shield, ArrowRight, Wind, Droplet, Thermometer, Umbrella, CheckCircle, Download, Plane, Monitor, Leaf
 } from "lucide-react"
 import { MLService } from "@/lib/mlService"
 import { WeatherService } from "@/lib/weatherService"
@@ -166,10 +166,10 @@ export default function HomePage() {
   }, [])
 
   const features = [
-    { icon: <ShoppingCart />, title: "Agricultural Marketplace", desc: "Buy and sell crops, seeds, fertilizers, and farming equipment" },
-    { icon: <Cloud />, title: "Real-time Weather Data", desc: "Get accurate forecasts and smart farming recommendations" },
-    { icon: <BarChart3 />, title: "Crop Management", desc: "Track your crops, planting dates, and harvest schedules" },
-    { icon: <Shield />, title: "Disease Detection", desc: "Early alerts for plant diseases and pest infestations" }
+    { icon: <Plane />, title: "Drone Technologies Marketplace", desc: "Buy, sell, and rent agricultural drones and related services." },
+    { icon: <Shield />, title: "AI Crop Disease Detection", desc: "AI-driven early warnings protect crops before diseases spread widely." },
+    { icon: <Cloud />, title: "Hindi language support", desc: "Support for Hindi language to give insights into crop diseases." },
+    { icon: <ShoppingCart />, title: "Farming Marketplace", desc: "Connect with buyers and sellers for crops, seeds, and equipment." }
   ]
 
   return (
@@ -191,10 +191,10 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
           >
             Smart Farming with{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-blue-600">AI</span>
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-blue-600"> AI</span>
           </motion.h1>
           <p className="text-lg text-gray-600 mb-10 max-w-2xl mx-auto"> {/* Adjusted text size and margin */}
-            Revolutionize your farming with AI-powered crop analysis, weather insights, and smart tools.
+            Revolutionize your farming with advanced drone technology, AI-powered crop analysis, weather insights, and smart tools.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <motion.a
@@ -352,7 +352,13 @@ function WeatherStat({ icon, label, value }: { icon: React.ReactNode; label: str
 function StatusCard({ title, status, extra, healthy, delay = 0 }: { title: string; status: string; extra: string; healthy: boolean; delay?: number }) {
   return (
     <motion.div
-      className={`bg-white rounded-xl shadow-subtle p-5 ${healthy ? "glow-green" : "glow-red"}`} /* Refined card style */
+      className="bg-white rounded-xl shadow-subtle p-5" /* Refined card style */
+      style={{
+        boxShadow: healthy
+          ? "0 0 20px 5px rgba(22, 163, 74, 0.6)" // green-600 with reduced opacity and spread
+          : "0 0 20px 5px rgba(220, 38, 38, 0.6)", // red-600 with reduced opacity and spread
+        transition: "box-shadow 0.3s ease-in-out",
+      }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay }}

@@ -11,6 +11,15 @@ export interface WeatherData {
   timestamp: string
 }
 
+// Cache for weather data
+interface WeatherCacheEntry {
+  data: WeatherData;
+  timestamp: number;
+}
+
+const weatherCache: { [key: string]: WeatherCacheEntry } = {};
+const WEATHER_CACHE_DURATION = 1000 * 60 * 5; // Cache for 5 minutes
+
 export class WeatherService {
   private static instance: WeatherService
 
@@ -24,16 +33,34 @@ export class WeatherService {
   }
 
   async getWeatherByCoordinates(latitude: number, longitude: number): Promise<WeatherData> {
+    const cacheKey = `coords-${latitude}-${longitude}`;
+    const now = Date.now();
+
+    if (weatherCache[cacheKey] && (now - weatherCache[cacheKey].timestamp < WEATHER_CACHE_DURATION)) {
+      console.log('Returning weather data from cache for coordinates:', latitude, longitude);
+      return weatherCache[cacheKey].data;
+    }
+
     try {
-      const response = await axios.get(`/api/weather?lat=${latitude}&lon=${longitude}`)
-      return response.data
+      const response = await axios.get(`/api/weather?lat=${latitude}&lon=${longitude}`);
+      const data = response.data;
+      weatherCache[cacheKey] = { data, timestamp: now };
+      return data;
     } catch (error) {
-      console.error('Weather fetch failed:', error)
-      throw new Error('Failed to fetch weather data')
+      console.error('Weather fetch failed for coordinates:', error);
+      throw new Error('Failed to fetch weather data');
     }
   }
 
   async getWeatherByCity(city: string): Promise<WeatherData> {
+    const cacheKey = `city-${city.toLowerCase()}`;
+    const now = Date.now();
+
+    if (weatherCache[cacheKey] && (now - weatherCache[cacheKey].timestamp < WEATHER_CACHE_DURATION)) {
+      console.log('Returning weather data from cache for city:', city);
+      return weatherCache[cacheKey].data;
+    }
+
     try {
       const response = await axios.get(`/api/weather?city=${city}`, {
         timeout: 10000,
@@ -41,24 +68,26 @@ export class WeatherService {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
         }
-      })
+      });
       
       if (response.status === 200 && response.data) {
-        return response.data
+        const data = response.data;
+        weatherCache[cacheKey] = { data, timestamp: now };
+        return data;
       }
-      throw new Error(`Weather API returned status: ${response.status}`)
+      throw new Error(`Weather API returned status: ${response.status}`);
     } catch (error) {
-      console.error('Weather fetch failed:', error)
+      console.error('Weather fetch failed for city:', error);
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 500) {
-          throw new Error('Weather API server error - check configuration')
+          throw new Error('Weather API server error - check configuration');
         } else if (error.response?.status === 401) {
-          throw new Error('Weather API authentication failed - check API key')
+          throw new Error('Weather API authentication failed - check API key');
         } else if (error.code === 'ECONNABORTED') {
-          throw new Error('Weather API request timeout')
+          throw new Error('Weather API request timeout');
         }
       }
-      throw new Error('Failed to fetch weather data')
+      throw new Error('Failed to fetch weather data');
     }
   }
 
