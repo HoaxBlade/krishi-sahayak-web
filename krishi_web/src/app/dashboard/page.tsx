@@ -7,7 +7,7 @@ import {
   ShoppingCart, 
   Users, 
   AlertTriangle,
-  DollarSign,
+  IndianRupee,
   MessageSquare,
   Bell,
   Plus,
@@ -164,7 +164,7 @@ export default function DashboardPage() {
       case 'new_order': return <ShoppingCart className="w-4 h-4" />
       case 'low_stock': return <AlertTriangle className="w-4 h-4" />
       case 'new_request': return <MessageSquare className="w-4 h-4" />
-      case 'payment_received': return <DollarSign className="w-4 h-4" />
+      case 'payment_received': return <IndianRupee className="w-4 h-4" />
       default: return <Bell className="w-4 h-4" />
     }
   }
@@ -241,7 +241,7 @@ export default function DashboardPage() {
                   <p className="text-3xl font-bold text-gray-900">₹{(stats?.total_revenue || 0).toLocaleString()}</p>
                 </div>
                 <div className="p-3 bg-green-100 rounded-lg">
-                  <DollarSign className="w-6 h-6 text-green-600" />
+                  <IndianRupee className="w-6 h-6 text-green-600" />
                 </div>
               </div>
               <div className="mt-4 flex items-center">

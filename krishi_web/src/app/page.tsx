@@ -352,7 +352,7 @@ function WeatherStat({ icon, label, value }: { icon: React.ReactNode; label: str
 function StatusCard({ title, status, extra, healthy, delay = 0 }: { title: string; status: string; extra: string; healthy: boolean; delay?: number }) {
   return (
     <motion.div
-      className="bg-white rounded-xl shadow-subtle p-5" /* Refined card style */
+      className={`bg-white rounded-xl shadow-subtle p-5 ${healthy ? "glow-green" : "glow-red"}`} /* Refined card style */
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay }}
