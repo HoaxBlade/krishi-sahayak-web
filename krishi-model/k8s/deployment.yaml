@@ -54,6 +54,27 @@ spec:
             configMapKeyRef:
               name: ml-server-config
               key: CPU_HEALTH_THRESHOLD
+        - name: CONFIDENCE_THRESHOLD
+          valueFrom:
+            configMapKeyRef:
+              name: ml-server-config
+              key: CONFIDENCE_THRESHOLD
+        - name: MODEL_TYPE
+          valueFrom:
+            configMapKeyRef:
+              name: ml-server-config
+              key: MODEL_TYPE
+        - name: ENABLE_MULTITASK
+          valueFrom:
+            configMapKeyRef:
+              name: ml-server-config
+              key: ENABLE_MULTITASK
+        - name: GEMINI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ml-server-secrets
+              key: GEMINI_API_KEY
+              optional: true
         resources:
           requests:
             memory: "512Mi"
