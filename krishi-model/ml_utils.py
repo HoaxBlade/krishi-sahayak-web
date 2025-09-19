@@ -211,6 +211,7 @@ def load_ml_model():
     model = None
     interpreter = None
     is_tflite = False
+    is_multitask = False
 
     for model_path in MODEL_PATHS:
         if os.path.exists(model_path):
@@ -220,30 +221,59 @@ def load_ml_model():
                     interpreter = tflite.Interpreter(model_path=model_path)
                     interpreter.allocate_tensors()
                     is_tflite = True
-                    logger.info(f"✅ TensorFlow Lite model loaded from {model_path}")
+                    
+                    # Check if it's a multitask model by examining output details
+                    output_details = interpreter.get_output_details()
+                    if len(output_details) == 2:
+                        is_multitask = True
+                        logger.info(f"✅ Multitask TensorFlow Lite model detected from {model_path}")
+                    else:
+                        logger.info(f"✅ Single-task TensorFlow Lite model loaded from {model_path}")
 
                     # Warm-up for lower p95 latency
                     input_details = interpreter.get_input_details()
-                    output_details = interpreter.get_output_details()
                     input_shape = input_details[0]['shape']
                     interpreter.set_tensor(input_details[0]['index'], np.zeros(input_shape, dtype=np.float32))
                     interpreter.invoke()
-                    _ = interpreter.get_tensor(output_details[0]['index'])
-                    logger.info(f"✅ TensorFlow Lite model warmed up from {model_path}")
-                    return interpreter, is_tflite
+                    
+                    if is_multitask:
+                        # Warm up both outputs
+                        _ = interpreter.get_tensor(output_details[0]['index'])
+                        _ = interpreter.get_tensor(output_details[1]['index'])
+                        logger.info(f"✅ Multitask TensorFlow Lite model warmed up from {model_path}")
+                    else:
+                        _ = interpreter.get_tensor(output_details[0]['index'])
+                        logger.info(f"✅ TensorFlow Lite model warmed up from {model_path}")
+                    
+                    return interpreter, is_tflite, is_multitask
                 else:
                     model = tf.keras.models.load_model(model_path)
+                    
+                    # Check if it's a multitask model by examining output structure
+                    if hasattr(model, 'output_names') and len(model.output_names) == 2:
+                        is_multitask = True
+                        logger.info(f"✅ Multitask Keras model detected from {model_path}")
+                    else:
+                        logger.info(f"✅ Single-task Keras model loaded from {model_path}")
+                    
                     # Warm-up for lower p95 latency
-                    _ = model.predict(np.zeros((1, IMAGE_SIZE[0], IMAGE_SIZE[1], 3), dtype=np.float32), verbose=0)
-                    logger.info(f"✅ Keras model loaded and warmed from {model_path}")
-                    return model, is_tflite
+                    if is_multitask:
+                        # Warm up multitask model
+                        warmup_input = np.zeros((1, IMAGE_SIZE[0], IMAGE_SIZE[1], 3), dtype=np.float32)
+                        _ = model.predict(warmup_input, verbose=0)
+                        logger.info(f"✅ Multitask Keras model warmed up from {model_path}")
+                    else:
+                        _ = model.predict(np.zeros((1, IMAGE_SIZE[0], IMAGE_SIZE[1], 3), dtype=np.float32), verbose=0)
+                        logger.info(f"✅ Keras model warmed up from {model_path}")
+                    
+                    return model, is_tflite, is_multitask
             except Exception as e:
                 logger.error(f"Error loading model from {model_path}: {e}")
                 continue
     logger.error("❌ No valid model file found in known paths")
-    return None, False
+    return None, False, False
 
-def analyze_crop_prediction(model_or_interpreter, image_data, labels, is_tflite_model):
+def analyze_crop_prediction(model_or_interpreter, image_data, labels, is_tflite_model, is_multitask_model=False):
     """Analyze crop health using the loaded model or TFLite interpreter"""
     try:
         logger.info("Starting crop analysis...")
@@ -273,16 +303,43 @@ def analyze_crop_prediction(model_or_interpreter, image_data, labels, is_tflite_
 
             interpreter.set_tensor(input_details[0]['index'], processed_image.astype(input_dtype))
             interpreter.invoke()
-            predictions = interpreter.get_tensor(output_details[0]['index'])
-            logger.info(f"TFLite model prediction completed: shape={predictions.shape}")
+            
+            if is_multitask_model:
+                # Handle multitask model with two outputs
+                class_predictions = interpreter.get_tensor(output_details[0]['index'])  # class_output
+                reg_predictions = interpreter.get_tensor(output_details[1]['index'])    # reg_output
+                logger.info(f"TFLite multitask model prediction completed: class_shape={class_predictions.shape}, reg_shape={reg_predictions.shape}")
+            else:
+                # Handle single output model
+                predictions = interpreter.get_tensor(output_details[0]['index'])
+                logger.info(f"TFLite model prediction completed: shape={predictions.shape}")
         else:
             model = model_or_interpreter
-            predictions = model.predict(processed_image, verbose=0)
-            logger.info(f"Keras model prediction completed: shape={predictions.shape}")
+            if is_multitask_model:
+                # Handle multitask Keras model
+                predictions = model.predict(processed_image, verbose=0)
+                class_predictions = predictions['class_output']
+                reg_predictions = predictions['reg_output']
+                logger.info(f"Keras multitask model prediction completed: class_shape={class_predictions.shape}, reg_shape={reg_predictions.shape}")
+            else:
+                # Handle single output Keras model
+                predictions = model.predict(processed_image, verbose=0)
+                logger.info(f"Keras model prediction completed: shape={predictions.shape}")
         
-        # Get the predicted class and confidence
-        predicted_class_idx = np.argmax(predictions[0])
-        confidence = np.max(predictions[0])
+        # Process predictions based on model type
+        if is_multitask_model:
+            # Multitask model: use classification for class, regression for confidence
+            predicted_class_idx = np.argmax(class_predictions[0])
+            class_confidence = np.max(class_predictions[0])
+            reg_confidence = reg_predictions[0][0]  # Regression confidence (0-100)
+            
+            # Use regression confidence as primary, fallback to class confidence
+            confidence = reg_confidence / 100.0  # Convert to 0-1 range
+            logger.info(f"Multitask results: class_idx={predicted_class_idx}, class_conf={class_confidence:.4f}, reg_conf={reg_confidence:.2f}")
+        else:
+            # Single output model: use max probability as confidence
+            predicted_class_idx = np.argmax(predictions[0])
+            confidence = np.max(predictions[0])
         
         # Apply confidence threshold
         if confidence < CONFIDENCE_THRESHOLD:
@@ -302,15 +359,30 @@ def analyze_crop_prediction(model_or_interpreter, image_data, labels, is_tflite_
         logger.info(f"  - Predicted label: {predicted_label}")
         logger.info(f"  - Confidence: {confidence:.4f}")
         logger.info(f"  - Is healthy: {is_healthy}")
-        logger.info(f"  - All predictions: {predictions[0].tolist()}")
         
-        return {
-            'prediction_class': int(predicted_class_idx),
-            'crop_type': predicted_label,
-            'confidence': float(confidence),
-            'is_healthy': is_healthy,
-            'all_predictions': predictions[0].tolist()
-        }
+        if is_multitask_model:
+            logger.info(f"  - Class predictions: {class_predictions[0].tolist()}")
+            logger.info(f"  - Regression confidence: {reg_confidence:.2f}")
+            return {
+                'prediction_class': int(predicted_class_idx),
+                'crop_type': predicted_label,
+                'confidence': float(confidence),
+                'is_healthy': is_healthy,
+                'all_predictions': class_predictions[0].tolist(),
+                'regression_confidence': float(reg_confidence),
+                'class_confidence': float(class_confidence),
+                'model_type': 'multitask'
+            }
+        else:
+            logger.info(f"  - All predictions: {predictions[0].tolist()}")
+            return {
+                'prediction_class': int(predicted_class_idx),
+                'crop_type': predicted_label,
+                'confidence': float(confidence),
+                'is_healthy': is_healthy,
+                'all_predictions': predictions[0].tolist(),
+                'model_type': 'single_task'
+            }
         
     except Exception as e:
         logger.error(f"Error in crop analysis: {e}")

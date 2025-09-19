@@ -10,6 +10,8 @@ MAX_FILE_SIZE = int(os.getenv('MAX_FILE_SIZE', '10485760'))  # 10MB
 
 # Model and Label Paths
 MODEL_PATHS = [
+    "saved_models/multitask_model.h5",  # Multitask model first
+    "saved_models/best_model.h5",       # Fallback to single model
     "saved_models/best_modelV1.h5",
     "model/best_model.h5",
     "notebooks/model/best_model.h5",

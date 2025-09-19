@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 /* eslint-disable @typescript-eslint/no-unused-vars */
  
 "use client"
@@ -206,6 +207,16 @@ export default function HomePage() {
               Explore Marketplace <ArrowRight className="ml-2 w-5 h-5" />
             </motion.a>
             <motion.a
+              href="/KrishiSahayak-release.apk"
+              download="KrishiSahayak-release.apk"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-7 py-3.5 rounded-xl text-base font-medium flex items-center justify-center shadow-md"
+              whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.1)" }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
+              Download App <Download className="ml-2 w-5 h-5" />
+            </motion.a>
+            <motion.a
               href="/learn-more"
               className="border border-green-600 text-green-700 px-7 py-3.5 rounded-xl text-base font-medium shadow-sm"
               whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.08)" }}
@@ -320,15 +331,15 @@ export default function HomePage() {
       </section>
       {/* Floating Android Download Button */}
       <motion.a
-        href="/path/to/your/app.apk" // Placeholder for the actual APK path
-        download
+        href="/KrishiSahayak-release.apk"
+        download="KrishiSahayak-release.apk"
         className="fixed bottom-8 right-8 bg-green-600 text-white p-4 rounded-full shadow-lg flex items-center justify-center z-50 cursor-pointer"
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, delay: 1 }}
         whileHover={{ scale: 1.1, boxShadow: "0 15px 30px rgba(0, 0, 0, 0.2)" }}
         whileTap={{ scale: 0.9 }}
-        title="Download Android App"
+        title="Download Android App - Krishi Sahayak v1.0 (101.8MB)"
       >
         <Download className="w-7 h-7" />
       </motion.a>
