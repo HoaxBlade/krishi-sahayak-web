@@ -104,7 +104,7 @@ export default function SignupForm({ onSuccess, onSwitchToLogin }: SignupFormPro
                 value={formData.fullName}
                 onChange={handleInputChange}
                 required
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors placeholder:text-gray-500"
                 placeholder="Enter your full name"
               />
             </div>
@@ -123,7 +123,7 @@ export default function SignupForm({ onSuccess, onSwitchToLogin }: SignupFormPro
                 value={formData.email}
                 onChange={handleInputChange}
                 required
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors placeholder:text-gray-500"
                 placeholder="Enter your email"
               />
             </div>
@@ -141,7 +141,7 @@ export default function SignupForm({ onSuccess, onSwitchToLogin }: SignupFormPro
                 name="phone"
                 value={formData.phone}
                 onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors placeholder:text-gray-500"
                 placeholder="Enter your phone number"
               />
             </div>
@@ -160,7 +160,7 @@ export default function SignupForm({ onSuccess, onSwitchToLogin }: SignupFormPro
                 value={formData.password}
                 onChange={handleInputChange}
                 required
-                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors placeholder:text-gray-500"
                 placeholder="Create a password"
               />
               <button
@@ -186,7 +186,7 @@ export default function SignupForm({ onSuccess, onSwitchToLogin }: SignupFormPro
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
                 required
-                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors placeholder:text-gray-500"
                 placeholder="Confirm your password"
               />
               <button

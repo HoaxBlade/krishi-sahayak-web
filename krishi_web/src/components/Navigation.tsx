@@ -31,8 +31,9 @@ export default function Navigation() {
 
   return (
     <nav className="bg-white shadow-subtle border-b border-gray-100 sticky top-0 z-50">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 focus:z-50 focus:bg-green-600 focus:text-white focus:p-3 focus:rounded-br-lg">Skip to main content</a>
       <div className="max-w-full mx-auto px-4">
-        <div className="flex justify-between items-center"> {/* Adjusted padding */}
+        <div className="flex justify-between items-center">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3">
             <Image
@@ -64,7 +65,7 @@ export default function Navigation() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6"> {/* Adjusted spacing */}
+          <div className="hidden md:flex items-center space-x-6">
             {navItems.map((item) => (
               <Link
                 key={item.name}
@@ -81,8 +82,8 @@ export default function Navigation() {
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
                 )}
-                <item.icon className="w-4 h-4" /> {/* Slightly smaller icon */}
-                <span className="text-sm">{item.name}</span> {/* Slightly smaller text */}
+                <item.icon className="w-4 h-4" />
+                <span className="text-sm">{item.name}</span>
               </Link>
             ))}
             
@@ -94,7 +95,7 @@ export default function Navigation() {
                 >
                   <User className="w-4 h-4" />
                   <span className="text-sm">
-                    Hi {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
+                        Hi {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
                   </span>
                 </Link>
               </div>
@@ -113,6 +114,8 @@ export default function Navigation() {
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="md:hidden p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+            aria-controls="mobile-menu"
+            aria-expanded={isOpen}
           >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -121,18 +124,19 @@ export default function Navigation() {
         {/* Mobile Navigation */}
         {isOpen && (
           <motion.div
-            className="md:hidden py-2 border-t border-gray-200" /* Adjusted padding */
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
+            id="mobile-menu"
+            className="md:hidden py-2 border-t border-gray-200"
+            initial={{ opacity: 0, maxHeight: 0 }}
+            animate={{ opacity: 1, maxHeight: '300px' }}
+            exit={{ opacity: 0, maxHeight: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
           >
-            <div className="space-y-1"> {/* Adjusted spacing */}
+            <div className="space-y-1">
               {navItems.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center space-x-3 px-4 py-2 text-gray-700 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors ${ /* Adjusted padding and text color */
+                  className={`flex items-center space-x-3 px-4 py-2 text-gray-700 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors ${
                     pathname === item.href ? 'text-green-600 font-semibold bg-green-50' : ''
                   }`}
                   onClick={() => setIsOpen(false)}

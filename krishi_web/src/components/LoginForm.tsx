@@ -83,7 +83,7 @@ export default function LoginForm({ onSuccess, onSwitchToSignup }: LoginFormProp
                 value={formData.email}
                 onChange={handleInputChange}
                 required
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors text-black placeholder:text-black"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors text-black placeholder:text-gray-500"
                 placeholder="Enter your email"
               />
             </div>
@@ -102,7 +102,7 @@ export default function LoginForm({ onSuccess, onSwitchToSignup }: LoginFormProp
                 value={formData.password}
                 onChange={handleInputChange}
                 required
-                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors text-black placeholder:text-black"
+                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors text-black placeholder:text-gray-500"
                 placeholder="Enter your password"
               />
               <button
