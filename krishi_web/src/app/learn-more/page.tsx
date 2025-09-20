@@ -115,7 +115,7 @@ const LearnMorePage: React.FC = () => {
         >
           <div className="flex flex-col md:flex-row items-center gap-12">
             <div className="md:w-1/3 flex justify-center">
-              <Image src="/NIELIT.png" alt="NIELIT Odisha" width={350} height={350} className="rounded-lg shadow-lg" />
+              <Image src="/NIELIT.png" alt="NIELIT Odisha" width={350} height={350} className="rounded-lg" />
             </div>
             <div className="md:w-2/3">
               <div className="hidden md:inline-block bg-gradient-to-br from-green-600 to-blue-600 text-white p-6 rounded-full mb-8 shadow-xl">
