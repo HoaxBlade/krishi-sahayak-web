@@ -176,7 +176,7 @@ export default function HomePage() {
     <div className="min-h-screen relative overflow-hidden">
       {/* Animated gradient waves */}
       <motion.div
-        className="absolute inset-0 bg-gradient-to-br from-green-200 via-blue-100 to-white z-0"
+        className="absolute inset-0 bg-gradient-to-br from-green-200 via-blue-300 to-teal-200 z-0"
         animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%", "50% 0%", "0% 50%"] }}
         transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
         style={{ backgroundSize: "200% 200%" }}

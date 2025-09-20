@@ -19,7 +19,7 @@
     --foreground: #ededed;
   }
   
-  .backdrop-blur-sm {
+  .backdrouip-blur-sm {
     backdrop-filter: blur(4px) !important;
     -webkit-backdrop-filter: blur(4px) !important; /* For Safari support */
   }
@@ -44,4 +44,18 @@ body {
 *:focus-visible {
   outline: 2px solid var(--color-green-600); /* Use a green outline for focus */
   outline-offset: 2px;
+}
+
+/* Pattern styles for subtle backgrounds */
+.pattern-cross-dots-md {
+  background-image: radial-gradient(currentColor 0.5px, transparent 0.5px);
+  background-size: 10px 10px;
+}
+
+.pattern-gray-800 {
+  color: #1f2937; /* Tailwind gray-800 */
+}
+
+.pattern-opacity-10 {
+  opacity: 0.1;
 }
