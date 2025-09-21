@@ -47,6 +47,50 @@ rate_limiter = RateLimiter()
 system_monitor = SystemMonitor()
 ml_queue_manager = MLQueueManager()
 
+# Worker initialization function for Gunicorn
+def on_starting(server):
+    """Called just before the master process is initialized."""
+    logger.info("🚀 Starting Gunicorn master process...")
+
+def when_ready(server):
+    """Called just after the server is started."""
+    logger.info("✅ Gunicorn master process ready...")
+
+def worker_int(worker):
+    """Called just after a worker has been forked."""
+    logger.info(f"🔄 Worker {worker.pid} starting...")
+    # Initialize model in each worker process
+    global model, labels, model_loaded, is_tflite_model, is_multitask_model
+    if initialize_production_model_and_labels():
+        logger.info(f"✅ Worker {worker.pid} model loaded successfully")
+    else:
+        logger.error(f"❌ Worker {worker.pid} failed to load model")
+
+def pre_fork(server, worker):
+    """Called just before a worker is forked."""
+    logger.info(f"🔄 Pre-forking worker...")
+
+def post_fork(server, worker):
+    """Called just after a worker has been forked."""
+    logger.info(f"✅ Post-fork worker {worker.pid} ready")
+
+def ensure_model_loaded():
+    """Ensure model is loaded, initialize if not."""
+    global model, labels, model_loaded, is_tflite_model, is_multitask_model
+    logger.info(f"🔍 ensure_model_loaded called: model_loaded={model_loaded}, model={model is not None}")
+    if not model_loaded or model is None:
+        logger.info("🔄 Model not loaded, initializing in worker process...")
+        try:
+            if initialize_production_model_and_labels():
+                logger.info("✅ Model loaded successfully in worker process")
+            else:
+                logger.error("❌ Failed to load model in worker process")
+        except Exception as e:
+            logger.error(f"❌ Exception in ensure_model_loaded: {e}")
+    else:
+        logger.info("✅ Model already loaded in worker process")
+    return model_loaded
+
 def initialize_production_model_and_labels():
     """Initialize model and labels for production server."""
     global model, labels, model_loaded, is_tflite_model, is_multitask_model
@@ -159,7 +203,20 @@ def analyze_crop_endpoint():
     start_time_req = time.time()
     
     try:
-        if not model_loaded or model is None:
+        # Ensure model is loaded
+        logger.info("🔍 About to call ensure_model_loaded()")
+        try:
+            model_loaded_result = ensure_model_loaded()
+            logger.info(f"🔍 ensure_model_loaded() returned: {model_loaded_result}")
+        except Exception as e:
+            logger.error(f"❌ Exception in ensure_model_loaded(): {e}")
+            return jsonify({
+                'error': 'Model loading error',
+                'message': f'Error loading model: {str(e)}',
+                'status': 'error'
+            }), 500
+        
+        if not model_loaded_result:
             logger.error("Model not loaded, cannot process request.")
             return jsonify({
                 'error': 'Model not available',
@@ -289,7 +346,7 @@ if __name__ == '__main__':
             #   requests:
             #     memory: "1Gi"
             # Tune num_workers based on CPU cores: (2 * num_cores) + 1 is a common starting point for CPU-bound tasks.
-            sys.argv = ['gunicorn', '--bind', f'{FLASK_HOST}:{FLASK_PORT}', '--workers', str(num_workers), '--timeout', '120', '--keep-alive', '5', '--max-requests', '1000', '--max-requests-jitter', '100', 'main_production:app']
+            sys.argv = ['gunicorn', '--bind', f'{FLASK_HOST}:{FLASK_PORT}', '--workers', '1', '--worker-class', 'gthread', '--threads', '2', '--timeout', '300', '--keep-alive', '5', '--max-requests', '1000', '--max-requests-jitter', '100', '--preload', 'main_production:app']
             wsgi.run()
         except ImportError:
             logger.warning("⚠️ Gunicorn not available, falling back to Flask development server")

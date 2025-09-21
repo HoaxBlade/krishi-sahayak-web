@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: ml-server
-        image: gcr.io/composed-slice-410214/krishi-ml-server:multi-model-20250921-183934
+        image: gcr.io/composed-slice-410214/krishi-ml-server:multi-model-20250921-112403
         ports:
         - containerPort: 5001
           name: http
@@ -77,11 +77,11 @@ spec:
               optional: true
         resources:
           requests:
-            memory: "256Mi"
-            cpu: "100m"
+            memory: "512Mi"
+            cpu: "250m"
           limits:
-            memory: "1Gi"
-            cpu: "500m"
+            memory: "2Gi"
+            cpu: "1000m"
         # It is recommended to use specific image tags (e.g., commit hash, version)
         # instead of 'latest' for production deployments to ensure reproducibility.
         livenessProbe:

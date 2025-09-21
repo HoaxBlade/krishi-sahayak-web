@@ -23,6 +23,11 @@ class MLService {
   final FirebaseAnalyticsService _analytics = FirebaseAnalyticsService();
   bool _isLocalModelReady = false;
 
+  // Multi-model support
+  List<String> _availableCrops = [];
+  Map<String, dynamic> _modelStatus = {};
+  bool _multiModelSupported = false;
+
   Future<void> initialize() async {
     debugPrint('🚀 [MLService] Initializing ML service...');
 
@@ -50,10 +55,73 @@ class MLService {
       _isLocalModelReady = false;
     }
 
+    // Check server multi-model support
+    await _checkServerMultiModelSupport();
+
     debugPrint('✅ [MLService] ML service initialization completed');
   }
 
-  Future<Map<String, dynamic>> analyzeCropHealth(XFile imageFile) async {
+  Future<void> _checkServerMultiModelSupport() async {
+    try {
+      debugPrint('🔍 [MLService] Checking server multi-model support...');
+      final response = await _client
+          .get(
+            Uri.parse('$baseUrl/models/status'),
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        _multiModelSupported = data['multi_model_system'] != null;
+
+        if (_multiModelSupported) {
+          _modelStatus = data['multi_model_system'];
+          debugPrint('✅ [MLService] Server supports multi-model system');
+          debugPrint(
+            '📊 [MLService] Available models: ${_modelStatus['total_models_loaded']}',
+          );
+
+          // Get available crops
+          await _loadAvailableCrops();
+        } else {
+          debugPrint(
+            '⚠️ [MLService] Server does not support multi-model system',
+          );
+        }
+      } else {
+        debugPrint(
+          '⚠️ [MLService] Server multi-model check failed: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      debugPrint('❌ [MLService] Server multi-model check failed: $e');
+    }
+  }
+
+  Future<void> _loadAvailableCrops() async {
+    try {
+      final response = await _client
+          .get(
+            Uri.parse('$baseUrl/models/available_crops'),
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        _availableCrops = List<String>.from(data['available_crops'] ?? []);
+        debugPrint('🌾 [MLService] Available crops: $_availableCrops');
+      }
+    } catch (e) {
+      debugPrint('❌ [MLService] Failed to load available crops: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> analyzeCropHealth(
+    XFile imageFile, {
+    String? cropType,
+  }) async {
     final stopwatch = Stopwatch()..start();
     debugPrint('🚀 [MLService] Starting crop health analysis...');
 
@@ -74,15 +142,24 @@ class MLService {
 
         if (serverHealthy) {
           // Use server model for best accuracy
-          debugPrint('🌐 [MLService] Using server ML model (online mode)...');
-          final result = await _analyzeWithServer(imageFile);
-          result['model_type'] = 'server';
-          result['processing_time'] = '${stopwatch.elapsedMilliseconds}ms';
-          result['analysis_mode'] = 'online';
+          Map<String, dynamic> result;
+          if (_multiModelSupported) {
+            debugPrint('🌐 [MLService] Using multi-model server system...');
+            result = await _analyzeWithMultiModelServer(imageFile, cropType);
+            result['model_type'] = 'multi_model_server';
+            result['processing_time'] = '${stopwatch.elapsedMilliseconds}ms';
+            result['analysis_mode'] = 'online_multi_model';
+          } else {
+            debugPrint('🌐 [MLService] Using legacy server model...');
+            result = await _analyzeWithServer(imageFile);
+            result['model_type'] = 'legacy_server';
+            result['processing_time'] = '${stopwatch.elapsedMilliseconds}ms';
+            result['analysis_mode'] = 'online_legacy';
+          }
+
           stopwatch.stop();
 
           // Track analytics
-          // Safely convert confidence to double
           double confidence = 0.0;
           if (result['confidence'] != null) {
             if (result['confidence'] is String) {
@@ -98,7 +175,7 @@ class MLService {
             healthStatus: result['health_status'] ?? 'unknown',
             confidence: confidence,
             processingTimeMs: stopwatch.elapsedMilliseconds,
-            modelType: 'server',
+            modelType: result['model_type'],
           );
 
           debugPrint(
@@ -135,7 +212,6 @@ class MLService {
       stopwatch.stop();
 
       // Track analytics
-      // Safely convert confidence to double
       double confidence = 0.0;
       if (result['confidence'] != null) {
         if (result['confidence'] is String) {
@@ -193,6 +269,71 @@ class MLService {
           'Server analysis failed and local model not available: $e',
         );
       }
+    }
+  }
+
+  Future<Map<String, dynamic>> _analyzeWithMultiModelServer(
+    XFile imageFile,
+    String? cropType,
+  ) async {
+    debugPrint('🌐 [MLService] Starting multi-model server analysis...');
+
+    // Track image compression
+    debugPrint('🗜️ [MLService] Compressing image for ML analysis...');
+    final compressionStart = Stopwatch()..start();
+    Uint8List imageBytes = await _compressionService.optimizeForModel(
+      imageFile,
+      modelType: 'crop_health',
+    );
+    compressionStart.stop();
+    debugPrint(
+      '✅ [MLService] Image compression completed in ${compressionStart.elapsedMilliseconds}ms',
+    );
+
+    // Track base64 conversion
+    debugPrint('🔄 [MLService] Converting image to base64...');
+    final base64Start = Stopwatch()..start();
+    String base64Image = base64Encode(imageBytes);
+    String imageData = 'data:image/jpeg;base64,$base64Image';
+    base64Start.stop();
+    debugPrint(
+      '✅ [MLService] Base64 conversion completed in ${base64Start.elapsedMilliseconds}ms',
+    );
+
+    // Prepare request body
+    Map<String, dynamic> requestBody = {'image': imageData};
+    if (cropType != null) {
+      requestBody['crop_type'] = cropType;
+    }
+
+    // Choose endpoint based on whether crop type is specified
+    String endpoint = cropType != null
+        ? '/analyze_crop_direct'
+        : '/analyze_crop';
+    debugPrint('🌐 [MLService] Using endpoint: $endpoint');
+
+    final requestStart = Stopwatch()..start();
+    final response = await _client.post(
+      Uri.parse('$baseUrl$endpoint'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(requestBody),
+    );
+    requestStart.stop();
+
+    debugPrint(
+      '✅ [MLService] Multi-model request completed in ${requestStart.elapsedMilliseconds}ms',
+    );
+    debugPrint('📊 [MLService] Response status: ${response.statusCode}');
+
+    if (response.statusCode == 200) {
+      final result = jsonDecode(response.body);
+      debugPrint('✅ [MLService] Multi-model analysis successful');
+      return result;
+    } else {
+      debugPrint(
+        '❌ [MLService] Multi-model server returned error status ${response.statusCode}',
+      );
+      throw Exception('Multi-model analysis failed: ${response.statusCode}');
     }
   }
 
@@ -315,8 +456,8 @@ class MLService {
     }
   }
 
-  // Get current model status
-  Map<String, dynamic> getModelStatus() {
+  // Get current local model status
+  Map<String, dynamic> getLocalModelStatus() {
     final localReady = _localML.isReady;
     final localStatus = _isLocalModelReady;
 
@@ -391,6 +532,60 @@ class MLService {
         debugPrint('❌ [MLService] Re-initialization failed: $e');
         _isLocalModelReady = false;
       }
+    }
+  }
+
+  // Multi-model utility methods
+  List<String> getAvailableCrops() {
+    return List.from(_availableCrops);
+  }
+
+  bool get isMultiModelSupported => _multiModelSupported;
+
+  Map<String, dynamic> getModelStatus() {
+    return Map.from(_modelStatus);
+  }
+
+  Future<void> refreshModelStatus() async {
+    await _checkServerMultiModelSupport();
+  }
+
+  Future<Map<String, dynamic>> getModelInfo(String modelName) async {
+    try {
+      final response = await _client
+          .get(
+            Uri.parse('$baseUrl/models/info/$modelName'),
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        return {'error': 'Failed to get model info: ${response.statusCode}'};
+      }
+    } catch (e) {
+      return {'error': 'Failed to get model info: $e'};
+    }
+  }
+
+  Future<bool> reloadModel(String modelName) async {
+    try {
+      final response = await _client
+          .post(
+            Uri.parse('$baseUrl/models/reload/$modelName'),
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final result = jsonDecode(response.body);
+        return result['status'] == 'success';
+      }
+      return false;
+    } catch (e) {
+      debugPrint('❌ [MLService] Failed to reload model $modelName: $e');
+      return false;
     }
   }
 

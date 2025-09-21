@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-server
+  namespace: krishi-sahayak
+  labels:
+    app: ml-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ml-server
+  template:
+    metadata:
+      labels:
+        app: ml-server
+    spec:
+      containers:
+      - name: ml-server
+        image: gcr.io/composed-slice-410214/krishi-ml-server:multi-model-fixed-final
+        ports:
+        - containerPort: 5000
+          name: http
+        command: ["python3", "main_production.py"]
+        env:
+        - name: FLASK_HOST
+          value: "0.0.0.0"
+        - name: FLASK_PORT
+          value: "5000"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 120
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 90
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 5
