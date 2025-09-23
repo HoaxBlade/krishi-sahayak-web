@@ -95,20 +95,58 @@ def initialize_production_model_and_labels():
     """Initialize model and labels for production server."""
     global model, labels, model_loaded, is_tflite_model, is_multitask_model
     logger.info("=== PRODUCTION MODEL LOADING PROCESS ===")
+    logger.info(f"📁 Working directory: {os.getcwd()}")
+    logger.info(f"📁 Available files in current directory: {os.listdir('.')}")
     
+    # Load labels first
+    logger.info("📝 Step 1: Loading labels...")
     labels = load_labels()
-    logger.info(f"Loaded {len(labels)} labels: {labels}")
+    logger.info(f"📝 Loaded {len(labels)} labels: {labels}")
     
+    # Load model
+    logger.info("🤖 Step 2: Loading ML model...")
     loaded_model, tflite_flag, multitask_flag = load_ml_model()
     model = loaded_model
     is_tflite_model = tflite_flag
     is_multitask_model = multitask_flag
     model_loaded = (model is not None)
     
+    # Log detailed results
+    logger.info("📊 === PRODUCTION MODEL LOADING RESULTS ===")
+    logger.info(f"🤖 Model loaded: {model_loaded}")
+    logger.info(f"🤖 Model object: {model}")
+    logger.info(f"🤖 Model type: {type(model) if model else 'None'}")
+    logger.info(f"🤖 Is TFLite: {is_tflite_model}")
+    logger.info(f"🤖 Is Multitask: {is_multitask_model}")
+    logger.info(f"📝 Labels count: {len(labels) if labels else 0}")
+    
     if not model_loaded:
         logger.error("❌ Failed to load model for production. Server will not start.")
+        logger.error("❌ === PRODUCTION MODEL LOADING FAILED ===")
     else:
         logger.info(f"✅ Model loaded successfully - TFLite: {is_tflite_model}, Multitask: {is_multitask_model}")
+        logger.info("✅ === PRODUCTION MODEL LOADING SUCCESS ===")
+        
+        # Additional model validation
+        try:
+            logger.info("🔍 Performing model validation...")
+            if is_tflite_model and model:
+                # Validate TFLite model
+                input_details = model.get_input_details()
+                output_details = model.get_output_details()
+                logger.info(f"🔍 TFLite input details: {[{'name': detail.get('name', 'unnamed'), 'shape': detail['shape']} for detail in input_details]}")
+                logger.info(f"🔍 TFLite output details: {[{'name': detail.get('name', 'unnamed'), 'shape': detail['shape']} for detail in output_details]}")
+            elif model and hasattr(model, 'input_shape'):
+                # Validate Keras model
+                logger.info(f"🔍 Keras input shape: {model.input_shape}")
+                if hasattr(model, 'output_shape'):
+                    logger.info(f"🔍 Keras output shape: {model.output_shape}")
+                if hasattr(model, 'output_names'):
+                    logger.info(f"🔍 Keras output names: {model.output_names}")
+            logger.info("✅ Model validation completed successfully")
+        except Exception as e:
+            logger.warning(f"⚠️ Model validation failed: {e}")
+    
     return model_loaded
 
 @app.errorhandler(RequestEntityTooLarge)
@@ -128,11 +166,35 @@ def health_check():
         cpu = system_monitor.get_cpu_usage()
         uptime = time.time() - start_time
         
+        # Get detailed model information
+        model_info = {
+            'loaded': model_loaded,
+            'type': type(model).__name__ if model else 'None',
+            'is_tflite': is_tflite_model,
+            'is_multitask': is_multitask_model,
+            'labels_count': len(labels) if labels else 0
+        }
+        
+        # Add model validation details if model is loaded
+        if model_loaded and model:
+            try:
+                if is_tflite_model:
+                    input_details = model.get_input_details()
+                    output_details = model.get_output_details()
+                    model_info['input_shape'] = input_details[0]['shape'] if input_details else None
+                    model_info['output_count'] = len(output_details)
+                elif hasattr(model, 'input_shape'):
+                    model_info['input_shape'] = model.input_shape
+                    if hasattr(model, 'output_shape'):
+                        model_info['output_shape'] = model.output_shape
+            except Exception as e:
+                model_info['validation_error'] = str(e)
+        
         return jsonify({
             'status': 'healthy' if model_loaded and system_monitor.is_system_healthy() else 'unhealthy',
             'timestamp': datetime.utcnow().isoformat(),
             'uptime_seconds': uptime,
-            'model_loaded': model_loaded,
+            'model': model_info,
             'system': {
                 'memory_usage_percent': memory['used_percent'],
                 'memory_used_mb': memory['used_mb'],
@@ -195,6 +257,68 @@ def detailed_status():
     except Exception as e:
         logger.error(f"Status check error: {e}")
         return jsonify({'error': str(e)}), 500
+
+@app.route('/model-status', methods=['GET'])
+def get_model_status():
+    """Get detailed model status information"""
+    try:
+        # Ensure model is loaded
+        model_loaded_status = ensure_model_loaded()
+        
+        # Get detailed model information
+        model_info = {
+            'loaded': model_loaded_status,
+            'type': type(model).__name__ if model else 'None',
+            'is_tflite': is_tflite_model,
+            'is_multitask': is_multitask_model,
+            'labels_count': len(labels) if labels else 0,
+            'labels': labels if labels else []
+        }
+        
+        # Add detailed model validation
+        if model_loaded_status and model:
+            try:
+                if is_tflite_model:
+                    input_details = model.get_input_details()
+                    output_details = model.get_output_details()
+                    model_info['input_details'] = [{'name': detail.get('name', 'unnamed'), 'shape': detail['shape'], 'dtype': str(detail['dtype'])} for detail in input_details]
+                    model_info['output_details'] = [{'name': detail.get('name', 'unnamed'), 'shape': detail['shape'], 'dtype': str(detail['dtype'])} for detail in output_details]
+                elif hasattr(model, 'input_shape'):
+                    model_info['input_shape'] = model.input_shape
+                    if hasattr(model, 'output_shape'):
+                        model_info['output_shape'] = model.output_shape
+                    if hasattr(model, 'output_names'):
+                        model_info['output_names'] = model.output_names
+                    if hasattr(model, 'summary'):
+                        # Get model summary as string
+                        import io
+                        import sys
+                        old_stdout = sys.stdout
+                        sys.stdout = buffer = io.StringIO()
+                        try:
+                            model.summary()
+                            model_info['summary'] = buffer.getvalue()
+                        except:
+                            model_info['summary'] = 'Summary not available'
+                        finally:
+                            sys.stdout = old_stdout
+            except Exception as e:
+                model_info['validation_error'] = str(e)
+                logger.error(f"Model validation error: {e}")
+        
+        return jsonify({
+            'status': 'success',
+            'model': model_info,
+            'timestamp': datetime.utcnow().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Model status check failed: {e}")
+        return jsonify({
+            'status': 'error',
+            'error': str(e),
+            'timestamp': datetime.utcnow().isoformat()
+        }), 500
 
 @app.route('/analyze_crop', methods=['POST'])
 def analyze_crop_endpoint():
