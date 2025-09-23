@@ -484,6 +484,8 @@ def initialize_model_and_labels():
     """Initialize model and labels on server startup."""
     global model, labels
     logger.info("=== MODEL LOADING/TRAINING PROCESS ===")
+    logger.info(f"📁 Working directory: {os.getcwd()}")
+    logger.info(f"📁 Available files in current directory: {os.listdir('.')}")
     
     # Initialize multi-model system first
     logger.info("🚀 Initializing Multi-Model System...")
@@ -497,10 +499,19 @@ def initialize_model_and_labels():
         logger.warning("⚠️ Multi-Model System initialization failed, falling back to legacy system")
     
     # Initialize legacy system for fallback
+    logger.info("🔄 Initializing legacy system for fallback...")
     labels = load_labels()
-    logger.info(f"Loaded {len(labels)} legacy labels: {labels}")
+    logger.info(f"📝 Loaded {len(labels)} legacy labels: {labels}")
     
+    logger.info("🤖 Loading legacy ML model...")
     model = load_ml_model()
+    
+    # Log detailed results
+    logger.info("📊 === LEGACY MODEL LOADING RESULTS ===")
+    logger.info(f"🤖 Model loaded: {model is not None}")
+    logger.info(f"🤖 Model object: {model}")
+    logger.info(f"🤖 Model type: {type(model) if model else 'None'}")
+    logger.info(f"📝 Labels count: {len(labels) if labels else 0}")
     
     if model is None:
         logger.info("No existing legacy model found. Attempting to train new model...")
