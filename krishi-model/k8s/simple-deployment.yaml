@@ -1,14 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+<<<<<<< HEAD
   name: ml-server
   namespace: krishi-sahayak
   labels:
     app: ml-server
+=======
+  name: ml-server-simple
+  namespace: krishi-sahayak
+  labels:
+    app: ml-server-simple
+>>>>>>> 8b0f66c5 (Reverted back to the old deployement)
 spec:
   replicas: 1
   selector:
     matchLabels:
+<<<<<<< HEAD
       app: ml-server
   template:
     metadata:
@@ -22,21 +30,43 @@ spec:
         - containerPort: 5001
           name: http
         command: ["python3", "main.py"]
+=======
+      app: ml-server-simple
+  template:
+    metadata:
+      labels:
+        app: ml-server-simple
+    spec:
+      containers:
+      - name: ml-server
+        image: gcr.io/composed-slice-410214/krishi-ml-server:simple-best-model
+        ports:
+        - containerPort: 5000
+>>>>>>> 8b0f66c5 (Reverted back to the old deployement)
         env:
         - name: FLASK_HOST
           value: "0.0.0.0"
         - name: FLASK_PORT
+<<<<<<< HEAD
           value: "5001"
         resources:
           requests:
             memory: "512Mi"
             cpu: "250m"
+=======
+          value: "5000"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+>>>>>>> 8b0f66c5 (Reverted back to the old deployement)
           limits:
             memory: "2Gi"
             cpu: "1000m"
         livenessProbe:
           httpGet:
             path: /health
+<<<<<<< HEAD
             port: 5001
           initialDelaySeconds: 60
           periodSeconds: 30
@@ -46,7 +76,37 @@ spec:
           httpGet:
             path: /health
             port: 5001
+=======
+            port: 5000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+>>>>>>> 8b0f66c5 (Reverted back to the old deployement)
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
+<<<<<<< HEAD
+=======
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ml-server-simple-service
+  namespace: krishi-sahayak
+  labels:
+    app: ml-server-simple
+spec:
+  selector:
+    app: ml-server-simple
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5000
+  type: LoadBalancer
+>>>>>>> 8b0f66c5 (Reverted back to the old deployement)
