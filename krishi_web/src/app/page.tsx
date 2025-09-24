@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 /* eslint-disable @typescript-eslint/no-unused-vars */
- 
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -52,9 +52,13 @@ export default function HomePage() {
     };
   }, []);
 
+  const [locationFetched, setLocationFetched] = useState(false);
   useEffect(() => {
     const fetchLocationAndServices = async () => {
-      setLoading(true)
+      if (locationFetched) {
+        return;
+      }
+      setLoading(true);
       let lat: number | null = null
       let lon: number | null = null
 
@@ -100,9 +104,9 @@ export default function HomePage() {
                   reject(new Error(errorMessage));
                 }, 
                 { 
-                  enableHighAccuracy: false, // Start with less accurate but faster
+                  enableHighAccuracy: true, // Use high accuracy
                   timeout: 15000, // Increased timeout
-                  maximumAge: 600000 // 10 minutes cache
+                  maximumAge: 0 // Force refresh
                 }
               );
             });
@@ -153,17 +157,22 @@ export default function HomePage() {
         console.warn("Service check failed:", error)
         setLocationError(prev => prev || "Failed to fetch weather data.");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    
+      setLocationFetched(true);
+    };
+
     // Wrap the entire function call in try-catch to handle any unhandled errors
     fetchLocationAndServices().catch((error) => {
       console.warn("Failed to fetch location and services:", error);
       setLocationError("Unable to load location and weather data. Please refresh the page.");
       setLoading(false);
     });
-  }, [])
+
+    return () => {
+      setLocationFetched(false);
+    };
+  }, []);
 
   const features = [
     { icon: <Plane />, title: "Drone Technologies Marketplace", desc: "Buy, sell, and rent agricultural drones and related services." },
@@ -372,5 +381,3 @@ function StatusCard({ title, status, extra, healthy, delay = 0 }: { title: strin
     </motion.div>
   )
 }
-
-
