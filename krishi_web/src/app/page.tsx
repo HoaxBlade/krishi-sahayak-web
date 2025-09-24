@@ -290,7 +290,6 @@ export default function HomePage() {
               status={weather ? "Connected" : "Disconnected"}
               extra={`Location: ${weather?.location || "N/A"}`}
               healthy={!!weather}
-              delay={0.1}
             />
             <StatusCard
               title="Database"
