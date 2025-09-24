@@ -25,20 +25,11 @@ COPY saved_models/crop_type_labels.txt saved_models/
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
-EXPOSE 5001
+EXPOSE 5000
 
-<<<<<<< HEAD
-# Healthcheck (uses curl)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-  CMD curl -fsS http://localhost:5001/health || exit 1
-
-# Use gunicorn for production
-CMD ["gunicorn", "-w", "1", "-k", "gthread", "--threads", "8", "-t", "60", "-b", "0.0.0.0:5001", "main:app"]
-=======
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD curl -fsS http://localhost:5000/health || exit 1
 
 # Run the simple server
 CMD ["python3", "main_simple.py"]
->>>>>>> 8b0f66c5 (Reverted back to the old deployement)
