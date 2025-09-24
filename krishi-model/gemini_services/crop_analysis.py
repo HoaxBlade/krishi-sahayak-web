@@ -42,7 +42,7 @@ Rules:
    - What are the Remedies?
    - What Can Be Used for Treatment?
 3. Each section should have 2-3 short, clear sentences.
-4. Only suggest proven remedies. Include one natural option and one general medicine/fungicide option in plain words.
+4. Only suggest proven remedies. Include one natural option and one medicine/fungicide realted to that disease option in plain words.
 5. End with: "Important: Always read product labels carefully and consult a local agricultural expert before using any chemical solution."
 """
 
