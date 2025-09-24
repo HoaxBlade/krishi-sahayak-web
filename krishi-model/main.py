@@ -10,6 +10,7 @@ from transformers import pipeline # type: ignore
 # Import utilities from ml_utils and config
 import ml_utils
 from ml_utils import load_labels, preprocess_image, analyze_crop_prediction, load_ml_model, RateLimiter, SystemMonitor, MLQueueManager, get_gemini_crop_analysis
+from multi_model_manager import MultiModelManager
 from config import RATE_LIMIT_REQUESTS, RATE_LIMIT_WINDOW, FLASK_PORT, FLASK_HOST, MEMORY_HEALTH_THRESHOLD, CPU_HEALTH_THRESHOLD, MAX_FILE_SIZE
 
 # Import existing training utilities
@@ -43,8 +44,9 @@ def handle_file_too_large(e):
 rate_limiter = RateLimiter()
 system_monitor = SystemMonitor()
 ml_queue_manager = MLQueueManager()
+multi_model_manager = MultiModelManager()
 
-# Global variable to store the trained model and labels
+# Global variable to store the trained model and labels (legacy support)
 model = None
 labels = []
 
@@ -70,10 +72,9 @@ def translate_text(text: str, target_language: str = 'hi') -> str:
 
 @app.route('/analyze_crop', methods=['POST'])
 async def analyze_crop_endpoint():
-    """Endpoint to analyze crop health from image"""
-    global model, labels
+    """Endpoint to analyze crop health from image using multi-model system"""
     try:
-        logger.info("=== NEW CROP ANALYSIS REQUEST ===")
+        logger.info("=== NEW CROP ANALYSIS REQUEST (Multi-Model) ===")
         user_id = request.headers.get('X-User-ID', request.remote_addr)
         
         if not rate_limiter.is_allowed(user_id):
@@ -123,40 +124,140 @@ async def analyze_crop_endpoint():
         
         image_data = image_data_input
         
-        if model is None:
-            logger.error("Model not loaded")
-            return jsonify({
-                'error': 'Model not available',
-                'message': 'The ML model is not loaded or initialized.',
-                'status': 'error'
-            }), 500
+        # Use multi-model system
+        if multi_model_manager.is_initialized:
+            result = multi_model_manager.analyze_crop_two_stage(image_data)
+            logger.info("=== MULTI-MODEL CROP ANALYSIS COMPLETED ===")
+        else:
+            # Fallback to legacy system
+            logger.warning("Multi-model system not initialized, using legacy system")
+            if model is None:
+                logger.error("No models available")
+                return jsonify({
+                    'error': 'Model not available',
+                    'message': 'No ML models are loaded or initialized.',
+                    'status': 'error'
+                }), 500
+            
+            with ml_queue_manager.processing_lock:
+                model_or_interpreter, is_tflite_model = model
+                result = analyze_crop_prediction(model_or_interpreter, image_data, labels, is_tflite_model)
+                result['analysis_type'] = 'legacy'
+                logger.info("=== LEGACY CROP ANALYSIS COMPLETED ===")
         
-        with ml_queue_manager.processing_lock:
-            model_or_interpreter, is_tflite_model = model # Unpack the model and its type
-            result = analyze_crop_prediction(model_or_interpreter, image_data, labels, is_tflite_model)
-            logger.info("=== CROP ANALYSIS COMPLETED ===")
-            
-            # Fetch Gemini analysis
-            disease_label = result.get('crop_type', 'Unknown')
-            gemini_analysis_english = await get_gemini_crop_analysis(disease_label)
-            
-            # Translate Gemini analysis to Hindi
-            gemini_analysis_hindi = translate_text(gemini_analysis_english, 'hi')
-            
-            result['gemini_analysis_english'] = gemini_analysis_english
-            result['gemini_analysis_hindi'] = gemini_analysis_hindi
-            
-            result['system_info'] = {
-                'memory_usage': system_monitor.get_memory_usage()['used_percent'],
-                'cpu_usage': system_monitor.get_cpu_usage(),
-                'remaining_requests': rate_limiter.get_remaining_requests(user_id)
-            }
-            result['status'] = 'success'
-            
-            return jsonify(result)
+        # Fetch Gemini analysis
+        disease_label = result.get('crop_type', 'Unknown')
+        gemini_analysis_english = await get_gemini_crop_analysis(disease_label)
+        
+        # Translate Gemini analysis to Hindi
+        gemini_analysis_hindi = translate_text(gemini_analysis_english, 'hi')
+        
+        result['gemini_analysis_english'] = gemini_analysis_english
+        result['gemini_analysis_hindi'] = gemini_analysis_hindi
+        
+        result['system_info'] = {
+            'memory_usage': system_monitor.get_memory_usage()['used_percent'],
+            'cpu_usage': system_monitor.get_cpu_usage(),
+            'remaining_requests': rate_limiter.get_remaining_requests(user_id)
+        }
+        result['status'] = 'success'
+        
+        return jsonify(result)
         
     except Exception as e:
         logger.error(f"Unexpected error in analyze_crop endpoint: {e}")
+        return jsonify({
+            'error': 'Internal server error',
+            'message': 'An unexpected error occurred',
+            'status': 'error'
+        }), 500
+
+@app.route('/analyze_crop_direct', methods=['POST'])
+async def analyze_crop_direct_endpoint():
+    """Endpoint for direct disease analysis with optional crop type specification"""
+    try:
+        logger.info("=== DIRECT CROP ANALYSIS REQUEST ===")
+        user_id = request.headers.get('X-User-ID', request.remote_addr)
+        
+        if not rate_limiter.is_allowed(user_id):
+            remaining = rate_limiter.get_remaining_requests(user_id)
+            return jsonify({
+                'error': 'Rate limit exceeded',
+                'message': f'Maximum {RATE_LIMIT_REQUESTS} requests per minute allowed',
+                'remaining_requests': remaining,
+                'retry_after': RATE_LIMIT_WINDOW
+            }), 429
+        
+        if not system_monitor.is_system_healthy():
+            return jsonify({
+                'error': 'Server overloaded',
+                'message': 'Please try again later',
+                'memory_usage': system_monitor.get_memory_usage()['used_percent'],
+                'cpu_usage': system_monitor.get_cpu_usage()
+            }), 503
+        
+        # Get crop type from request
+        crop_type = None
+        if request.is_json and 'crop_type' in request.get_json():
+            crop_type = request.get_json()['crop_type']
+        
+        image_data_input = None
+        
+        if 'image' in request.files:
+            image_file = request.files['image']
+            if image_file.filename != '':
+                try:
+                    image_data_input = Image.open(image_file.stream)
+                except Exception as e:
+                    logger.error(f"File upload processing error: {e}")
+                    return jsonify({
+                        'error': 'Invalid image file',
+                        'message': 'Could not process the uploaded image file',
+                        'status': 'error'
+                    }), 400
+        
+        elif request.is_json and 'image' in request.get_json():
+            image_data_input = request.get_json()['image']
+        
+        if image_data_input is None:
+            return jsonify({
+                'error': 'No image provided',
+                'message': 'Please provide an image file or base64 image data',
+                'status': 'error'
+            }), 400
+        
+        image_data = image_data_input
+        
+        # Use multi-model system
+        if multi_model_manager.is_initialized:
+            result = multi_model_manager.analyze_crop_direct(image_data, crop_type)
+            logger.info("=== DIRECT MULTI-MODEL ANALYSIS COMPLETED ===")
+        else:
+            return jsonify({
+                'error': 'Multi-model system not available',
+                'message': 'Multi-model system is not initialized',
+                'status': 'error'
+            }), 500
+        
+        # Fetch Gemini analysis
+        disease_label = result.get('crop_type', 'Unknown')
+        gemini_analysis_english = await get_gemini_crop_analysis(disease_label)
+        gemini_analysis_hindi = translate_text(gemini_analysis_english, 'hi')
+        
+        result['gemini_analysis_english'] = gemini_analysis_english
+        result['gemini_analysis_hindi'] = gemini_analysis_hindi
+        
+        result['system_info'] = {
+            'memory_usage': system_monitor.get_memory_usage()['used_percent'],
+            'cpu_usage': system_monitor.get_cpu_usage(),
+            'remaining_requests': rate_limiter.get_remaining_requests(user_id)
+        }
+        result['status'] = 'success'
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"Unexpected error in analyze_crop_direct endpoint: {e}")
         return jsonify({
             'error': 'Internal server error',
             'message': 'An unexpected error occurred',
@@ -240,6 +341,108 @@ def get_labels():
     logger.info("Labels requested")
     return jsonify({'labels': labels, 'status': 'success'})
 
+@app.route('/models/status', methods=['GET'])
+def get_models_status():
+    """Get status of all models in the multi-model system"""
+    try:
+        if multi_model_manager.is_initialized:
+            status = multi_model_manager.get_model_status()
+            return jsonify({
+                'status': 'success',
+                'multi_model_system': status,
+                'legacy_system': {
+                    'model_loaded': model is not None,
+                    'labels_loaded': len(labels) > 0
+                }
+            })
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'Multi-model system not initialized',
+                'legacy_system': {
+                    'model_loaded': model is not None,
+                    'labels_loaded': len(labels) > 0
+                }
+            })
+    except Exception as e:
+        logger.error(f"Error getting models status: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/models/available_crops', methods=['GET'])
+def get_available_crops():
+    """Get list of crops with available disease models"""
+    try:
+        if multi_model_manager.is_initialized:
+            crops = multi_model_manager.get_available_crops()
+            return jsonify({
+                'status': 'success',
+                'available_crops': crops
+            })
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'Multi-model system not initialized'
+            }), 500
+    except Exception as e:
+        logger.error(f"Error getting available crops: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/models/info/<model_name>', methods=['GET'])
+def get_model_info(model_name):
+    """Get detailed information about a specific model"""
+    try:
+        if multi_model_manager.is_initialized:
+            info = multi_model_manager.get_model_info(model_name)
+            return jsonify({
+                'status': 'success',
+                'model_info': info
+            })
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'Multi-model system not initialized'
+            }), 500
+    except Exception as e:
+        logger.error(f"Error getting model info for {model_name}: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/models/reload/<model_name>', methods=['POST'])
+def reload_model(model_name):
+    """Reload a specific model"""
+    try:
+        if multi_model_manager.is_initialized:
+            success = multi_model_manager.reload_model(model_name)
+            if success:
+                return jsonify({
+                    'status': 'success',
+                    'message': f'Model {model_name} reloaded successfully'
+                })
+            else:
+                return jsonify({
+                    'status': 'error',
+                    'message': f'Failed to reload model {model_name}'
+                }), 500
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'Multi-model system not initialized'
+            }), 500
+    except Exception as e:
+        logger.error(f"Error reloading model {model_name}: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
 @app.route('/status', methods=['GET'])
 def get_status():
     """Get detailed server status"""
@@ -281,19 +484,42 @@ def initialize_model_and_labels():
     """Initialize model and labels on server startup."""
     global model, labels
     logger.info("=== MODEL LOADING/TRAINING PROCESS ===")
+    logger.info(f"📁 Working directory: {os.getcwd()}")
+    logger.info(f"📁 Available files in current directory: {os.listdir('.')}")
     
+    # Initialize multi-model system first
+    logger.info("🚀 Initializing Multi-Model System...")
+    multi_model_success = multi_model_manager.initialize()
+    
+    if multi_model_success:
+        logger.info("✅ Multi-Model System initialized successfully")
+        logger.info(f"📊 Available crops: {multi_model_manager.get_available_crops()}")
+        logger.info(f"📊 Total models loaded: {multi_model_manager.get_model_status()['total_models_loaded']}")
+    else:
+        logger.warning("⚠️ Multi-Model System initialization failed, falling back to legacy system")
+    
+    # Initialize legacy system for fallback
+    logger.info("🔄 Initializing legacy system for fallback...")
     labels = load_labels()
-    logger.info(f"Loaded {len(labels)} labels: {labels}")
+    logger.info(f"📝 Loaded {len(labels)} legacy labels: {labels}")
     
+    logger.info("🤖 Loading legacy ML model...")
     model = load_ml_model()
     
+    # Log detailed results
+    logger.info("📊 === LEGACY MODEL LOADING RESULTS ===")
+    logger.info(f"🤖 Model loaded: {model is not None}")
+    logger.info(f"🤖 Model object: {model}")
+    logger.info(f"🤖 Model type: {type(model) if model else 'None'}")
+    logger.info(f"📝 Labels count: {len(labels) if labels else 0}")
+    
     if model is None:
-        logger.info("No existing model found. Attempting to train new model...")
+        logger.info("No existing legacy model found. Attempting to train new model...")
         try:
             if not os.path.exists("Data"):
                 logger.error("Training data directory 'Data' not found. Cannot train new model.")
                 logger.error("Please ensure training data is available or use an existing model.")
-                return False
+                return multi_model_success  # Return multi-model status even if legacy fails
                 
             logger.info("Training data found, starting training process...")
             train_gen, val_gen, num_classes = get_generators("Data", "labels.txt")
@@ -301,12 +527,13 @@ def initialize_model_and_labels():
             
             os.makedirs("model", exist_ok=True)
             model.save("model/mobilenetv2_model.h5")
-            logger.info("New model trained and saved successfully")
+            logger.info("New legacy model trained and saved successfully")
             return True
         except Exception as e:
-            logger.error(f"Error training model: {e}")
-            return False
-    return True
+            logger.error(f"Error training legacy model: {e}")
+            return multi_model_success  # Return multi-model status even if legacy fails
+    
+    return multi_model_success or model is not None
 
 if __name__ == '__main__':
     logger.info("=== STARTING KRISHI ML SERVER ===")
