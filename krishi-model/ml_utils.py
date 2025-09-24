@@ -213,17 +213,34 @@ def load_ml_model():
     is_tflite = False
     is_multitask = False
 
-    for model_path in MODEL_PATHS:
+    logger.info("🔍 === LEGACY MODEL LOADING PROCESS ===")
+    logger.info(f"📁 Working directory: {os.getcwd()}")
+    logger.info(f"📁 Available files in current directory: {os.listdir('.')}")
+    logger.info(f"🔍 Checking {len(MODEL_PATHS)} model paths: {MODEL_PATHS}")
+
+    for i, model_path in enumerate(MODEL_PATHS, 1):
+        logger.info(f"🔍 [{i}/{len(MODEL_PATHS)}] Checking model path: {model_path}")
+        logger.info(f"🔍 File exists: {os.path.exists(model_path)}")
+        logger.info(f"🔍 Absolute path: {os.path.abspath(model_path)}")
+        
         if os.path.exists(model_path):
             try:
-                logger.info(f"Attempting to load model from: {model_path}")
+                logger.info(f"📦 Attempting to load model from: {model_path}")
+                file_size = os.path.getsize(model_path)
+                logger.info(f"📦 Model file size: {file_size} bytes ({file_size / (1024*1024):.2f} MB)")
+                
                 if model_path.endswith('.tflite'):
+                    logger.info(f"🤖 Loading TensorFlow Lite model from: {model_path}")
                     interpreter = tflite.Interpreter(model_path=model_path)
                     interpreter.allocate_tensors()
                     is_tflite = True
+                    logger.info(f"✅ TensorFlow Lite interpreter created successfully")
                     
                     # Check if it's a multitask model by examining output details
                     output_details = interpreter.get_output_details()
+                    logger.info(f"🔍 Output details count: {len(output_details)}")
+                    logger.info(f"🔍 Output details: {[{'name': detail.get('name', 'unnamed'), 'shape': detail['shape']} for detail in output_details]}")
+                    
                     if len(output_details) == 2:
                         is_multitask = True
                         logger.info(f"✅ Multitask TensorFlow Lite model detected from {model_path}")
@@ -231,8 +248,11 @@ def load_ml_model():
                         logger.info(f"✅ Single-task TensorFlow Lite model loaded from {model_path}")
 
                     # Warm-up for lower p95 latency
+                    logger.info(f"🔥 Starting model warm-up...")
                     input_details = interpreter.get_input_details()
                     input_shape = input_details[0]['shape']
+                    logger.info(f"🔍 Input shape: {input_shape}")
+                    
                     interpreter.set_tensor(input_details[0]['index'], np.zeros(input_shape, dtype=np.float32))
                     interpreter.invoke()
                     
@@ -245,18 +265,27 @@ def load_ml_model():
                         _ = interpreter.get_tensor(output_details[0]['index'])
                         logger.info(f"✅ TensorFlow Lite model warmed up from {model_path}")
                     
+                    logger.info(f"✅ TensorFlow Lite model loaded and warmed up successfully from {model_path}")
                     return interpreter, is_tflite, is_multitask
+                    
                 else:
+                    logger.info(f"🤖 Loading Keras model from: {model_path}")
                     model = tf.keras.models.load_model(model_path)
+                    logger.info(f"✅ Keras model loaded successfully")
+                    logger.info(f"🔍 Model summary: {model.summary() if hasattr(model, 'summary') else 'No summary available'}")
                     
                     # Check if it's a multitask model by examining output structure
                     if hasattr(model, 'output_names') and len(model.output_names) == 2:
                         is_multitask = True
                         logger.info(f"✅ Multitask Keras model detected from {model_path}")
+                        logger.info(f"🔍 Output names: {model.output_names}")
                     else:
                         logger.info(f"✅ Single-task Keras model loaded from {model_path}")
+                        if hasattr(model, 'output_names'):
+                            logger.info(f"🔍 Output names: {model.output_names}")
                     
                     # Warm-up for lower p95 latency
+                    logger.info(f"🔥 Starting model warm-up...")
                     if is_multitask:
                         # Warm up multitask model
                         warmup_input = np.zeros((1, IMAGE_SIZE[0], IMAGE_SIZE[1], 3), dtype=np.float32)
@@ -266,11 +295,21 @@ def load_ml_model():
                         _ = model.predict(np.zeros((1, IMAGE_SIZE[0], IMAGE_SIZE[1], 3), dtype=np.float32), verbose=0)
                         logger.info(f"✅ Keras model warmed up from {model_path}")
                     
+                    logger.info(f"✅ Keras model loaded and warmed up successfully from {model_path}")
                     return model, is_tflite, is_multitask
+                    
             except Exception as e:
-                logger.error(f"Error loading model from {model_path}: {e}")
+                logger.error(f"❌ Error loading model from {model_path}: {e}")
+                logger.error(f"❌ Exception type: {type(e).__name__}")
+                import traceback
+                logger.error(f"❌ Traceback: {traceback.format_exc()}")
                 continue
+        else:
+            logger.warning(f"⚠️ Model file not found: {model_path}")
+    
     logger.error("❌ No valid model file found in known paths")
+    logger.error(f"❌ Checked paths: {MODEL_PATHS}")
+    logger.error("❌ === LEGACY MODEL LOADING FAILED ===")
     return None, False, False
 
 def analyze_crop_prediction(model_or_interpreter, image_data, labels, is_tflite_model, is_multitask_model=False):

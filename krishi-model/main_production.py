@@ -47,24 +47,106 @@ rate_limiter = RateLimiter()
 system_monitor = SystemMonitor()
 ml_queue_manager = MLQueueManager()
 
+# Worker initialization function for Gunicorn
+def on_starting(server):
+    """Called just before the master process is initialized."""
+    logger.info("🚀 Starting Gunicorn master process...")
+
+def when_ready(server):
+    """Called just after the server is started."""
+    logger.info("✅ Gunicorn master process ready...")
+
+def worker_int(worker):
+    """Called just after a worker has been forked."""
+    logger.info(f"🔄 Worker {worker.pid} starting...")
+    # Initialize model in each worker process
+    global model, labels, model_loaded, is_tflite_model, is_multitask_model
+    if initialize_production_model_and_labels():
+        logger.info(f"✅ Worker {worker.pid} model loaded successfully")
+    else:
+        logger.error(f"❌ Worker {worker.pid} failed to load model")
+
+def pre_fork(server, worker):
+    """Called just before a worker is forked."""
+    logger.info(f"🔄 Pre-forking worker...")
+
+def post_fork(server, worker):
+    """Called just after a worker has been forked."""
+    logger.info(f"✅ Post-fork worker {worker.pid} ready")
+
+def ensure_model_loaded():
+    """Ensure model is loaded, initialize if not."""
+    global model, labels, model_loaded, is_tflite_model, is_multitask_model
+    logger.info(f"🔍 ensure_model_loaded called: model_loaded={model_loaded}, model={model is not None}")
+    if not model_loaded or model is None:
+        logger.info("🔄 Model not loaded, initializing in worker process...")
+        try:
+            if initialize_production_model_and_labels():
+                logger.info("✅ Model loaded successfully in worker process")
+            else:
+                logger.error("❌ Failed to load model in worker process")
+        except Exception as e:
+            logger.error(f"❌ Exception in ensure_model_loaded: {e}")
+    else:
+        logger.info("✅ Model already loaded in worker process")
+    return model_loaded
+
 def initialize_production_model_and_labels():
     """Initialize model and labels for production server."""
     global model, labels, model_loaded, is_tflite_model, is_multitask_model
     logger.info("=== PRODUCTION MODEL LOADING PROCESS ===")
+    logger.info(f"📁 Working directory: {os.getcwd()}")
+    logger.info(f"📁 Available files in current directory: {os.listdir('.')}")
     
+    # Load labels first
+    logger.info("📝 Step 1: Loading labels...")
     labels = load_labels()
-    logger.info(f"Loaded {len(labels)} labels: {labels}")
+    logger.info(f"📝 Loaded {len(labels)} labels: {labels}")
     
+    # Load model
+    logger.info("🤖 Step 2: Loading ML model...")
     loaded_model, tflite_flag, multitask_flag = load_ml_model()
     model = loaded_model
     is_tflite_model = tflite_flag
     is_multitask_model = multitask_flag
     model_loaded = (model is not None)
     
+    # Log detailed results
+    logger.info("📊 === PRODUCTION MODEL LOADING RESULTS ===")
+    logger.info(f"🤖 Model loaded: {model_loaded}")
+    logger.info(f"🤖 Model object: {model}")
+    logger.info(f"🤖 Model type: {type(model) if model else 'None'}")
+    logger.info(f"🤖 Is TFLite: {is_tflite_model}")
+    logger.info(f"🤖 Is Multitask: {is_multitask_model}")
+    logger.info(f"📝 Labels count: {len(labels) if labels else 0}")
+    
     if not model_loaded:
         logger.error("❌ Failed to load model for production. Server will not start.")
+        logger.error("❌ === PRODUCTION MODEL LOADING FAILED ===")
     else:
         logger.info(f"✅ Model loaded successfully - TFLite: {is_tflite_model}, Multitask: {is_multitask_model}")
+        logger.info("✅ === PRODUCTION MODEL LOADING SUCCESS ===")
+        
+        # Additional model validation
+        try:
+            logger.info("🔍 Performing model validation...")
+            if is_tflite_model and model:
+                # Validate TFLite model
+                input_details = model.get_input_details()
+                output_details = model.get_output_details()
+                logger.info(f"🔍 TFLite input details: {[{'name': detail.get('name', 'unnamed'), 'shape': detail['shape']} for detail in input_details]}")
+                logger.info(f"🔍 TFLite output details: {[{'name': detail.get('name', 'unnamed'), 'shape': detail['shape']} for detail in output_details]}")
+            elif model and hasattr(model, 'input_shape'):
+                # Validate Keras model
+                logger.info(f"🔍 Keras input shape: {model.input_shape}")
+                if hasattr(model, 'output_shape'):
+                    logger.info(f"🔍 Keras output shape: {model.output_shape}")
+                if hasattr(model, 'output_names'):
+                    logger.info(f"🔍 Keras output names: {model.output_names}")
+            logger.info("✅ Model validation completed successfully")
+        except Exception as e:
+            logger.warning(f"⚠️ Model validation failed: {e}")
+    
     return model_loaded
 
 @app.errorhandler(RequestEntityTooLarge)
@@ -84,11 +166,35 @@ def health_check():
         cpu = system_monitor.get_cpu_usage()
         uptime = time.time() - start_time
         
+        # Get detailed model information
+        model_info = {
+            'loaded': model_loaded,
+            'type': type(model).__name__ if model else 'None',
+            'is_tflite': is_tflite_model,
+            'is_multitask': is_multitask_model,
+            'labels_count': len(labels) if labels else 0
+        }
+        
+        # Add model validation details if model is loaded
+        if model_loaded and model:
+            try:
+                if is_tflite_model:
+                    input_details = model.get_input_details()
+                    output_details = model.get_output_details()
+                    model_info['input_shape'] = input_details[0]['shape'] if input_details else None
+                    model_info['output_count'] = len(output_details)
+                elif hasattr(model, 'input_shape'):
+                    model_info['input_shape'] = model.input_shape
+                    if hasattr(model, 'output_shape'):
+                        model_info['output_shape'] = model.output_shape
+            except Exception as e:
+                model_info['validation_error'] = str(e)
+        
         return jsonify({
             'status': 'healthy' if model_loaded and system_monitor.is_system_healthy() else 'unhealthy',
             'timestamp': datetime.utcnow().isoformat(),
             'uptime_seconds': uptime,
-            'model_loaded': model_loaded,
+            'model': model_info,
             'system': {
                 'memory_usage_percent': memory['used_percent'],
                 'memory_used_mb': memory['used_mb'],
@@ -152,6 +258,68 @@ def detailed_status():
         logger.error(f"Status check error: {e}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/model-status', methods=['GET'])
+def get_model_status():
+    """Get detailed model status information"""
+    try:
+        # Ensure model is loaded
+        model_loaded_status = ensure_model_loaded()
+        
+        # Get detailed model information
+        model_info = {
+            'loaded': model_loaded_status,
+            'type': type(model).__name__ if model else 'None',
+            'is_tflite': is_tflite_model,
+            'is_multitask': is_multitask_model,
+            'labels_count': len(labels) if labels else 0,
+            'labels': labels if labels else []
+        }
+        
+        # Add detailed model validation
+        if model_loaded_status and model:
+            try:
+                if is_tflite_model:
+                    input_details = model.get_input_details()
+                    output_details = model.get_output_details()
+                    model_info['input_details'] = [{'name': detail.get('name', 'unnamed'), 'shape': detail['shape'], 'dtype': str(detail['dtype'])} for detail in input_details]
+                    model_info['output_details'] = [{'name': detail.get('name', 'unnamed'), 'shape': detail['shape'], 'dtype': str(detail['dtype'])} for detail in output_details]
+                elif hasattr(model, 'input_shape'):
+                    model_info['input_shape'] = model.input_shape
+                    if hasattr(model, 'output_shape'):
+                        model_info['output_shape'] = model.output_shape
+                    if hasattr(model, 'output_names'):
+                        model_info['output_names'] = model.output_names
+                    if hasattr(model, 'summary'):
+                        # Get model summary as string
+                        import io
+                        import sys
+                        old_stdout = sys.stdout
+                        sys.stdout = buffer = io.StringIO()
+                        try:
+                            model.summary()
+                            model_info['summary'] = buffer.getvalue()
+                        except:
+                            model_info['summary'] = 'Summary not available'
+                        finally:
+                            sys.stdout = old_stdout
+            except Exception as e:
+                model_info['validation_error'] = str(e)
+                logger.error(f"Model validation error: {e}")
+        
+        return jsonify({
+            'status': 'success',
+            'model': model_info,
+            'timestamp': datetime.utcnow().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Model status check failed: {e}")
+        return jsonify({
+            'status': 'error',
+            'error': str(e),
+            'timestamp': datetime.utcnow().isoformat()
+        }), 500
+
 @app.route('/analyze_crop', methods=['POST'])
 def analyze_crop_endpoint():
     """Analyze crop image for disease detection"""
@@ -159,7 +327,20 @@ def analyze_crop_endpoint():
     start_time_req = time.time()
     
     try:
-        if not model_loaded or model is None:
+        # Ensure model is loaded
+        logger.info("🔍 About to call ensure_model_loaded()")
+        try:
+            model_loaded_result = ensure_model_loaded()
+            logger.info(f"🔍 ensure_model_loaded() returned: {model_loaded_result}")
+        except Exception as e:
+            logger.error(f"❌ Exception in ensure_model_loaded(): {e}")
+            return jsonify({
+                'error': 'Model loading error',
+                'message': f'Error loading model: {str(e)}',
+                'status': 'error'
+            }), 500
+        
+        if not model_loaded_result:
             logger.error("Model not loaded, cannot process request.")
             return jsonify({
                 'error': 'Model not available',
@@ -289,7 +470,7 @@ if __name__ == '__main__':
             #   requests:
             #     memory: "1Gi"
             # Tune num_workers based on CPU cores: (2 * num_cores) + 1 is a common starting point for CPU-bound tasks.
-            sys.argv = ['gunicorn', '--bind', f'{FLASK_HOST}:{FLASK_PORT}', '--workers', str(num_workers), '--timeout', '120', '--keep-alive', '5', '--max-requests', '1000', '--max-requests-jitter', '100', 'main_production:app']
+            sys.argv = ['gunicorn', '--bind', f'{FLASK_HOST}:{FLASK_PORT}', '--workers', '1', '--worker-class', 'gthread', '--threads', '2', '--timeout', '300', '--keep-alive', '5', '--max-requests', '1000', '--max-requests-jitter', '100', '--preload', 'main_production:app']
             wsgi.run()
         except ImportError:
             logger.warning("⚠️ Gunicorn not available, falling back to Flask development server")

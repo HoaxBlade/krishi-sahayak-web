@@ -39,7 +39,7 @@ export default function Navigation() {
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3">
             <Image
-              src="/logo.jpg"
+              src="/applogo.png"
               alt="Krishi Sahayak Logo"
               width={70}
               height={70}
