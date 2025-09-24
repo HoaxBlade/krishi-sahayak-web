@@ -177,7 +177,7 @@ export default function HomePage() {
   const features = [
     { icon: <Plane />, title: "Drone Technologies Marketplace", desc: "Buy, sell, and rent agricultural drones and related services." },
     { icon: <Shield />, title: "AI Crop Disease Detection", desc: "AI-driven early warnings protect crops before diseases spread widely." },
-    { icon: <Cloud />, title: "Hindi language support", desc: "Support for Hindi language to give insights into crop diseases." },
+    { icon: <Cloud />, title: "Regional language support", desc: "Support for Regional language to give insights into crop diseases." },
     { icon: <ShoppingCart />, title: "Farming Marketplace", desc: "Connect with buyers and sellers for crops, seeds, and equipment." }
   ]
 
