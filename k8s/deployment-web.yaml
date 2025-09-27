@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: krishi-web-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: krishi-web
+  template:
+    metadata:
+      labels:
+        app: krishi-web
+    spec:
+      containers:
+      - name: krishi-web
+        image: <your-docker-registry>/krishi_web
+        ports:
+        - containerPort: 3000

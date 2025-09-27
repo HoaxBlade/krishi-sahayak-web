@@ -105,6 +105,7 @@ class MultiModelManager:
             model_path = self.model_paths['crop_detector']
             logger.info(f"🔍 Checking crop detector at: {model_path}")
             logger.info(f"🔍 File exists: {os.path.exists(model_path)}")
+            logger.info(f"🔍 Absolute path: {os.path.abspath(model_path)}")
             
             if os.path.exists(model_path):
                 logger.info(f"📦 Loading crop detector from: {model_path}")
@@ -133,6 +134,7 @@ class MultiModelManager:
             model_path = self.model_paths[model_key]
             logger.info(f"🔍 Checking {crop_type} disease model at: {model_path}")
             logger.info(f"🔍 File exists: {os.path.exists(model_path)}")
+            logger.info(f"🔍 Absolute path: {os.path.abspath(model_path)}")
             
             if os.path.exists(model_path):
                 logger.info(f"📦 Loading {crop_type} disease model from: {model_path}")
@@ -164,6 +166,7 @@ class MultiModelManager:
                 model_path = self.model_paths[model_key]
                 logger.info(f"🔍 Checking fallback model {model_key} at: {model_path}")
                 logger.info(f"🔍 File exists: {os.path.exists(model_path)}")
+                logger.info(f"🔍 Absolute path: {os.path.abspath(model_path)}")
                 
                 if os.path.exists(model_path):
                     logger.info(f"📦 Loading fallback model {model_key} from: {model_path}")
@@ -197,6 +200,7 @@ class MultiModelManager:
             label_path = self.label_paths[model_key]
             logger.info(f"🔍 Checking labels for {model_key} at: {label_path}")
             logger.info(f"🔍 Labels file exists: {os.path.exists(label_path)}")
+            logger.info(f"🔍 Absolute path: {os.path.abspath(label_path)}")
             
             if os.path.exists(label_path):
                 with open(label_path, 'r') as f:
