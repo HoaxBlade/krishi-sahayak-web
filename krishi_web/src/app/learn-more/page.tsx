@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { Users, Target, Zap, ArrowLeft, Plane } from 'lucide-react';
+import { Users, Target, Zap, ArrowLeft, Plane, Shield, Cloud } from 'lucide-react';
 import Link from 'next/link';
 import { useRef } from 'react';
 
@@ -46,9 +46,22 @@ const LearnMorePage: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: "easeOut" }}
       >
-        {/* Subtle background pattern with parallax */}
-        <motion.div className="absolute inset-0 z-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle, #ffffff 1px, rgba(255,255,255,0) 1px)', backgroundSize: '20px 20px', y: y }}>
-        </motion.div>
+        {/* Parallax Background Layers */}
+        <motion.div
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundColor: 'rgba(255, 255, 255, 0.05)', // Subtle background color
+            y: useTransform(scrollYProgress, [0, 1], ["0%", "10%"]), // Adjust speed as needed
+          }}
+        />
+        <motion.div
+          className="absolute inset-0 z-0 opacity-30"
+          style={{
+            backgroundImage: 'radial-gradient(circle, #ffffff 1px, rgba(255,255,255,0) 1px)',
+            backgroundSize: '30px 30px',
+            y: useTransform(scrollYProgress, [0, 1], ["0%", "15%"]), // Adjust speed as needed
+          }}
+        />
         <div className="relative z-10 px-4">
           <motion.h1
             className="text-5xl md:text-7xl font-extrabold leading-tight mb-6 drop-shadow-md"
@@ -84,8 +97,39 @@ const LearnMorePage: React.FC = () => {
           </div>
           <h2 className="text-4xl md:text-5xl font-extrabold mb-7 text-green-700 tracking-tight drop-shadow-md">Our Mission: Cultivating a Smarter Future</h2>
           <p className="text-xl md:text-2xl max-w-4xl mx-auto leading-relaxed text-gray-700 font-light">
-            Krishi Sahayak is dedicated to revolutionizing the agricultural sector by empowering farmers with cutting-edge technology. Our platform provides advanced tools for crop analysis, disease detection, and real-time weather forecasting to help farmers make informed decisions, increase productivity, and ensure sustainable farming practices. We aim to foster a new era of smart farming, ensuring food security and environmental stewardship for generations to come.
+            Krishi Sahayak is on a mission to transform agriculture by equipping farmers with the latest technology. Our platform offers advanced tools for crop analysis, early disease detection, and precise weather insights, enabling data-driven decisions, improved yields, and sustainable farming. We envision a future where smart farming ensures food security and protects our environment for generations.
           </p>
+        </motion.section>
+
+        {/* Key Features Section */}
+        <motion.section
+          className="mb-20 text-center group"
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        >
+          <div className="inline-block bg-gradient-to-br from-green-600 to-blue-600 text-white p-6 rounded-full mb-8 shadow-xl transform group-hover:scale-110 group-hover:shadow-2xl transition-all duration-300 ease-in-out">
+            <Zap className="w-12 h-12" />
+          </div>
+          <h2 className="text-4xl md:text-5xl font-extrabold mb-7 text-green-700 tracking-tight drop-shadow-md">Key Features</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <FeatureItem
+              title="AI Crop Disease Detection"
+              description="Early warnings protect crops before diseases spread widely."
+              icon={<Shield className="w-6 h-6" />}
+            />
+            <FeatureItem
+              title="Drone Technologies Marketplace"
+              description="Buy, sell, and rent agricultural drones and related services."
+              icon={<Plane className="w-6 h-6" />}
+            />
+            <FeatureItem
+              title="Regional Language Support"
+              description="Insights into crop diseases in your local language."
+              icon={<Cloud className="w-6 h-6" />}
+            />
+          </div>
         </motion.section>
 
        {/* Drone Technologies Section */}
@@ -185,3 +229,13 @@ const LearnMorePage: React.FC = () => {
 };
 
 export default LearnMorePage;
+
+const FeatureItem: React.FC<{ title: string; description: string; icon: React.ReactNode }> = ({ title, description, icon }) => (
+  <div className="text-center p-6 rounded-xl bg-white/70 backdrop-blur-md shadow-subtle">
+    <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-green-100 to-blue-100 text-green-600 rounded-full mb-3 shadow-inner">
+      {icon}
+    </div>
+    <h3 className="text-lg font-medium text-gray-900 mb-1.5">{title}</h3>
+    <p className="text-gray-600 text-sm">{description}</p>
+  </div>
+);
