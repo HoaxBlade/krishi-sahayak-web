@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @next/next/no-img-element */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
@@ -205,10 +206,10 @@ export default function HomePage() {
           <p className="text-lg text-gray-600 mb-10 max-w-2xl mx-auto"> {/* Adjusted text size and margin */}
             Revolutionize your farming with advanced drone technology, AI-powered crop analysis, weather insights, and smart tools.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4">
             <motion.a
               href="/marketplace"
-              className="bg-gradient-to-r from-green-600 to-green-700 text-white px-7 py-3.5 rounded-xl text-base font-medium flex items-center justify-center shadow-md"
+              className="w-full sm:w-auto bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-4 sm:px-7 sm:py-3.5 rounded-xl text-sm sm:text-base font-medium flex items-center justify-center shadow-md min-h-[48px]"
               whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.1)" }}
               whileTap={{ scale: 0.98 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
@@ -217,7 +218,7 @@ export default function HomePage() {
             </motion.a>
             <motion.a
               href="/learn-more"
-              className="border border-green-600 text-green-700 px-7 py-3.5 rounded-xl text-base font-medium shadow-sm"
+              className="w-full sm:w-auto border border-green-600 text-green-700 px-6 py-4 sm:px-7 sm:py-3.5 rounded-xl text-sm sm:text-base font-medium shadow-sm min-h-[48px] flex items-center justify-center"
               whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.08)" }}
               whileTap={{ scale: 0.98 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
