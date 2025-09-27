@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: krishi-model-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: krishi-model
+  template:
+    metadata:
+      labels:
+        app: krishi-model
+    spec:
+      containers:
+        - name: krishi-model
+          image: <your-docker-registry>/krishi_model  # Replace with your actual Docker image
+          ports:
+            - containerPort: 8000

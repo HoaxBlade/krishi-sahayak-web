@@ -1,35 +1,13 @@
-# Simple Dockerfile for best_model.h5 only
-FROM python:3.11-slim
+FROM python:3.9-slim-buster
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-  curl \
-  && rm -rf /var/lib/apt/lists/*
+COPY requirements.txt /app
+RUN pip install -r requirements.txt
 
-# Environment variables
-ENV PYTHONUNBUFFERED=1
-ENV TENSORFLOW_CPP_MIN_LOG_LEVEL=2
+COPY .env /app
+COPY . /app
 
-# Copy requirements and install Python packages
-COPY requirements_simple.txt .
-RUN pip install --no-cache-dir -r requirements_simple.txt
+EXPOSE 8000
 
-# Copy only necessary files
-COPY main_simple.py .
-COPY saved_models/best_model.h5 saved_models/
-COPY saved_models/crop_type_labels.txt saved_models/
-
-# Create non-root user
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
-USER appuser
-
-EXPOSE 5000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD curl -fsS http://localhost:5000/health || exit 1
-
-# Run the simple server
-CMD ["python3", "main_simple.py"]
+CMD gunicorn --bind 0.0.0.0:8000 main:app
