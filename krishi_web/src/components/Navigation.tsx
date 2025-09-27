@@ -27,7 +27,7 @@ export default function Navigation() {
     { name: 'Home', href: '/', icon: Home },
     { name: 'Stats', href: '/analyze', icon: Activity },
     { name: 'Drone Marketplace', href: '/marketplace', icon: Plane },
-    { name: 'Weather', href: '/weather', icon: MapPin },
+    { name: 'Requirements', href: '/weather', icon: MapPin },
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
   ]
 
