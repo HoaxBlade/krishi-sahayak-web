@@ -86,7 +86,7 @@ export default function ProfilePage() {
               {/* Email */}
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-3">
-                  <Mail className="w-5 h-5 text-gray-400" />
+                  <Mail className="w-5 h-5 text-black" />
                   <div>
                     <p className="text-sm font-medium text-gray-500">Email</p>
                     <p className="text-gray-900 break-all">{user?.email}</p>
@@ -98,7 +98,7 @@ export default function ProfilePage() {
               {/* Full Name */}
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-3">
-                  <User className="w-5 h-5 text-gray-400" />
+                  <User className="w-5 h-5 text-black" />
                   <div>
                     <p className="text-sm font-medium text-gray-500">Full Name</p>
                     {isEditing ? (
@@ -121,7 +121,7 @@ export default function ProfilePage() {
               {/* Phone */}
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-3">
-                  <Phone className="w-5 h-5 text-gray-400" />
+                  <Phone className="w-5 h-5 text-black" />
                   <div>
                     <p className="text-sm font-medium text-gray-500">Phone</p>
                     {isEditing ? (
@@ -144,7 +144,7 @@ export default function ProfilePage() {
               {/* Account Created */}
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-3">
-                  <Calendar className="w-5 h-5 text-gray-400" />
+                  <Calendar className="w-5 h-5 text-black" />
                   <div>
                     <p className="text-sm font-medium text-gray-500">Member Since</p>
                     <p className="text-gray-900">
