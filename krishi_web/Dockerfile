@@ -3,14 +3,13 @@ FROM node:18-alpine
 WORKDIR /app
 
 COPY package.json package-lock.json ./
+COPY .env.local ./.env.local
 
 RUN npm install
 
 COPY . .
-COPY .env.local .env.local
-
 RUN npm run build
 
 EXPOSE 3000
 
-CMD ["npm", "run", "dev"]
+CMD ["npm", "start"]

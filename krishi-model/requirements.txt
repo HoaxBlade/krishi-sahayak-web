@@ -4,7 +4,7 @@ flask-cors>=4.0.0
 
 # TensorFlow CPU
 tensorflow>=2.20.0
-tf-keras>=2.20.0
+tf-keras>=2.20.1
 
 # Image and array processing
 pillow>=10.0.0
