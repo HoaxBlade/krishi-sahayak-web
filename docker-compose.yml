@@ -8,11 +8,15 @@ services:
       - "3000:3000"
     depends_on:
       - model
+    env_file:
+      - ./krishi_web/.env.local
     environment:
-      NODE_ENV: development
+      NODE_ENV: production # Changed to production for containerization
 
   model:
     build:
       context: ./krishi-model
+    env_file:
+      - ./krishi-model/.env
     ports:
       - "8000:8000"
