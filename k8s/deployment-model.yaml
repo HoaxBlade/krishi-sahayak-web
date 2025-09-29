@@ -14,6 +14,13 @@ spec:
     spec:
       containers:
         - name: krishi-model
-          image: <your-docker-registry>/krishi_model  # Replace with your actual Docker image
+          image: krishi-model:latest
           ports:
             - containerPort: 8000
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1"
