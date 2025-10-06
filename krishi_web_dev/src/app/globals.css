@@ -19,14 +19,7 @@
     --foreground: #ededed;
   }
   
-  .backdrouip-blur-sm {
-    backdrop-filter: blur(4px) !important;
-    -webkit-backdrop-filter: blur(4px) !important; /* For Safari support */
-  }
-}
-
-.backdrop-blur-sm {
-  backdrop-filter: blur(4px);
+  /* Removed backdrop-filter for performance on low-end devices */
 }
 
 body {
@@ -46,16 +39,4 @@ body {
   outline-offset: 2px;
 }
 
-/* Pattern styles for subtle backgrounds */
-.pattern-cross-dots-md {
-  background-image: radial-gradient(currentColor 0.5px, transparent 0.5px);
-  background-size: 10px 10px;
-}
-
-.pattern-gray-800 {
-  color: #1f2937; /* Tailwind gray-800 */
-}
-
-.pattern-opacity-10 {
-  opacity: 0.1;
-}
+/* Removed pattern styles for performance on low-end devices */
