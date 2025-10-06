@@ -1,6 +1,8 @@
-FROM python:3.9-slim-buster
+FROM tensorflow/tensorflow:2.20.0
 
 WORKDIR /app
+
+ENV PYTHONUNBUFFERED=1
 
 COPY requirements.txt /app
 RUN pip install --upgrade pip && pip install --default-timeout=1000 -r requirements.txt

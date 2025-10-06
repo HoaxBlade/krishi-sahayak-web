@@ -1,0 +1,15 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['buildx', 'create', '--name', 'multiarch-builder', '--use']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['buildx', 'inspect', 'multiarch-builder', '--bootstrap']
+- name: 'gcr.io/cloud-builders/docker'
+  args: [
+    'buildx', 'build',
+    '--platform', 'linux/amd64,linux/arm64',
+    '--tag', 'ayush183739/krishi-model:latest',
+    '--push',
+    '-f', 'krishi-model/Dockerfile',
+    'krishi-model/'
+  ]
+timeout: 1200s # 20 minutes, adjust as needed
