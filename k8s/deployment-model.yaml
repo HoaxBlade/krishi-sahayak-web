@@ -14,9 +14,8 @@ spec:
     spec:
       containers:
         - name: krishi-model
-          image: <your-docker-registry>/krishi_model  # Replace with your actual Docker image
+          image: krishi-model:latest
           ports:
-<<<<<<< HEAD
             - containerPort: 8000
           resources:
             requests:
@@ -25,6 +24,3 @@ spec:
             limits:
               memory: "10Gi"
               cpu: "4"
-=======
-            - containerPort: 8000
->>>>>>> parent of 0b1df680 (contanerization completed)
