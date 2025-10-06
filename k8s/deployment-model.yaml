@@ -14,13 +14,13 @@ spec:
     spec:
       containers:
         - name: krishi-model
-          image: krishi-model:latest
+          image: ayush183739/krishi-model:latest
           ports:
             - containerPort: 8000
           resources:
             requests:
               memory: "512Mi"
-              cpu: "500m"
+              cpu: "250m"
             limits:
               memory: "1Gi"
-              cpu: "1"
+              cpu: "500m"
