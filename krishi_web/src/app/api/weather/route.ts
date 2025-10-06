@@ -47,7 +47,6 @@ export async function GET(request: Request) {
 
   const now = Date.now();
   if (serverWeatherCache[cacheKey] && (now - serverWeatherCache[cacheKey].timestamp < WEATHER_CACHE_DURATION)) {
-    console.log('Returning weather data from server cache for:', cacheKey);
     return NextResponse.json(serverWeatherCache[cacheKey].data);
   }
 

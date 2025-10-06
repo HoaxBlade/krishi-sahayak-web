@@ -91,7 +91,6 @@ export default function AnalyzePage() {
       
       // Log if using sample data
       if (data.note) {
-        console.log('Analyses API:', data.note)
       }
     } catch (error) {
       console.error('Error fetching recent analyses:', error)

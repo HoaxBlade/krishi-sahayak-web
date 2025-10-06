@@ -71,7 +71,6 @@ export class MLService {
       formData.append('image', imageFile);
       
       const url = USE_API_ROUTES ? '/api/ml/analyze' : `${this.baseUrl}/analyze_crop`;
-      console.log('Analyzing crop health at:', url);
       
       const response = await axios.post(url, formData, {
         headers: {
@@ -99,7 +98,6 @@ export class MLService {
   }> {
     const now = Date.now();
     if (mlPerformanceCache.data && (now - mlPerformanceCache.timestamp < ML_PERFORMANCE_CACHE_DURATION)) {
-      console.log('Returning ML performance data from cache.');
       return mlPerformanceCache.data;
     }
 
@@ -139,7 +137,6 @@ export class MLService {
   }> {
     const now = Date.now();
     if (mlStatusCache.data && (now - mlStatusCache.timestamp < ML_STATUS_CACHE_DURATION)) {
-      console.log('Returning ML server status from cache.');
       return mlStatusCache.data;
     }
 
@@ -150,7 +147,6 @@ export class MLService {
     try {
       // Use the correct URL for health check
       const url = USE_API_ROUTES ? '/api/ml/health' : `${this.baseUrl}/health`
-      console.log('Checking ML Server health at:', url)
       
       const response = await axios.get(url, {
         timeout: 15000,
@@ -161,7 +157,6 @@ export class MLService {
         }
       })
       
-      console.log('ML Server health response:', response.status, response.data)
       
       // Check if response is healthy
       if (response.status === 200 && response.data && response.data.data?.status === 'healthy') {
@@ -188,7 +183,6 @@ export class MLService {
     };
 
     mlStatusCache = { data: status, timestamp: now };
-    console.log('ML Server status being returned:', status);
     return status;
   }
 }

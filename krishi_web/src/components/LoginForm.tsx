@@ -18,11 +18,35 @@ export default function LoginForm({ onSuccess, onSwitchToSignup }: LoginFormProp
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({})
+
+  const validateForm = () => {
+    const errors: { [key: string]: string } = {}
+
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required.'
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = 'Email is invalid.'
+    }
+
+    if (!formData.password) {
+      errors.password = 'Password is required.'
+    }
+
+    setValidationErrors(errors)
+    return Object.keys(errors).length === 0
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setValidationErrors({})
+
+    if (!validateForm()) {
+      setLoading(false)
+      return
+    }
 
     try {
       const authService = AuthService.getInstance()
@@ -30,7 +54,6 @@ export default function LoginForm({ onSuccess, onSwitchToSignup }: LoginFormProp
         email: formData.email,
         password: formData.password
       })
-      
       onSuccess?.()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Login failed. Please try again.')
@@ -83,10 +106,11 @@ export default function LoginForm({ onSuccess, onSwitchToSignup }: LoginFormProp
                 value={formData.email}
                 onChange={handleInputChange}
                 required
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors text-black placeholder:text-gray-500"
+                className={`w-full pl-10 pr-4 py-3 border ${validationErrors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors text-black placeholder:text-gray-500`}
                 placeholder="Enter your email"
               />
             </div>
+            {validationErrors.email && <p className="mt-2 text-sm text-red-600">{validationErrors.email}</p>}
           </div>
 
           <div>
@@ -102,7 +126,7 @@ export default function LoginForm({ onSuccess, onSwitchToSignup }: LoginFormProp
                 value={formData.password}
                 onChange={handleInputChange}
                 required
-                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors text-black placeholder:text-gray-500"
+                className={`w-full pl-10 pr-12 py-3 border ${validationErrors.password ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors text-black placeholder:text-gray-500`}
                 placeholder="Enter your password"
               />
               <button
@@ -113,6 +137,7 @@ export default function LoginForm({ onSuccess, onSwitchToSignup }: LoginFormProp
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
+            {validationErrors.password && <p className="mt-2 text-sm text-red-600">{validationErrors.password}</p>}
           </div>
 
           <button

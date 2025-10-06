@@ -92,7 +92,6 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
     
     try {
       // TODO: Implement product creation API call
-      console.log('Creating product:', formData)
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000))
