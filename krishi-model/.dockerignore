@@ -54,9 +54,3 @@ README.md
 # Test files
 test_*.py
 *_test.py
-
-# Large data/model directories
-notebooks/
-SplitData_Crop/
-SplitData/
-Data/
