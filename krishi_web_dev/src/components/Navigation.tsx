@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation' // Import usePathname
-import { motion } from 'framer-motion'
 import {
   Menu,
   X,
@@ -78,11 +77,8 @@ export default function Navigation() {
                 }`}
               >
                 {pathname === item.href && (
-                  <motion.span
-                    layoutId="underline"
+                  <span
                     className="absolute bottom-0 left-0 w-full h-0.5 bg-green-600"
-                    initial={false}
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
                 )}
                 <item.icon className="w-4 h-4" />
@@ -126,13 +122,9 @@ export default function Navigation() {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <motion.div
+          <div
             id="mobile-menu"
-            className="md:hidden py-2 border-t border-gray-200 bg-white"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="md:hidden py-2 border-t border-gray-200 bg-white transition-all duration-300 ease-in-out"
           >
             <div className="space-y-1">
               {navItems.map((item) => (
@@ -174,7 +166,7 @@ export default function Navigation() {
                 )}
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
       </div>
     </nav>

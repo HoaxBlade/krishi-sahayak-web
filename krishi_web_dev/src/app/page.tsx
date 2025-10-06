@@ -1,18 +1,17 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @next/next/no-img-element */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
-import { 
+import Image from "next/image" // Import next/image
+import {
   ShoppingCart, BarChart3, Cloud, Shield, ArrowRight, Wind, Droplet, Thermometer, Umbrella, CheckCircle, Download, Plane, Monitor, Leaf
 } from "lucide-react"
 import { MLService } from "@/lib/mlService"
 import { WeatherService } from "@/lib/weatherService"
 import { useAuth } from "@/contexts/AuthContext"
-import React from "react" 
+import React from "react"
 
 type MLStatus = {
   healthy: boolean
@@ -104,10 +103,10 @@ export default function HomePage() {
                   }
                   reject(new Error(errorMessage));
                 }, 
-                { 
-                  enableHighAccuracy: true, // Use high accuracy
-                  timeout: 15000, // Increased timeout
-                  maximumAge: 0 // Force refresh
+                {
+                  enableHighAccuracy: false, // Prefer lower accuracy for faster results on low-end devices
+                  timeout: 5000, // Reduced timeout for quicker fallback
+                  maximumAge: 60000 // Allow cached position for up to 1 minute
                 }
               );
             });
@@ -185,46 +184,34 @@ export default function HomePage() {
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Animated gradient waves */}
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-br from-green-300 via-blue-200 to-green-300 z-0"
-        animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%", "50% 0%", "0% 50%"] }}
-        transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-        style={{ backgroundSize: "200% 200%" }}
-      />
+      {/* Simplified static background for low-end devices */}
+      <div className="absolute inset-0 bg-gradient-to-br from-green-100 via-blue-50 to-green-100 z-0" />
       
       {/* Hero with animated background */}
       <section className="relative py-24 overflow-hidden text-center z-10">
         <div className="relative">
-          <motion.h1
+          <h1
             className="text-5xl md:text-6xl font-extrabold text-gray-900 mb-8 leading-tight" /* Adjusted text size and margin */
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
           >
             Smart Farming with{" "}
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-blue-600"> AI</span>
-          </motion.h1>
+          </h1>
           <p className="text-lg text-gray-600 mb-10 max-w-2xl mx-auto"> {/* Adjusted text size and margin */}
             Revolutionize your farming with advanced drone technology, AI-powered crop analysis, weather insights, and smart tools.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4">
-            <motion.a
+            <a
               href="/marketplace"
               className="w-full sm:w-auto bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-4 sm:px-7 sm:py-3.5 rounded-xl text-sm sm:text-base font-medium flex items-center justify-center shadow-md min-h-[48px]"
-              whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.1)" }}
-              whileTap={{ scale: 0.98 }}
-              transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
               Explore Marketplace <ArrowRight className="ml-2 w-5 h-5" />
-            </motion.a>
-            <motion.a
+            </a>
+            <a
               href="/learn-more"
               className="w-full sm:w-auto border border-green-600 text-green-700 px-6 py-4 sm:px-7 sm:py-3.5 rounded-xl text-sm sm:text-base font-medium shadow-sm min-h-[48px] flex items-center justify-center"
-              whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.08)" }}
-              whileTap={{ scale: 0.98 }}
-              transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
               Learn More
-            </motion.a>
+            </a>
           </div>
         </div>
       </section>
@@ -232,12 +219,8 @@ export default function HomePage() {
       {/* Weather */}
       {weather && (
         <section className="relative py-4 z-10">
-          <motion.div
+          <div
             className="backdrop-blur-xl bg-white/60 border border-gray-100 rounded-2xl shadow-subtle p-7 max-w-sm mx-auto"
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.08)" }}
-            transition={{ duration: 0.8, type: "spring", stiffness: 100 }}
           >
             <div className="flex items-center justify-between mb-5"> {/* Adjusted margin */}
               <div>
@@ -258,7 +241,7 @@ export default function HomePage() {
               <WeatherStat icon={<Umbrella />} label="Rain" value={`${weather.precipitation}mm`} />
             </div>
             
-          </motion.div>
+          </div>
         </section>
       )}
 
@@ -266,7 +249,7 @@ export default function HomePage() {
       <section className="relative py-8 pt-16 pb-8 z-10 bg-gradient-to-br from-green-50 via-blue-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-lg text-gray-600 font-medium mb-1">Incubated By:</p>
-          <img src="/NIELIT.png" alt="NIELIT Logo" className="mx-auto h-16" />
+          <Image src="/NIELIT.png" alt="NIELIT Logo" width={150} height={64} className="mx-auto h-16" priority />
           <p className="text-sm text-gray-500 mt-1">An initiative by NIELIT</p>
         </div>
       </section>
@@ -297,7 +280,6 @@ export default function HomePage() {
               status="Connected"
               extra="Provider: Supabase"
               healthy
-              delay={0.2}
             />
           </div>
         </div>
@@ -310,38 +292,29 @@ export default function HomePage() {
           <p className="text-base text-gray-600 mb-14">Everything you need to optimize your agricultural operations</p>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((f, i) => (
-              <motion.div
+              <div
                 key={i}
                 className="text-center p-6 rounded-xl bg-white/70 backdrop-blur-md shadow-subtle"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.08)" }}
-                transition={{ delay: i * 0.15, type: "spring", stiffness: 100 }}
               >
                 <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-green-100 to-blue-100 text-green-600 rounded-full mb-3 shadow-inner">
                   {f.icon}
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-1.5">{f.title}</h3>
                 <p className="text-gray-600 text-sm">{f.desc}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
       </section>
       {/* Floating Android Download Button */}
-      <motion.a
+      <a
         href="/KrishiSahayak-release.apk"
         download="KrishiSahayak-release.apk"
         className="fixed bottom-8 right-8 bg-green-600 text-white p-4 rounded-full shadow-lg flex items-center justify-center z-50 cursor-pointer"
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, delay: 1 }}
-        whileHover={{ scale: 1.1, boxShadow: "0 15px 30px rgba(0, 0, 0, 0.2)" }}
-        whileTap={{ scale: 0.9 }}
         title="Download Android App - Krishi Sahayak v1.0 (101.8MB)"
       >
         <Download className="w-7 h-7" />
-      </motion.a>
+      </a>
     </div>
   )
 }
@@ -358,19 +331,15 @@ function WeatherStat({ icon, label, value }: { icon: React.ReactNode; label: str
   )
 }
 
-function StatusCard({ title, status, extra, healthy, delay = 0 }: { title: string; status: string; extra: string; healthy: boolean; delay?: number }) {
+function StatusCard({ title, status, extra, healthy }: { title: string; status: string; extra: string; healthy: boolean }) {
   return (
-    <motion.div
+    <div
       className="bg-white rounded-xl shadow-subtle p-5" /* Refined card style */
       style={{
         boxShadow: healthy
-          ? "0 0 20px 5px rgba(22, 163, 74, 0.6)" // green-600 with reduced opacity and spread
-          : "0 0 20px 5px rgba(220, 38, 38, 0.6)", // red-600 with reduced opacity and spread
-        transition: "box-shadow 0.3s ease-in-out",
+          ? "0 0 10px 2px rgba(22, 163, 74, 0.4)" // green-600 with reduced opacity and spread
+          : "0 0 10px 2px rgba(220, 38, 38, 0.4)", // red-600 with reduced opacity and spread
       }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay }}
     >
       <div className="flex items-center justify-between mb-3"> {/* Adjusted margin */}
         <h3 className="text-base font-medium text-gray-900">{title}</h3> {/* Adjusted text size and weight */}
@@ -378,6 +347,6 @@ function StatusCard({ title, status, extra, healthy, delay = 0 }: { title: strin
       </div>
       <p className="text-gray-500 mb-1.5 text-sm">Status: {status}</p> {/* Adjusted text color and size */}
       <p className="text-gray-500 text-sm">{extra}</p> {/* Adjusted text color and size */}
-    </motion.div>
+    </div>
   )
 }
