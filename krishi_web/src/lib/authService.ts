@@ -41,7 +41,6 @@ export class AuthService {
   // Sign up with email and password
   async signUp({ email, password, metadata }: SignUpData) {
     try {
-      console.log('📝 [AuthService] Signing up user:', email)
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -56,7 +55,6 @@ export class AuthService {
         throw new Error(error.message)
       }
 
-      console.log('✅ [AuthService] User signed up successfully')
       return { data, error: null }
     } catch (error) {
       console.error('❌ [AuthService] Sign up error:', error)
@@ -67,7 +65,6 @@ export class AuthService {
   // Sign in with email and password
   async signIn({ email, password }: SignInData) {
     try {
-      console.log('🔐 [AuthService] Signing in user:', email)
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -79,7 +76,6 @@ export class AuthService {
         throw new Error(error.message)
       }
 
-      console.log('✅ [AuthService] User signed in successfully')
       return { data, error: null }
     } catch (error) {
       console.error('❌ [AuthService] Sign in error:', error)
@@ -90,7 +86,6 @@ export class AuthService {
   // Sign out
   async signOut() {
     try {
-      console.log('👋 [AuthService] Signing out user')
       
       const { error } = await supabase.auth.signOut()
       
@@ -99,7 +94,6 @@ export class AuthService {
         throw new Error(error.message)
       }
 
-      console.log('✅ [AuthService] User signed out successfully')
     } catch (error) {
       console.error('❌ [AuthService] Sign out error:', error)
       throw error
@@ -138,7 +132,6 @@ export class AuthService {
   // Reset password
   async resetPassword(email: string) {
     try {
-      console.log('🔄 [AuthService] Resetting password for:', email)
       
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`
@@ -149,7 +142,6 @@ export class AuthService {
         throw new Error(error.message)
       }
 
-      console.log('✅ [AuthService] Password reset email sent')
     } catch (error) {
       console.error('❌ [AuthService] Password reset error:', error)
       throw error
@@ -159,7 +151,6 @@ export class AuthService {
   // Update user profile
   async updateProfile(updates: { full_name?: string; phone?: string }) {
     try {
-      console.log('👤 [AuthService] Updating user profile')
       
       const { data, error } = await supabase.auth.updateUser({
         data: updates
@@ -170,7 +161,6 @@ export class AuthService {
         throw new Error(error.message)
       }
 
-      console.log('✅ [AuthService] Profile updated successfully')
       return { data, error: null }
     } catch (error) {
       console.error('❌ [AuthService] Profile update error:', error)

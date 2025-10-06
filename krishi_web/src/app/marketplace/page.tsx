@@ -143,7 +143,6 @@ export default function MarketplacePage() {
   // Handle buy now
   const handleBuyNow = (product: Product) => {
     // TODO: Implement buy now functionality
-    console.log('Buy now:', product)
   }
 
   return (
