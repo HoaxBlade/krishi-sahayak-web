@@ -128,7 +128,6 @@ export default function DashboardPage() {
     if (cachedData) {
       const { data, timestamp } = JSON.parse(cachedData);
       if (now - timestamp < DASHBOARD_CACHE_DURATION) {
-        console.log('Returning dashboard data from cache.');
         setStats(data.stats);
         setRecentOrders(data.recentOrders);
         setPendingRequests(data.pendingRequests);

@@ -72,7 +72,6 @@ export default function HomePage() {
             lat = latitude;
             lon = longitude;
             setUserLocation({ latitude, longitude });
-            console.log("Using stored location:", { lat, lon });
           }
         } catch (error) {
           console.warn('Failed to parse stored location:', error);
@@ -114,7 +113,6 @@ export default function HomePage() {
             lat = position.coords.latitude;
             lon = position.coords.longitude;
             setUserLocation({ latitude: lat, longitude: lon });
-            console.log("Geolocation successful:", { lat, lon });
           } catch (error: unknown) {
             // Handle geolocation errors gracefully without throwing
             console.warn("Geolocation error:", error);

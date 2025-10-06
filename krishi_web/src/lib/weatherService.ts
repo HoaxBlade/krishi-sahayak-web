@@ -37,7 +37,6 @@ export class WeatherService {
     const now = Date.now();
 
     if (weatherCache[cacheKey] && (now - weatherCache[cacheKey].timestamp < WEATHER_CACHE_DURATION)) {
-      console.log('Returning weather data from cache for coordinates:', latitude, longitude);
       return weatherCache[cacheKey].data;
     }
 
@@ -57,7 +56,6 @@ export class WeatherService {
     const now = Date.now();
 
     if (weatherCache[cacheKey] && (now - weatherCache[cacheKey].timestamp < WEATHER_CACHE_DURATION)) {
-      console.log('Returning weather data from cache for city:', city);
       return weatherCache[cacheKey].data;
     }
 

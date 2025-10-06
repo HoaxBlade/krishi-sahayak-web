@@ -4,7 +4,6 @@ const ML_SERVER_URL = process.env.NEXT_PUBLIC_ML_SERVER_URL || 'http://35.222.33
 
 export async function GET() {
   try {
-    console.log('Proxying ML Server health check to:', ML_SERVER_URL)
     
     // Create a timeout controller
     const controller = new AbortController()
@@ -27,7 +26,6 @@ export async function GET() {
     }
 
     const data = await response.json()
-    console.log('ML Server health response:', data)
 
     return NextResponse.json({
       healthy: true,
