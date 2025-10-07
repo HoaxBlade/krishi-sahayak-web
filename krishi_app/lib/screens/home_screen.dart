@@ -6,12 +6,10 @@ import '../services/user_service.dart';
 import '../services/connectivity_service.dart';
 import '../services/firebase_analytics_service.dart';
 import '../models/crop.dart';
-import '../widgets/offline_indicator.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  final VoidCallback? onNavigateToAdvanced;
-
-  const HomeScreen({super.key, this.onNavigateToAdvanced});
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -88,29 +86,39 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // backgroundColor and foregroundColor are now handled by AppBarTheme in main.dart
-        title: Text('Krishi Sahayak - Home'), // Removed const to allow theme styling
-        actions: [const OfflineIndicator(), const SyncStatusIndicator()],
+        title: Text('Krishi Sahayak'),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.person, color: Colors.black, size: 28),
+            onPressed: () {
+              // Navigate to profile screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ProfileScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary)) // Themed progress indicator
+          ? Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _loadData,
-              color: Theme.of(context).colorScheme.primary, // Themed refresh indicator
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildWelcomeCard(),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
                     _buildStatsCards(),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
                     _buildUpcomingHarvests(),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
                     _buildWeatherCard(),
-                    const SizedBox(height: 16),
-                    _buildAdvancedFeaturesCard(),
                   ],
                 ),
               ),
@@ -119,29 +127,42 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildWelcomeCard() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 0), // Adjusted padding
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(20), // More generous padding
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Welcome back, ${_userProfile['name'] ?? 'Farmer'}!',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600, // Slightly bolder
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Manage your crops and stay updated with weather information.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7), // Subtle text color
-                ),
-              ),
-            ],
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: Offset(0, 5),
           ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Welcome back, ${_userProfile['name'] ?? 'Farmer'}!',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[900],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Manage your crops and stay updated with weather information.',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+                height: 1.4,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -151,59 +172,79 @@ class _HomeScreenState extends State<HomeScreen> {
     return Row(
       children: [
         Expanded(
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20), // More generous padding
-              child: Column(
-                children: [
-                  Icon(Icons.agriculture, size: 36, color: Theme.of(context).colorScheme.primary), // Themed icon
-                  const SizedBox(height: 12), // Increased spacing
-                  Text(
-                    '${_crops.length}',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700, // Bolder value
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
+          child: _buildGlassCard(
+            child: Column(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF16A34A).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  Text(
-                    'Active Crops',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), // Subtle text
-                    ),
+                  child: Icon(
+                    Icons.agriculture,
+                    size: 32,
+                    color: Color(0xFF16A34A),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  '${_crops.length}',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[900],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Active Crops',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
         const SizedBox(width: 16),
         Expanded(
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20), // More generous padding
-              child: Column(
-                children: [
-                  Icon(
+          child: _buildGlassCard(
+            child: Column(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF3B82F6).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
                     Icons.calendar_today,
-                    size: 36,
-                    color: Theme.of(context).colorScheme.secondary, // Themed icon
+                    size: 32,
+                    color: Color(0xFF3B82F6),
                   ),
-                  const SizedBox(height: 12), // Increased spacing
-                  Text(
-                    '${_upcomingHarvests.length}',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700, // Bolder value
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  '${_upcomingHarvests.length}',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[900],
                   ),
-                  Text(
-                    'Upcoming Harvests',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), // Subtle text
-                    ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Upcoming Harvests',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -211,242 +252,328 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildGlassCard({required Widget child}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Padding(padding: const EdgeInsets.all(20), child: child),
+    );
+  }
+
   Widget _buildUpcomingHarvests() {
     if (_upcomingHarvests.isEmpty) {
-      return Card(
-        child: Padding(
-          padding: const EdgeInsets.all(20), // More generous padding
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+      return _buildGlassCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF16A34A).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.agriculture,
+                    size: 24,
+                    color: Color(0xFF16A34A),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Upcoming Harvests',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[900],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Color(0xFF16A34A).withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Color(0xFF16A34A).withOpacity(0.2)),
+              ),
+              child: Row(
                 children: [
-                  Icon(Icons.agriculture, size: 28, color: Theme.of(context).colorScheme.primary), // Themed icon
-                  const SizedBox(width: 10),
-                  Text(
-                    'Upcoming Harvests',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
+                  Icon(Icons.info_outline, color: Color(0xFF16A34A), size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Add crops to track harvest dates and get reminders.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF16A34A).withOpacity(0.9),
+                        height: 1.4,
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16), // Increased spacing
-              Container(
-                padding: const EdgeInsets.all(16), // More padding
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.05), // Subtle background
-                  borderRadius: BorderRadius.circular(10), // Rounded corners
-                  border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.2)), // Subtle border
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary), // Themed icon
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Add crops to track harvest dates and get reminders.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.9), // Themed text color
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16), // Increased spacing
-              ElevatedButton.icon(
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
                 onPressed: () {
                   // Navigate to add crop
                 },
-                icon: const Icon(Icons.add),
+                icon: const Icon(Icons.add, size: 20),
                 label: const Text('Add Your First Crop'),
-                // Style is now handled by ElevatedButtonThemeData in main.dart
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF16A34A),
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
     }
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20), // More generous padding
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Upcoming Harvests',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
+    return _buildGlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Color(0xFF16A34A).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.agriculture,
+                  size: 24,
+                  color: Color(0xFF16A34A),
+                ),
               ),
-            ),
-            const SizedBox(height: 12), // Increased spacing
-            ..._upcomingHarvests
-                .take(3)
-                .map(
-                  (crop) => ListTile(
-                    leading: Icon(Icons.agriculture, color: Theme.of(context).colorScheme.primary), // Themed icon
-                    title: Text(crop.name, style: Theme.of(context).textTheme.titleMedium),
-                    subtitle: Text(
-                      'Harvest: ${crop.harvestDate?.toString().split(' ')[0] ?? 'Not set'}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              const SizedBox(width: 12),
+              Text(
+                'Upcoming Harvests',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[900],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ..._upcomingHarvests
+              .take(3)
+              .map(
+                (crop) => Container(
+                  margin: EdgeInsets.only(bottom: 8),
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey[200]!),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.agriculture,
+                        color: Color(0xFF16A34A),
+                        size: 20,
                       ),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4), // Adjusted padding
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              crop.name,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[900],
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Harvest: ${crop.harvestDate?.toString().split(' ')[0] ?? 'Not set'}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-          ],
-        ),
+              ),
+        ],
       ),
     );
   }
 
   Widget _buildWeatherCard() {
     if (_currentWeather == null) {
-      return Card(
-        child: Padding(
-          padding: const EdgeInsets.all(20), // More generous padding
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+      return _buildGlassCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF3B82F6).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.wb_sunny,
+                    size: 24,
+                    color: Color(0xFF3B82F6),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Current Weather',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[900],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Color(0xFF3B82F6).withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Color(0xFF3B82F6).withOpacity(0.2)),
+              ),
+              child: Row(
                 children: [
-                  Icon(Icons.wb_sunny, size: 28, color: Theme.of(context).colorScheme.secondary), // Themed icon
-                  const SizedBox(width: 10),
-                  Text(
-                    'Current Weather',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
+                  Icon(Icons.cloud_off, color: Color(0xFF3B82F6), size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Weather data will appear here. Check your internet connection.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF3B82F6).withOpacity(0.9),
+                        height: 1.4,
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16), // Increased spacing
+            ),
+          ],
+        ),
+      );
+    }
+
+    return _buildGlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
               Container(
-                padding: const EdgeInsets.all(16), // More padding
+                padding: EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondary.withOpacity(0.05), // Subtle background
-                  borderRadius: BorderRadius.circular(10), // Rounded corners
-                  border: Border.all(color: Theme.of(context).colorScheme.secondary.withOpacity(0.2)), // Subtle border
+                  color: Color(0xFF3B82F6).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Row(
+                child: Icon(Icons.wb_sunny, size: 24, color: Color(0xFF3B82F6)),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Current Weather',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[900],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Text(
+                '${_currentWeather!.temperature?.toStringAsFixed(1) ?? 'N/A'}°C',
+                style: TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[900],
+                ),
+              ),
+              const SizedBox(width: 24),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.cloud_off, color: Theme.of(context).colorScheme.secondary), // Themed icon
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Weather data will appear here. Check your internet connection.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.secondary.withOpacity(0.9), // Themed text color
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.water_drop,
+                          size: 16,
+                          color: Color(0xFF3B82F6),
                         ),
-                      ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Humidity: ${_currentWeather!.humidity?.toStringAsFixed(1) ?? 'N/A'}%',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.umbrella,
+                          size: 16,
+                          color: Color(0xFF3B82F6),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Rainfall: ${_currentWeather!.rainfall?.toStringAsFixed(1) ?? 'N/A'} mm',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
             ],
           ),
-        ),
-      );
-    }
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20), // More generous padding
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.wb_sunny, size: 28, color: Theme.of(context).colorScheme.secondary), // Themed icon
-                const SizedBox(width: 10),
-                Text(
-                  'Current Weather',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const Spacer(),
-                const OfflineIndicator(showText: true, iconSize: 16),
-              ],
-            ),
-            const SizedBox(height: 12), // Increased spacing
-            Row(
-              children: [
-                Text(
-                  '${_currentWeather!.temperature?.toStringAsFixed(1) ?? 'N/A'}°C',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(width: 20), // Increased spacing
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Humidity: ${_currentWeather!.humidity?.toStringAsFixed(1) ?? 'N/A'}%',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                      ),
-                    ),
-                    Text(
-                      'Rainfall: ${_currentWeather!.rainfall?.toStringAsFixed(1) ?? 'N/A'} mm',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAdvancedFeaturesCard() {
-    return Card(
-      color: Theme.of(context).colorScheme.primary.withOpacity(0.05), // Themed background
-      child: Padding(
-        padding: const EdgeInsets.all(20), // More generous padding
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.rocket_launch, size: 28, color: Theme.of(context).colorScheme.primary), // Themed icon
-                const SizedBox(width: 10),
-                Text(
-                  'Advanced Features',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.primary, // Themed text color
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const Spacer(),
-                Icon(Icons.new_releases, color: Theme.of(context).colorScheme.secondary), // Themed icon
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Explore offline maps, image storage, background sync, and smart notifications.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-              ),
-            ),
-            const SizedBox(height: 16), // Increased spacing
-            ElevatedButton.icon(
-              onPressed: widget.onNavigateToAdvanced,
-              icon: const Icon(Icons.explore),
-              label: const Text('Explore Advanced Features'),
-              // Style is now handled by ElevatedButtonThemeData in main.dart
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }

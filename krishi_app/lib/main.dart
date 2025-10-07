@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:geolocator/geolocator.dart';
 import 'services/database_helper.dart';
 import 'services/connectivity_service.dart';
 import 'services/preferences_service.dart';
@@ -21,8 +22,7 @@ import 'services/location_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/crop_screen.dart';
 import 'screens/weather_screen.dart';
-import 'screens/profile_screen.dart';
-import 'widgets/advanced_features_demo.dart';
+import 'screens/harvest_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,6 +47,9 @@ void main() async {
 
   // Initialize Location Service
   await LocationService().initialize();
+
+  // Request location permission on app start
+  await _requestLocationPermissionOnStart();
 
   // Initialize Firebase Analytics
   await FirebaseAnalyticsService().initialize();
@@ -79,6 +82,45 @@ void main() async {
   runApp(const MyApp());
 }
 
+/// Request location permission when app starts
+Future<void> _requestLocationPermissionOnStart() async {
+  try {
+    debugPrint('🌍 [Main] Requesting location permission on app start...');
+
+    // Check if location services are enabled
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      debugPrint('⚠️ [Main] Location services are disabled');
+      return;
+    }
+
+    // Check current permission status
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied) {
+      debugPrint('🔐 [Main] Requesting location permission...');
+      permission = await Geolocator.requestPermission();
+
+      if (permission == LocationPermission.denied) {
+        debugPrint('❌ [Main] Location permission denied by user');
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      debugPrint('🚫 [Main] Location permission permanently denied');
+      return;
+    }
+
+    if (permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always) {
+      debugPrint('✅ [Main] Location permission granted');
+    }
+  } catch (e) {
+    debugPrint('❌ [Main] Error requesting location permission: $e');
+  }
+}
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -92,9 +134,13 @@ class MyApp extends StatelessWidget {
         // Define a custom color scheme for a more refined look
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.green,
-          primary: const Color(0xFF16A34A), // A slightly darker green for primary actions
+          primary: const Color(
+            0xFF16A34A,
+          ), // A slightly darker green for primary actions
           onPrimary: Colors.white,
-          secondary: const Color(0xFF3B82F6), // A blue for secondary actions/accents
+          secondary: const Color(
+            0xFF3B82F6,
+          ), // A blue for secondary actions/accents
           onSecondary: Colors.white,
           surface: Colors.white, // Clean white surfaces
           onSurface: const Color(0xFF1F2937), // Dark gray for text on surfaces
@@ -103,9 +149,11 @@ class MyApp extends StatelessWidget {
           error: Colors.red.shade700,
           onError: Colors.white,
         ),
-        scaffoldBackgroundColor: const Color(0xFFF9FAFB), // Consistent light background
-        fontFamily: 'SF Pro Display', // Attempting an Apple-like font (might need to import custom font)
-
+        scaffoldBackgroundColor: const Color(
+          0xFFF9FAFB,
+        ), // Consistent light background
+        fontFamily:
+            'SF Pro Display', // Attempting an Apple-like font (might need to import custom font)
         // AppBar Theme for a minimalistic, clean look
         appBarTheme: AppBarTheme(
           backgroundColor: Colors.white,
@@ -121,12 +169,18 @@ class MyApp extends StatelessWidget {
         ),
 
         // Card Theme for subtle depth and rounded corners
-        cardTheme: CardThemeData( // Corrected to CardThemeData and removed const
+        cardTheme: CardThemeData(
+          // Corrected to CardThemeData and removed const
           elevation: 2, // Subtle shadow
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12), // Consistent rounded corners
+            borderRadius: BorderRadius.circular(
+              12,
+            ), // Consistent rounded corners
           ),
-          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 0), // Consistent margins
+          margin: const EdgeInsets.symmetric(
+            vertical: 8,
+            horizontal: 0,
+          ), // Consistent margins
         ),
 
         // ElevatedButton Theme for premium buttons
@@ -163,8 +217,11 @@ class MyApp extends StatelessWidget {
         // Bottom Navigation Bar Theme
         bottomNavigationBarTheme: BottomNavigationBarThemeData(
           backgroundColor: Colors.white,
-          selectedItemColor: const Color(0xFF16A34A), // Green for selected items
-          unselectedItemColor: Colors.grey.shade600, // Darker grey for unselected
+          selectedItemColor: const Color(
+            0xFF16A34A,
+          ), // Green for selected items
+          unselectedItemColor:
+              Colors.grey.shade600, // Darker grey for unselected
           elevation: 8, // Subtle shadow for the bar
           type: BottomNavigationBarType.fixed,
           selectedLabelStyle: const TextStyle(
@@ -189,13 +246,22 @@ class MyApp extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: const Color(0xFF16A34A), width: 2), // Green border on focus
+            borderSide: BorderSide(
+              color: const Color(0xFF16A34A),
+              width: 2,
+            ), // Green border on focus
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: Colors.grey.shade300, width: 1), // Subtle border when enabled
+            borderSide: BorderSide(
+              color: Colors.grey.shade300,
+              width: 1,
+            ), // Subtle border when enabled
           ),
-          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 12,
+            horizontal: 16,
+          ),
           hintStyle: TextStyle(color: Colors.grey.shade500),
         ),
       ),
@@ -254,18 +320,11 @@ class _MainScreenState extends State<MainScreen> {
   static const List<Widget> _screens = [
     HomeScreen(),
     CropScreen(),
+    HarvestScreen(),
     WeatherScreen(),
-    AdvancedFeaturesDemo(),
-    ProfileScreen(),
   ];
 
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
-  void _navigateToTab(int index) {
     setState(() {
       _selectedIndex = index;
     });
@@ -277,11 +336,10 @@ class _MainScreenState extends State<MainScreen> {
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          HomeScreen(onNavigateToAdvanced: () => _navigateToTab(3)),
+          HomeScreen(),
           CropScreen(),
+          HarvestScreen(),
           WeatherScreen(),
-          AdvancedFeaturesDemo(),
-          ProfileScreen(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -296,12 +354,11 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.agriculture),
             label: 'Crops',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.wb_sunny), label: 'Weather'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.rocket_launch),
-            label: 'Advanced',
+            icon: Icon(Icons.calendar_today),
+            label: 'Harvest',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+          BottomNavigationBarItem(icon: Icon(Icons.wb_sunny), label: 'Weather'),
         ],
       ),
     );

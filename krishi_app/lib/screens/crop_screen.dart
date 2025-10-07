@@ -6,7 +6,6 @@ import '../services/sync_service.dart';
 import '../services/error_handler_service.dart';
 import '../models/crop.dart';
 import '../widgets/add_crop_dialog.dart';
-import '../widgets/offline_indicator.dart';
 import '../widgets/error_dialogs.dart';
 import 'camera_screen.dart';
 
@@ -123,9 +122,11 @@ class _CropScreenState extends State<CropScreen> {
         // backgroundColor and foregroundColor are now handled by AppBarTheme in main.dart
         title: Text('Crop Management'), // Removed const to allow theme styling
         actions: [
-          const OfflineIndicator(),
           IconButton(
-            icon: Icon(Icons.camera_alt, color: Theme.of(context).colorScheme.onSurface), // Themed icon color
+            icon: Icon(
+              Icons.camera_alt,
+              color: Theme.of(context).colorScheme.onSurface,
+            ), // Themed icon color
             onPressed: () {
               Navigator.push(
                 context,
@@ -134,7 +135,10 @@ class _CropScreenState extends State<CropScreen> {
             },
             tooltip: 'Analyze Crop Health',
           ),
-          IconButton(icon: Icon(Icons.add, color: Theme.of(context).colorScheme.primary), onPressed: _addNewCrop), // Themed icon color
+          IconButton(
+            icon: Icon(Icons.add, color: Theme.of(context).colorScheme.primary),
+            onPressed: _addNewCrop,
+          ), // Themed icon color
         ],
       ),
       body: Column(
@@ -142,10 +146,20 @@ class _CropScreenState extends State<CropScreen> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: TextField(
-              decoration: InputDecoration( // Removed const to allow theme styling
+              decoration: InputDecoration(
+                // Removed const to allow theme styling
                 hintText: 'Search crops...',
-                hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)), // Themed hint style
-                prefixIcon: Icon(Icons.search, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)), // Themed icon color
+                hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.5),
+                ), // Themed hint style
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.6),
+                ), // Themed icon color
                 // Border is now handled by InputDecorationTheme in main.dart
               ),
               onChanged: _searchCrops,
@@ -153,9 +167,22 @@ class _CropScreenState extends State<CropScreen> {
           ),
           Expanded(
             child: _isLoading
-                ? Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary)) // Themed progress indicator
+                ? Center(
+                    child: CircularProgressIndicator(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ) // Themed progress indicator
                 : _filteredCrops.isEmpty
-                ? Center(child: Text('No crops found', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)))) // Themed text style
+                ? Center(
+                    child: Text(
+                      'No crops found',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.7),
+                      ),
+                    ),
+                  ) // Themed text style
                 : ListView.builder(
                     itemCount: _filteredCrops.length,
                     itemBuilder: (context, index) {
@@ -168,39 +195,73 @@ class _CropScreenState extends State<CropScreen> {
                         child: ListTile(
                           leading: Icon(
                             Icons.agriculture,
-                            color: Theme.of(context).colorScheme.primary, // Themed icon color
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary, // Themed icon color
                           ),
-                          title: Text(crop.name, style: Theme.of(context).textTheme.titleMedium),
+                          title: Text(
+                            crop.name,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               if (crop.variety != null)
-                                Text('Variety: ${crop.variety}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7))),
+                                Text(
+                                  'Variety: ${crop.variety}',
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.7),
+                                      ),
+                                ),
                               if (crop.plantingDate != null)
                                 Text(
                                   'Planted: ${crop.plantingDate.toString().split(' ')[0]}',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.7),
+                                      ),
                                 ),
                               if (crop.harvestDate != null)
                                 Text(
                                   'Harvest: ${crop.harvestDate.toString().split(' ')[0]}',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.7),
+                                      ),
                                 ),
                             ],
                           ),
                           trailing: Chip(
                             label: Text(
                               crop.status,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: crop.status == 'active'
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                fontWeight: FontWeight.w500,
-                              ),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: crop.status == 'active'
+                                        ? Theme.of(context).colorScheme.primary
+                                        : Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withOpacity(0.7),
+                                    fontWeight: FontWeight.w500,
+                                  ),
                             ),
                             backgroundColor: crop.status == 'active'
-                                ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-                                : Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+                                ? Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withOpacity(0.1)
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withOpacity(0.05),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                               side: BorderSide.none,

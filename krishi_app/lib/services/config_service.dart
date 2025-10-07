@@ -21,28 +21,28 @@ class ConfigService {
   String? get openWeatherMapApiKey {
     try {
       // Try to get from dotenv first
-      return dotenv.dotenv.env['OPENWEATHERMAP_API_KEY'];
+      return dotenv.dotenv.env['NEXT_PUBLIC_OPENWEATHERMAP_API_KEY'];
     } catch (e) {
       // Fallback to local config
-      return _fallbackConfig['OPENWEATHERMAP_API_KEY'];
+      return _fallbackConfig['NEXT_PUBLIC_OPENWEATHERMAP_API_KEY'];
     }
   }
 
   /// Get Supabase URL
   String? get supabaseUrl {
     try {
-      return dotenv.dotenv.env['SUPABASE_URL'];
+      return dotenv.dotenv.env['NEXT_PUBLIC_SUPABASE_URL'];
     } catch (e) {
-      return _fallbackConfig['SUPABASE_URL'];
+      return _fallbackConfig['NEXT_PUBLIC_SUPABASE_URL'];
     }
   }
 
   /// Get Supabase Anonymous Key
   String? get supabaseAnonKey {
     try {
-      return dotenv.dotenv.env['SUPABASE_ANON_KEY'];
+      return dotenv.dotenv.env['NEXT_PUBLIC_SUPABASE_ANON_KEY'];
     } catch (e) {
-      return _fallbackConfig['SUPABASE_ANON_KEY'];
+      return _fallbackConfig['NEXT_PUBLIC_SUPABASE_ANON_KEY'];
     }
   }
 
@@ -168,7 +168,7 @@ class ConfigService {
   /// Set up fallback configuration for development
   void _setupFallbackConfig() {
     // Don't set a fallback API key as it won't work
-    _fallbackConfig['OPENWEATHERMAP_API_KEY'] = '';
+    _fallbackConfig['NEXT_PUBLIC_OPENWEATHERMAP_API_KEY'] = '';
     _fallbackConfig['APP_NAME'] = 'Krishi Sahayak';
     _fallbackConfig['APP_VERSION'] = '1.0.0';
     _fallbackConfig['ENVIRONMENT'] = 'development';
@@ -184,7 +184,7 @@ class ConfigService {
 
   /// Validate that all required environment variables are present
   void _validateRequiredEnvVars() {
-    final requiredVars = ['OPENWEATHERMAP_API_KEY'];
+    final requiredVars = ['NEXT_PUBLIC_OPENWEATHERMAP_API_KEY'];
 
     final missingVars = <String>[];
     for (final varName in requiredVars) {
@@ -243,11 +243,11 @@ class ConfigService {
 📁 Create a .env file in: $currentDir
 
 🔑 Add your API key:
-OPENWEATHERMAP_API_KEY=bf5945787401f51daf7ce7f1fe7a2779
+NEXT_PUBLIC_OPENWEATHERMAP_API_KEY=bf5945787401f51daf7ce7f1fe7a2779
 
 📝 Example .env file content:
 # Weather API Configuration
-OPENWEATHERMAP_API_KEY=bf5945787401f51daf7ce7f1fe7a2779
+NEXT_PUBLIC_OPENWEATHERMAP_API_KEY=bf5945787401f51daf7ce7f1fe7a2779
 
 # App Configuration (optional)
 APP_NAME=Krishi Sahayak
