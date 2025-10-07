@@ -27,7 +27,7 @@ Create a `.env` file in your `krishi_app` root directory with the following cont
 
 ```bash
 # Weather API Configuration
-OPENWEATHERMAP_API_KEY=your_actual_api_key_here
+NEXT_PUBLIC_OPENWEATHERMAP_API_KEY=your_actual_api_key_here
 
 # App Configuration (optional)
 APP_NAME=Krishi Sahayak
@@ -74,7 +74,7 @@ final apiKey = configService.openWeatherMapApiKey;
 ### "API key not found" error
 
 - Check that your `.env` file exists in the `krishi_app` root directory
-- Verify the variable name is exactly `OPENWEATHERMAP_API_KEY`
+- Verify the variable name is exactly `NEXT_PUBLIC_OPENWEATHERMAP_API_KEY`
 - Make sure there are no extra spaces or quotes around the value
 
 ### "Failed to load environment configuration" error

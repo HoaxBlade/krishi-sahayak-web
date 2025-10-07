@@ -14,10 +14,19 @@ class CropService {
   // Get all crops
   Future<List<Crop>> getAllCrops() async {
     try {
+      debugPrint('🔍 [CropService] Getting all crops from database...');
       final cropsData = await _dbHelper.getAllCrops();
-      return cropsData.map((data) => Crop.fromMap(data)).toList();
+      debugPrint(
+        '🔍 [CropService] Database returned ${cropsData.length} raw crop records',
+      );
+
+      final crops = cropsData.map((data) => Crop.fromMap(data)).toList();
+      debugPrint('🔍 [CropService] Converted to ${crops.length} Crop objects');
+
+      return crops;
     } catch (e) {
-      debugPrint('Error getting crops: $e');
+      debugPrint('❌ [CropService] Error getting crops: $e');
+      debugPrint('❌ [CropService] Error type: ${e.runtimeType}');
       return [];
     }
   }
@@ -39,10 +48,21 @@ class CropService {
   // Add new crop
   Future<bool> addCrop(Crop crop) async {
     try {
+      debugPrint('🌱 [CropService] Adding crop: ${crop.name}');
+      debugPrint('🌱 [CropService] Crop data: ${crop.toMap()}');
+
       final id = await _dbHelper.insertCrop(crop.toMap());
-      return id > 0;
+      debugPrint('🌱 [CropService] Database insert returned ID: $id');
+
+      final success = id > 0;
+      debugPrint(
+        '🌱 [CropService] Add crop ${success ? "successful" : "failed"}',
+      );
+
+      return success;
     } catch (e) {
-      debugPrint('Error adding crop: $e');
+      debugPrint('❌ [CropService] Error adding crop: $e');
+      debugPrint('❌ [CropService] Error type: ${e.runtimeType}');
       return false;
     }
   }

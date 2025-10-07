@@ -54,7 +54,9 @@ class LocationService {
     }
 
     if (permission == LocationPermission.deniedForever) {
-      debugPrint('Location permissions are permanently denied. Cannot request permissions.');
+      debugPrint(
+        'Location permissions are permanently denied. Cannot request permissions.',
+      );
       // Permissions are denied forever, handle appropriately.
       return null;
     }
@@ -62,6 +64,8 @@ class LocationService {
     // When we reach here, permissions are granted and we can
     // continue accessing the position of the device.
     debugPrint('Location permissions granted. Fetching position.');
-    return await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+    return await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
   }
 }

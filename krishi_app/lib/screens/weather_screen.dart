@@ -39,7 +39,10 @@ class _WeatherScreenState extends State<WeatherScreen> {
     setState(() => _isLoading = true);
     try {
       debugPrint('📱 [WeatherScreen] Loading weather data...');
-      final weather = await _weatherService.getLatestWeather();
+      // Use the new method that requests location permission
+      final weather = await _weatherService.getWeatherWithLocationPermission(
+        context,
+      );
       final forecast = await _weatherService.getWeatherForecast();
       final stats = await _weatherService.getWeatherStats();
       final isConnected = _connectivityService.isConnected;
@@ -65,8 +68,20 @@ class _WeatherScreenState extends State<WeatherScreen> {
     setState(() => _isRefreshing = true);
     try {
       debugPrint('🔄 [WeatherScreen] Refreshing weather data...');
-      await _weatherService.refresh();
-      await _loadWeatherData();
+      // Use the new method that requests location permission
+      final weather = await _weatherService.getWeatherWithLocationPermission(
+        context,
+      );
+      final forecast = await _weatherService.getWeatherForecast();
+      final stats = await _weatherService.getWeatherStats();
+      final isConnected = _connectivityService.isConnected;
+
+      setState(() {
+        _currentWeather = weather;
+        _forecast = forecast;
+        _stats = stats;
+        _isConnected = isConnected;
+      });
       debugPrint('✅ [WeatherScreen] Weather data refreshed successfully');
     } catch (e) {
       debugPrint('❌ [WeatherScreen] Error refreshing weather: $e');

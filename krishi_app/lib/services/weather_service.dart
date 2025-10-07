@@ -1,7 +1,7 @@
 // ignore_for_file: avoid_print
 
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:weather/weather.dart';
 import 'package:geolocator/geolocator.dart';
 import 'database_helper.dart';
@@ -95,7 +95,8 @@ class WeatherService {
   final ConfigService _configService = ConfigService();
   final CacheService _cacheService = CacheService();
   final FirebaseAnalyticsService _analytics = FirebaseAnalyticsService();
-  final ConnectivityService _connectivityService = ConnectivityService(); // Instantiate ConnectivityService
+  final ConnectivityService _connectivityService =
+      ConnectivityService(); // Instantiate ConnectivityService
 
   Position? _currentPosition;
   Timer? _refreshTimer;
@@ -121,13 +122,13 @@ class WeatherService {
         '❌ [WeatherService] OpenWeatherMap API key not found in environment variables',
       );
       debugPrint(
-        '📝 [WeatherService] Please create a .env file with OPENWEATHERMAP_API_KEY=your_api_key',
+        '📝 [WeatherService] Please create a .env file with NEXT_PUBLIC_OPENWEATHERMAP_API_KEY=your_api_key',
       );
       debugPrint(
         '📁 [WeatherService] Expected location: ${Directory.current.path}/.env',
       );
       throw Exception(
-        'OpenWeatherMap API key not found. Please create a .env file with OPENWEATHERMAP_API_KEY=your_api_key',
+        'OpenWeatherMap API key not found. Please create a .env file with NEXT_PUBLIC_OPENWEATHERMAP_API_KEY=your_api_key',
       );
     }
 
@@ -149,7 +150,6 @@ class WeatherService {
     _currentPosition = await LocationService().getCurrentLocation();
     _startAutoRefresh();
   }
-
 
   // Start automatic refresh timer
   void _startAutoRefresh() {
@@ -182,17 +182,21 @@ class WeatherService {
       await _ensureInitialized();
 
       // Check connectivity before making API call
-      final isConnected = await _connectivityService.checkConnectivity(); // Use the instantiated service
+      final isConnected = await _connectivityService
+          .checkConnectivity(); // Use the instantiated service
       if (!isConnected) {
-        debugPrint('⚠️ [WeatherService] Offline. Cannot fetch current weather.');
+        debugPrint(
+          '⚠️ [WeatherService] Offline. Cannot fetch current weather.',
+        );
         return null; // Return null if offline
       }
 
       if (_currentPosition == null) {
+        // Try to get location, but don't request permission here as we don't have context
         _currentPosition = await LocationService().getCurrentLocation();
         if (_currentPosition == null) {
           debugPrint(
-            '❌ [WeatherService] No location available for weather fetch',
+            '❌ [WeatherService] No location available for weather fetch - location permission may be needed',
           );
           return null;
         }
@@ -244,9 +248,12 @@ class WeatherService {
       await _ensureInitialized();
 
       // Check connectivity before making API call
-      final isConnected = await _connectivityService.checkConnectivity(); // Use the instantiated service
+      final isConnected = await _connectivityService
+          .checkConnectivity(); // Use the instantiated service
       if (!isConnected) {
-        debugPrint('⚠️ [WeatherService] Offline. Cannot fetch weather forecast.');
+        debugPrint(
+          '⚠️ [WeatherService] Offline. Cannot fetch weather forecast.',
+        );
         return []; // Return empty list if offline
       }
 
@@ -320,38 +327,89 @@ class WeatherService {
     }
   }
 
-  // Get latest weather data with smart caching
-  Future<WeatherData?> getLatestWeather() async {
+  // Request location permission and get weather data
+  Future<WeatherData?> getWeatherWithLocationPermission(
+    BuildContext context,
+  ) async {
     try {
-      // Check cache first for recent data
-      final cacheKey =
-          'current_weather_${_currentPosition?.latitude}_${_currentPosition?.longitude}';
-      final cachedWeather = _cacheService.get(cacheKey);
+      await _ensureInitialized();
 
-      if (cachedWeather != null) {
-        debugPrint('⚡ [WeatherService] Using cached weather data (fast)');
-        return WeatherData.fromMap(cachedWeather);
+      // Check connectivity first
+      final isConnected = await _connectivityService.checkConnectivity();
+      if (!isConnected) {
+        debugPrint('⚠️ [WeatherService] Offline. Cannot fetch weather.');
+        return null;
       }
 
-      // Check if we have fresh data in database
-      if (await isWeatherDataFresh()) {
-        debugPrint('📱 [WeatherService] Using fresh database weather data');
-        final weatherData = await _dbHelper.getLatestWeather();
-        if (weatherData != null) {
-          final weather = WeatherData.fromMap(weatherData);
-          // Cache for quick access
-          await _cacheService.set(cacheKey, weatherData, 'weather');
-          return weather;
+      // Request location permission
+      debugPrint('🌍 [WeatherService] Requesting location permission...');
+      final permission = await Geolocator.checkPermission();
+
+      if (permission == LocationPermission.denied) {
+        debugPrint('🔐 [WeatherService] Requesting location permission...');
+        final newPermission = await Geolocator.requestPermission();
+        if (newPermission == LocationPermission.denied) {
+          debugPrint('❌ [WeatherService] Location permission denied by user');
+          return null;
         }
       }
 
-      // Fetch fresh data from API
+      if (permission == LocationPermission.deniedForever) {
+        debugPrint(
+          '🚫 [WeatherService] Location permission permanently denied',
+        );
+        return null;
+      }
+
+      // Check if location services are enabled
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        debugPrint('⚠️ [WeatherService] Location services are disabled');
+        return null;
+      }
+
+      // Get current location
+      _currentPosition = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10),
+      );
+
+      if (_currentPosition == null) {
+        debugPrint('❌ [WeatherService] Could not get current location');
+        return null;
+      }
+
+      debugPrint('✅ [WeatherService] Location obtained, fetching weather...');
+      return await fetchCurrentWeather();
+    } catch (e) {
+      debugPrint(
+        '❌ [WeatherService] Error getting weather with location permission: $e',
+      );
+      return null;
+    }
+  }
+
+  // Get latest weather data - always try fresh data first
+  Future<WeatherData?> getLatestWeather() async {
+    try {
+      // Always try to fetch fresh data from API first
       debugPrint('🌐 [WeatherService] Fetching fresh weather data from API');
       final freshWeather = await fetchCurrentWeather();
       if (freshWeather != null) {
         // Cache the fresh data
+        final cacheKey =
+            'current_weather_${_currentPosition?.latitude}_${_currentPosition?.longitude}';
         await _cacheService.set(cacheKey, freshWeather.toMap(), 'weather');
         return freshWeather;
+      }
+
+      // If API fails, check if we have recent data in database
+      if (await isWeatherDataFresh()) {
+        debugPrint('📱 [WeatherService] Using recent database weather data');
+        final weatherData = await _dbHelper.getLatestWeather();
+        if (weatherData != null) {
+          return WeatherData.fromMap(weatherData);
+        }
       }
 
       // Final fallback to any cached data
@@ -389,22 +447,22 @@ class WeatherService {
     }
   }
 
-  // Get weather forecast with smart caching
+  // Get weather forecast - always try fresh data first
   Future<List<WeatherData>> getWeatherForecast({int days = 7}) async {
     try {
-      // Check cache first for recent forecast
-      final cacheKey =
-          'weather_forecast_${days}d_${_currentPosition?.latitude}_${_currentPosition?.longitude}';
-      final cachedForecast = _cacheService.get(cacheKey);
-
-      if (cachedForecast != null) {
-        debugPrint('⚡ [WeatherService] Using cached forecast data (fast)');
-        return (cachedForecast as List)
-            .map((data) => WeatherData.fromMap(data))
-            .toList();
+      // Always try to fetch fresh forecast from API first
+      debugPrint('🌐 [WeatherService] Fetching fresh forecast from API');
+      final freshForecast = await fetchWeatherForecast(days: days);
+      if (freshForecast.isNotEmpty) {
+        // Cache the fresh forecast
+        final cacheKey =
+            'weather_forecast_${days}d_${_currentPosition?.latitude}_${_currentPosition?.longitude}';
+        final forecastMaps = freshForecast.map((w) => w.toMap()).toList();
+        await _cacheService.set(cacheKey, forecastMaps, 'weather');
+        return freshForecast;
       }
 
-      // Check if we have recent forecast in database
+      // If API fails, check if we have recent forecast in database
       final dbForecast = await _dbHelper.getWeatherData(limit: days);
       if (dbForecast.isNotEmpty) {
         final latestDbEntry = DateTime.parse(dbForecast.first['created_at']);
@@ -412,23 +470,8 @@ class WeatherService {
 
         if (timeSinceUpdate.inMinutes < 30) {
           debugPrint('📱 [WeatherService] Using recent database forecast');
-          final forecast = dbForecast
-              .map((data) => WeatherData.fromMap(data))
-              .toList();
-          // Cache for quick access
-          await _cacheService.set(cacheKey, dbForecast, 'weather');
-          return forecast;
+          return dbForecast.map((data) => WeatherData.fromMap(data)).toList();
         }
-      }
-
-      // Fetch fresh forecast from API
-      debugPrint('🌐 [WeatherService] Fetching fresh forecast from API');
-      final freshForecast = await fetchWeatherForecast(days: days);
-      if (freshForecast.isNotEmpty) {
-        // Cache the fresh forecast
-        final forecastMaps = freshForecast.map((w) => w.toMap()).toList();
-        await _cacheService.set(cacheKey, forecastMaps, 'weather');
-        return freshForecast;
       }
 
       // Fallback to any available cached data
