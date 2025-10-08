@@ -45,7 +45,7 @@ def load_model_and_labels():
         
         # Set paths
         model_path = 'saved_models/best_model.h5'
-        labels_path = 'saved_models/crop_type_labels.txt'
+        labels_path = 'labels.txt'  # Use disease labels instead of crop type labels
         
         # Check if files exist
         if not os.path.exists(model_path):
@@ -162,13 +162,36 @@ def analyze_crop():
         # Get prediction results
         predicted_class_idx = np.argmax(predictions[0])
         confidence = float(predictions[0][predicted_class_idx])
-        predicted_crop = labels[predicted_class_idx] if predicted_class_idx < len(labels) else "Unknown"
+        predicted_disease = labels[predicted_class_idx] if predicted_class_idx < len(labels) else "Unknown"
         
-        logger.info(f"✅ Prediction: {predicted_crop} (confidence: {confidence:.4f})")
+        # Extract crop type and disease from the label (format: "Crop___Disease" or "Crop___Healthy")
+        crop_type = "Unknown"
+        disease_type = "Unknown"
+        is_healthy = False
+        
+        if "___" in predicted_disease:
+            parts = predicted_disease.split("___")
+            crop_type = parts[0]
+            disease_type = parts[1]
+            is_healthy = "Healthy" in disease_type
+        elif "_" in predicted_disease:
+            # Handle cases like "Sugarcane_Bacterial Blight"
+            parts = predicted_disease.split("_", 1)
+            crop_type = parts[0]
+            disease_type = parts[1]
+            is_healthy = "Healthy" in disease_type
+        
+        logger.info(f"✅ Prediction: {predicted_disease} (confidence: {confidence:.4f})")
+        logger.info(f"📊 Crop: {crop_type}, Disease: {disease_type}, Healthy: {is_healthy}")
         
         return jsonify({
-            'prediction': predicted_crop,
+            'prediction': predicted_disease,
+            'crop_type': crop_type,
+            'disease_type': disease_type,
+            'is_healthy': is_healthy,
+            'health_status': 'healthy' if is_healthy else 'unhealthy',
             'confidence': confidence,
+            'prediction_class': int(predicted_class_idx),
             'all_predictions': {
                 labels[i]: float(predictions[0][i]) 
                 for i in range(min(len(labels), len(predictions[0])))
