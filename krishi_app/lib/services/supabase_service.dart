@@ -9,7 +9,14 @@ class SupabaseService {
 
   final ConfigService _configService = ConfigService();
 
-  SupabaseClient get client => Supabase.instance.client;
+  SupabaseClient get client {
+    if (!_isInitialized) {
+      throw Exception(
+        'SupabaseService not initialized. Call initialize() first.',
+      );
+    }
+    return Supabase.instance.client;
+  }
 
   bool _isInitialized = false;
   bool get isInitialized => _isInitialized;
@@ -226,6 +233,84 @@ class SupabaseService {
       debugPrint('✅ [SupabaseService] Image deleted successfully');
     } catch (e) {
       debugPrint('❌ [SupabaseService] Error deleting image: $e');
+      rethrow;
+    }
+  }
+
+  /// Analysis Operations
+
+  // Get all crop analyses
+  Future<List<Map<String, dynamic>>> getCropAnalyses({String? userId}) async {
+    try {
+      final query = client.from('crop_analyses').select();
+
+      if (userId != null) {
+        query.eq('user_id', userId);
+      }
+
+      final response = await query.order('created_at', ascending: false);
+      debugPrint(
+        '✅ [SupabaseService] Retrieved ${response.length} crop analyses',
+      );
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      debugPrint('❌ [SupabaseService] Error getting crop analyses: $e');
+      rethrow;
+    }
+  }
+
+  // Insert crop analysis
+  Future<Map<String, dynamic>> insertCropAnalysis(
+    Map<String, dynamic> analysisData,
+  ) async {
+    try {
+      // Add user_id if authenticated
+      if (isAuthenticated) {
+        analysisData['user_id'] = currentUser!.id;
+      }
+
+      final response = await client
+          .from('crop_analyses')
+          .insert(analysisData)
+          .select()
+          .single();
+
+      debugPrint('✅ [SupabaseService] Crop analysis inserted successfully');
+      return response;
+    } catch (e) {
+      debugPrint('❌ [SupabaseService] Error inserting crop analysis: $e');
+      rethrow;
+    }
+  }
+
+  // Update crop analysis
+  Future<Map<String, dynamic>> updateCropAnalysis(
+    String id,
+    Map<String, dynamic> updates,
+  ) async {
+    try {
+      final response = await client
+          .from('crop_analyses')
+          .update(updates)
+          .eq('id', id)
+          .select()
+          .single();
+
+      debugPrint('✅ [SupabaseService] Crop analysis updated successfully');
+      return response;
+    } catch (e) {
+      debugPrint('❌ [SupabaseService] Error updating crop analysis: $e');
+      rethrow;
+    }
+  }
+
+  // Delete crop analysis
+  Future<void> deleteCropAnalysis(String id) async {
+    try {
+      await client.from('crop_analyses').delete().eq('id', id);
+      debugPrint('✅ [SupabaseService] Crop analysis deleted successfully');
+    } catch (e) {
+      debugPrint('❌ [SupabaseService] Error deleting crop analysis: $e');
       rethrow;
     }
   }

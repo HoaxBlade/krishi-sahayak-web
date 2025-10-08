@@ -16,6 +16,7 @@ import 'services/image_storage_service.dart';
 import 'services/background_sync_service.dart';
 import 'services/push_notification_service.dart';
 import 'services/config_service.dart';
+import 'services/supabase_service.dart';
 import 'services/weather_service.dart';
 import 'services/ml_service.dart';
 import 'services/location_service.dart';
@@ -44,6 +45,9 @@ void main() async {
 
   // Initialize configuration service first
   await ConfigService().initialize();
+
+  // Initialize Supabase Service
+  await SupabaseService().initialize();
 
   // Initialize Location Service
   await LocationService().initialize();
