@@ -52,7 +52,7 @@ class _CropAnalysisResultState extends State<CropAnalysisResult> {
         confidence = (widget.result['confidence'] as num).toDouble();
       }
     }
-    confidence = confidence * 100;
+   
 
     // Safely convert prediction class to int
     int predictionClass = 0;

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 import 'connectivity_service.dart';
 import 'local_ml_service.dart';
@@ -12,7 +13,7 @@ import 'firebase_analytics_service.dart';
 
 class MLService {
   static const String baseUrl =
-      'http://35.222.33.77'; // Kubernetes ML server on Google Cloud
+      'http://34.133.74.201'; // Kubernetes ML server on Google Cloud
   // Use 'http://10.0.2.2:5001' for Android emulator
   // Use 'http://localhost:5001' for iOS simulator
 
@@ -290,34 +291,33 @@ class MLService {
       '✅ [MLService] Image compression completed in ${compressionStart.elapsedMilliseconds}ms',
     );
 
-    // Track base64 conversion
-    debugPrint('🔄 [MLService] Converting image to base64...');
-    final base64Start = Stopwatch()..start();
-    String base64Image = base64Encode(imageBytes);
-    String imageData = 'data:image/jpeg;base64,$base64Image';
-    base64Start.stop();
-    debugPrint(
-      '✅ [MLService] Base64 conversion completed in ${base64Start.elapsedMilliseconds}ms',
-    );
-
-    // Prepare request body
-    Map<String, dynamic> requestBody = {'image': imageData};
-    if (cropType != null) {
-      requestBody['crop_type'] = cropType;
-    }
-
     // Choose endpoint based on whether crop type is specified
     String endpoint = cropType != null
         ? '/analyze_crop_direct'
         : '/analyze_crop';
     debugPrint('🌐 [MLService] Using endpoint: $endpoint');
 
-    final requestStart = Stopwatch()..start();
-    final response = await _client.post(
-      Uri.parse('$baseUrl$endpoint'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(requestBody),
+    // Prepare multipart request for file upload
+    var request = http.MultipartRequest('POST', Uri.parse('$baseUrl$endpoint'));
+
+    // Add the image file
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'image',
+        imageBytes,
+        filename: 'crop_image.jpg',
+        contentType: MediaType('image', 'jpeg'),
+      ),
     );
+
+    // Add crop type if specified
+    if (cropType != null) {
+      request.fields['crop_type'] = cropType;
+    }
+
+    final requestStart = Stopwatch()..start();
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
     requestStart.stop();
 
     debugPrint(
@@ -326,8 +326,14 @@ class MLService {
     debugPrint('📊 [MLService] Response status: ${response.statusCode}');
 
     if (response.statusCode == 200) {
-      final result = jsonDecode(response.body);
+      debugPrint('📊 [MLService] Raw multi-model response: ${response.body}');
+      final serverResult = jsonDecode(response.body);
       debugPrint('✅ [MLService] Multi-model analysis successful');
+      debugPrint('📊 [MLService] Multi-model result: $serverResult');
+
+      // Map server response to expected UI format
+      final result = _mapServerResponseToUIFormat(serverResult);
+      debugPrint('📊 [MLService] Mapped multi-model result: $result');
       return result;
     } else {
       debugPrint(
@@ -355,34 +361,31 @@ class MLService {
       '📊 [MLService] Compressed size: ${imageBytes.length} bytes (${(imageBytes.length / 1024).toStringAsFixed(2)} KB)',
     );
 
-    // Track base64 conversion
-    debugPrint('🔄 [MLService] Converting image to base64...');
-    final base64Start = Stopwatch()..start();
-    String base64Image = base64Encode(imageBytes);
-    String imageData = 'data:image/jpeg;base64,$base64Image';
-    base64Start.stop();
-    debugPrint(
-      '✅ [MLService] Base64 conversion completed in ${base64Start.elapsedMilliseconds}ms',
-    );
-    debugPrint(
-      '📊 [MLService] Base64 string length: ${imageData.length} characters',
-    );
-
     // Track network request preparation
     debugPrint(
-      '🌐 [MLService] Preparing network request to $baseUrl/analyze_crop...',
-    );
-    debugPrint(
-      '📊 [MLService] Request payload size: ${jsonEncode({'image': imageData}).length} characters',
+      '🌐 [MLService] Preparing file upload request to $baseUrl/analyze_crop...',
     );
     final requestStart = Stopwatch()..start();
 
-    // Prepare request
-    final response = await _client.post(
+    // Prepare multipart request for file upload
+    var request = http.MultipartRequest(
+      'POST',
       Uri.parse('$baseUrl/analyze_crop'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'image': imageData}),
     );
+
+    // Add the image file
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'image',
+        imageBytes,
+        filename: 'crop_image.jpg',
+        contentType: MediaType('image', 'jpeg'),
+      ),
+    );
+
+    // Send the request
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
 
     requestStart.stop();
     debugPrint(
@@ -395,18 +398,17 @@ class MLService {
     debugPrint('📊 [MLService] Response headers: ${response.headers}');
 
     if (response.statusCode == 200) {
-      final result = jsonDecode(response.body);
+      debugPrint('📊 [MLService] Raw server response: ${response.body}');
+      final serverResult = jsonDecode(response.body);
       debugPrint('✅ [MLService] Server analysis successful');
-      debugPrint('📊 [MLService] Final result keys: ${result.keys.toList()}');
+      debugPrint('📊 [MLService] Parsed result: $serverResult');
       debugPrint(
-        '📊 [MLService] Confidence type: ${result['confidence'].runtimeType}',
+        '📊 [MLService] Final result keys: ${serverResult.keys.toList()}',
       );
-      debugPrint(
-        '📊 [MLService] Prediction class type: ${result['prediction_class'].runtimeType}',
-      );
-      debugPrint(
-        '📊 [MLService] All predictions type: ${result['all_predictions'].runtimeType}',
-      );
+
+      // Map server response to expected UI format
+      final result = _mapServerResponseToUIFormat(serverResult);
+      debugPrint('📊 [MLService] Mapped result: $result');
 
       // Extract new Gemini analysis fields
       final String? geminiAnalysisEnglish = result['gemini_analysis_english'];
@@ -593,5 +595,94 @@ class MLService {
     debugPrint('🧹 [MLService] Disposing ML service...');
     _client.close();
     _localML.dispose();
+  }
+
+  /// Maps server response to UI-expected format
+  Map<String, dynamic> _mapServerResponseToUIFormat(
+    Map<String, dynamic> serverResult,
+  ) {
+    // Get the prediction with highest confidence
+    final allPredictions =
+        serverResult['all_predictions'] as Map<String, dynamic>? ?? {};
+    String cropType = 'Unknown';
+    double maxConfidence = 0.0;
+    int predictionClass = 0;
+
+    if (allPredictions.isNotEmpty) {
+      int classIndex = 0;
+      allPredictions.forEach((crop, confidence) {
+        final conf = (confidence as num).toDouble();
+        if (conf > maxConfidence) {
+          maxConfidence = conf;
+          cropType = crop;
+          predictionClass = classIndex;
+        }
+        classIndex++;
+      });
+    }
+
+    // Determine health status based on main confidence (not maxConfidence from all_predictions)
+    String healthStatus = 'unknown';
+    bool isHealthy = false;
+
+    // Use the main confidence field for health determination
+    double mainConfidence = (serverResult['confidence'] as num? ?? 0.0)
+        .toDouble();
+
+    if (mainConfidence > 0.8) {
+      healthStatus = 'healthy';
+      isHealthy = true;
+    } else if (mainConfidence > 0.5) {
+      healthStatus = 'moderate';
+      isHealthy = false;
+    } else {
+      healthStatus = 'unhealthy';
+      isHealthy = false;
+    }
+
+    debugPrint(
+      '📊 [MLService] Health determination - mainConfidence: $mainConfidence, healthStatus: $healthStatus, isHealthy: $isHealthy',
+    );
+
+    // Convert confidence to percentage (ensure it's between 0-100)
+    double rawConfidence = (serverResult['confidence'] as num? ?? 0.0)
+        .toDouble();
+    debugPrint('📊 [MLService] Raw confidence from server: $rawConfidence');
+
+    double confidencePercent = rawConfidence;
+
+    // If confidence is already a percentage (> 1), use it as is
+    // If confidence is a decimal (< 1), convert to percentage
+    if (rawConfidence <= 1.0) {
+      confidencePercent = rawConfidence * 100;
+    }
+
+    debugPrint(
+      '📊 [MLService] Calculated confidence percent: $confidencePercent',
+    );
+
+    // Ensure confidence is within reasonable bounds (0-100)
+    confidencePercent = confidencePercent.clamp(0.0, 100.0);
+
+    debugPrint('📊 [MLService] Final confidence percent: $confidencePercent');
+
+    return {
+      // Core fields
+      'crop_type': cropType,
+      'health_status': healthStatus,
+      'is_healthy': isHealthy,
+      'confidence': confidencePercent,
+      'prediction_class': predictionClass,
+      'prediction': cropType,
+
+      // Server response fields
+      'all_predictions': allPredictions,
+      'status': serverResult['status'] ?? 'success',
+
+      // Analysis metadata
+      'model_type': 'server',
+      'analysis_mode': 'online',
+      'processing_time': '${DateTime.now().millisecondsSinceEpoch}ms',
+    };
   }
 }
