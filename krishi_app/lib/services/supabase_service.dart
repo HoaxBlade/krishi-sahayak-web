@@ -237,6 +237,178 @@ class SupabaseService {
     }
   }
 
+  /// Marketplace Operations
+
+  // Get all products
+  Future<List<Map<String, dynamic>>> getProducts({
+    String? category,
+    String? search,
+    double? minPrice,
+    double? maxPrice,
+    String? location,
+    String? sortBy,
+    bool ascending = false,
+    int? page,
+    int? limit,
+  }) async {
+    try {
+      debugPrint('🛒 [SupabaseService] Fetching products...');
+
+      final query = client
+          .from('products')
+          .select('''
+        *,
+        provider_profiles!inner(
+          id,
+          business_name,
+          city,
+          state,
+          rating_avg,
+          verification_status
+        ),
+        categories!inner(
+          id,
+          name
+        )
+      ''')
+          .eq('is_active', true);
+
+      // Apply filters
+      var filteredQuery = query;
+      if (category != null && category.isNotEmpty && category != 'all') {
+        filteredQuery = filteredQuery.eq('categories.name', category);
+      }
+
+      if (search != null && search.isNotEmpty) {
+        filteredQuery = filteredQuery.or(
+          'name.ilike.%$search%,description.ilike.%$search%',
+        );
+      }
+
+      if (minPrice != null) {
+        filteredQuery = filteredQuery.gte('price', minPrice);
+      }
+
+      if (maxPrice != null) {
+        filteredQuery = filteredQuery.lte('price', maxPrice);
+      }
+
+      if (location != null && location.isNotEmpty) {
+        filteredQuery = filteredQuery.or(
+          'provider_profiles.city.ilike.%$location%,provider_profiles.state.ilike.%$location%',
+        );
+      }
+
+      // Apply sorting and pagination
+      final sortField = sortBy ?? 'created_at';
+      final response = await filteredQuery
+          .order(sortField, ascending: ascending)
+          .range(
+            page != null && limit != null ? (page - 1) * limit : 0,
+            page != null && limit != null
+                ? (page - 1) * limit + limit - 1
+                : 1000,
+          );
+      debugPrint('✅ [SupabaseService] Retrieved ${response.length} products');
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      debugPrint('❌ [SupabaseService] Error getting products: $e');
+      rethrow;
+    }
+  }
+
+  // Get product categories
+  Future<List<Map<String, dynamic>>> getCategories() async {
+    try {
+      debugPrint('📂 [SupabaseService] Fetching categories...');
+
+      final response = await client
+          .from('categories')
+          .select('*')
+          .eq('is_active', true)
+          .order('name', ascending: true);
+
+      debugPrint('✅ [SupabaseService] Retrieved ${response.length} categories');
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      debugPrint('❌ [SupabaseService] Error getting categories: $e');
+      rethrow;
+    }
+  }
+
+  // Create order
+  Future<Map<String, dynamic>> createOrder({
+    required String productId,
+    required int quantity,
+    required Map<String, dynamic> shippingAddress,
+    String? notes,
+  }) async {
+    try {
+      debugPrint('🛒 [SupabaseService] Creating order for product: $productId');
+
+      if (!isAuthenticated) {
+        throw Exception('User must be authenticated to create orders');
+      }
+
+      // Get product details first
+      final productResponse = await client
+          .from('products')
+          .select('''
+            *,
+            provider_profiles!inner(
+              id,
+              business_name
+            )
+          ''')
+          .eq('id', productId)
+          .single();
+
+      final product = productResponse;
+      final providerId = product['provider_profiles']['id'];
+      final unitPrice = product['price'] as double;
+      final totalAmount = unitPrice * quantity;
+
+      // Generate order number
+      final orderNumber = 'ORD-${DateTime.now().millisecondsSinceEpoch}';
+
+      final orderData = {
+        'farmer_id': currentUser!.id,
+        'provider_id': providerId,
+        'order_number': orderNumber,
+        'status': 'pending',
+        'total_amount': totalAmount,
+        'payment_status': 'pending',
+        'shipping_address': shippingAddress,
+        'notes': notes,
+      };
+
+      final response = await client
+          .from('orders')
+          .insert(orderData)
+          .select()
+          .single();
+
+      // Create order items
+      final orderItemData = {
+        'order_id': response['id'],
+        'product_id': productId,
+        'quantity': quantity,
+        'unit_price': unitPrice,
+        'total_price': totalAmount,
+      };
+
+      await client.from('order_items').insert(orderItemData);
+
+      debugPrint(
+        '✅ [SupabaseService] Order created successfully: ${response['id']}',
+      );
+      return response;
+    } catch (e) {
+      debugPrint('❌ [SupabaseService] Error creating order: $e');
+      rethrow;
+    }
+  }
+
   /// Analysis Operations
 
   // Get all crop analyses

@@ -24,6 +24,7 @@ import 'screens/home_screen.dart';
 import 'screens/crop_screen.dart';
 import 'screens/weather_screen.dart';
 import 'screens/harvest_screen.dart';
+import 'screens/service_request_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -326,6 +327,7 @@ class _MainScreenState extends State<MainScreen> {
     CropScreen(),
     HarvestScreen(),
     WeatherScreen(),
+    ServiceRequestScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -344,6 +346,7 @@ class _MainScreenState extends State<MainScreen> {
           CropScreen(),
           HarvestScreen(),
           WeatherScreen(),
+          ServiceRequestScreen(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -363,6 +366,10 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Harvest',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.wb_sunny), label: 'Weather'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_cart),
+            label: 'Marketplace',
+          ),
         ],
       ),
     );
