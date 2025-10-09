@@ -15,12 +15,15 @@ import {
   CreditCard,
   Filter,
   X,
-  ChevronDown
+  ChevronDown,
+  Edit,
+  Trash2
 } from 'lucide-react'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { useAuth } from '@/contexts/AuthContext'
 import { MarketplaceService, Product, Category } from '@/lib/marketplaceService'
 import AddProductModal from '@/components/AddProductModal'
+import EditProductModal from '@/components/EditProductModal'
 
 export default function MarketplacePage() {
   const { user } = useAuth()
@@ -33,6 +36,8 @@ export default function MarketplacePage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [showRentalModal, setShowRentalModal] = useState(false)
   const [showAddProductModal, setShowAddProductModal] = useState(false)
+  const [showEditProductModal, setShowEditProductModal] = useState(false)
+  const [productToEdit, setProductToEdit] = useState<Product | null>(null)
   
   // Advanced filter states
   const [showFilters, setShowFilters] = useState(false)
@@ -143,6 +148,74 @@ export default function MarketplacePage() {
   // Handle buy now
   const handleBuyNow = (product: Product) => {
     // TODO: Implement buy now functionality
+  }
+
+  // Handle edit product
+  const handleEditProduct = (product: Product) => {
+    setProductToEdit(product)
+    setShowEditProductModal(true)
+  }
+
+  // Handle delete product
+  const handleDeleteProduct = async (product: Product) => {
+    if (window.confirm('Are you sure you want to delete this product?')) {
+      try {
+        await marketplaceService.deleteProduct(product.id)
+        // Refresh products list
+        // Refresh products list
+        const productsResponse = await marketplaceService.getProducts({
+          category: selectedCategory === 'all' ? undefined : selectedCategory,
+          search: searchQuery || undefined,
+          minPrice: priceRange.min ? parseFloat(priceRange.min) : undefined,
+          maxPrice: priceRange.max ? parseFloat(priceRange.max) : undefined,
+          location: location || undefined,
+          sortBy,
+          sortOrder,
+          page: pagination.page,
+          limit: 12
+        })
+        setProducts(productsResponse.products || [])
+      } catch (error) {
+        console.error('Error deleting product:', error)
+      }
+    }
+  }
+
+  // Check if current user is the product owner
+  const isProductOwner = (product: Product) => {
+    // For now, we'll check if the user is logged in and show owner actions
+    // todo: Implement proper ownership check by comparing provider profile IDs
+    // This would require getting the current user's provider profile ID
+    return !!user
+  }
+
+  // Refresh products list
+  const refreshProducts = async () => {
+    try {
+      setLoading(true)
+      const productsResponse = await marketplaceService.getProducts({
+        category: selectedCategory === 'all' ? undefined : selectedCategory,
+        search: searchQuery || undefined,
+        minPrice: priceRange.min ? parseFloat(priceRange.min) : undefined,
+        maxPrice: priceRange.max ? parseFloat(priceRange.max) : undefined,
+        location: location || undefined,
+        sortBy,
+        sortOrder,
+        page: pagination.page,
+        limit: 12
+      })
+      
+      setProducts(productsResponse.products || [])
+      setPagination({
+        page: productsResponse.pagination?.page || 1,
+        totalPages: productsResponse.pagination?.totalPages || 1,
+        total: productsResponse.pagination?.total || 0
+      })
+    } catch (error) {
+      setError('Failed to refresh products')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -405,8 +478,8 @@ export default function MarketplacePage() {
                     <div className="w-full h-full flex items-center justify-center text-gray-400">
                       <ShoppingCart className="w-12 h-12" />
                     </div>
-                    {/* Product Type Badge */}
-                    <div className="absolute top-3 left-3">
+                    {/* Product Type Badge and Owner Badge */}
+                    <div className="absolute top-3 left-3 flex gap-2">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                         product.product_type === 'rentable' 
                           ? 'bg-blue-100 text-blue-800' 
@@ -414,6 +487,11 @@ export default function MarketplacePage() {
                       }`}>
                         {product.product_type === 'rentable' ? 'Rent' : 'Buy'}
                       </span>
+                      {isProductOwner(product) && (
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                          Your Product
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -495,26 +573,48 @@ export default function MarketplacePage() {
 
                     {/* Action Buttons */}
                     <div className="flex gap-2">
-                      {product.product_type === 'rentable' ? (
-                        <button 
-                          onClick={() => handleRentalBooking(product)}
-                          className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center text-sm"
-                        >
-                          <Calendar className="w-3 h-3 mr-1" />
-                          Rent Now
-                        </button>
+                      {isProductOwner(product) ? (
+                        // Owner actions: Edit and Delete
+                        <>
+                          <button 
+                            onClick={() => handleEditProduct(product)}
+                            className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center text-sm"
+                          >
+                            <Edit className="w-3 h-3 mr-1" />
+                            Edit
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteProduct(product)}
+                            className="bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center text-sm"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </>
                       ) : (
-                        <button 
-                          onClick={() => handleBuyNow(product)}
-                          className="flex-1 bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center text-sm"
-                        >
-                          <CreditCard className="w-3 h-3 mr-1" />
-                          Buy Now
-                        </button>
+                        // Buyer actions: Buy/Rent and Call
+                        <>
+                          {product.product_type === 'rentable' ? (
+                            <button 
+                              onClick={() => handleRentalBooking(product)}
+                              className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center text-sm"
+                            >
+                              <Calendar className="w-3 h-3 mr-1" />
+                              Rent Now
+                            </button>
+                          ) : (
+                            <button 
+                              onClick={() => handleBuyNow(product)}
+                              className="flex-1 bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center text-sm"
+                            >
+                              <CreditCard className="w-3 h-3 mr-1" />
+                              Buy Now
+                            </button>
+                          )}
+                          <button className="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center text-sm">
+                            <Phone className="w-3 h-3" />
+                          </button>
+                        </>
                       )}
-                      <button className="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center text-sm">
-                        <Phone className="w-3 h-3" />
-                      </button>
                     </div>
                   </div>
                 </motion.div>
@@ -709,6 +809,14 @@ export default function MarketplacePage() {
         <AddProductModal 
           isOpen={showAddProductModal}
           onClose={() => setShowAddProductModal(false)}
+        />
+
+        {/* Edit Product Modal */}
+        <EditProductModal 
+          isOpen={showEditProductModal}
+          onClose={() => setShowEditProductModal(false)}
+          product={productToEdit}
+          onProductUpdated={refreshProducts}
         />
       </div>
     </ProtectedRoute>

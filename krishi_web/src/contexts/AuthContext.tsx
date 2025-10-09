@@ -12,6 +12,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, metadata?: { full_name?: string; phone?: string }) => Promise<void>
   signOut: () => Promise<void>
   updateProfile: (updates: { full_name?: string; phone?: string }) => Promise<void>
+  clearAuthCache: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -96,6 +97,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     await authService.updateProfile(updates)
   }
 
+  const clearAuthCache = async () => {
+    const authService = AuthService.getInstance()
+    await authService.clearAuthCache()
+  }
+
+  const resendConfirmation = async (email: string) => {
+    const authService = AuthService.getInstance()
+    return await authService.resendConfirmation(email)
+  }
+
   const value = {
     user,
     loading,
@@ -103,7 +114,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signIn,
     signUp,
     signOut,
-    updateProfile
+    updateProfile,
+    clearAuthCache,
+    resendConfirmation
   }
 
   return (
