@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { X } from 'lucide-react'
+import { MarketplaceService } from '@/lib/marketplaceService'
 
 interface AddProductModalProps {
   isOpen: boolean
@@ -44,6 +45,10 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
 
   const [currentStep, setCurrentStep] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+
+  const marketplaceService = MarketplaceService.getInstance()
 
   const categories = [
     'Fresh Crops',
@@ -89,49 +94,98 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
 
   const handleSubmit = async () => {
     setLoading(true)
+    setError(null)
     
     try {
-      // TODO: Implement product creation API call
+      // Validate required fields
+      if (!formData.name || !formData.description || !formData.price || !formData.category) {
+        setError('Please fill in all required fields')
+        return
+      }
+
+      // Prepare product data for API
+      const productData = {
+        name: formData.name,
+        description: formData.description,
+        price: parseFloat(formData.price),
+        discount_price: formData.discountPrice ? parseFloat(formData.discountPrice) : undefined,
+        category_id: formData.category, // This will be the category name for now
+        stock_quantity: parseInt(formData.stockQuantity),
+        min_order_quantity: parseInt(formData.minOrderQuantity) || 1,
+        unit: formData.unit,
+        images: formData.images,
+        specifications: formData.specifications,
+        // Add rental fields if product type is rentable
+        ...(formData.productType === 'rentable' && {
+          product_type: 'rentable' as const,
+          rental_price_per_day: formData.rentalPricePerDay ? parseFloat(formData.rentalPricePerDay) : undefined,
+          rental_price_per_week: formData.rentalPricePerWeek ? parseFloat(formData.rentalPricePerWeek) : undefined,
+          rental_price_per_month: formData.rentalPricePerMonth ? parseFloat(formData.rentalPricePerMonth) : undefined,
+          min_rental_days: parseInt(formData.minRentalDays) || 1,
+          max_rental_days: formData.maxRentalDays ? parseInt(formData.maxRentalDays) : undefined,
+          requires_deposit: formData.requiresDeposit,
+          deposit_amount: formData.depositAmount ? parseFloat(formData.depositAmount) : undefined,
+        }),
+        // Add buyable fields if product type is buyable
+        ...(formData.productType === 'buyable' && {
+          product_type: 'buyable' as const,
+        })
+      }
+
+      // Call the actual API
+      await marketplaceService.createProduct(productData)
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      setSuccess(true)
       
-      // Reset form and close modal
-      setFormData({
-        name: '',
-        description: '',
-        price: '',
-        discountPrice: '',
-        stockQuantity: '',
-        minOrderQuantity: '1',
-        unit: '',
-        productType: 'buyable',
-        category: '',
-        rentalPricePerDay: '',
-        rentalPricePerWeek: '',
-        rentalPricePerMonth: '',
-        minRentalDays: '1',
-        maxRentalDays: '',
-        requiresDeposit: false,
-        depositAmount: '',
-        images: [],
-        specifications: {
-          variety: '',
-          color: '',
-          size: '',
-          organic: false,
-          material: '',
-          weight: '',
-          dimensions: ''
-        }
-      })
-      setCurrentStep(1)
-      onClose()
-    } catch (error) {
+      // Reset form and close modal after a short delay
+      setTimeout(() => {
+        resetForm()
+        onClose()
+      }, 1500)
+      
+    } catch (error: unknown) {
       console.error('Error creating product:', error)
+      const errorMessage = error instanceof Error && 'response' in error 
+        ? (error as { response?: { data?: { error?: string } } }).response?.data?.error 
+        : 'Failed to create product. Please try again.'
+      setError(errorMessage || 'Failed to create product. Please try again.')
     } finally {
       setLoading(false)
     }
+  }
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      description: '',
+      price: '',
+      discountPrice: '',
+      stockQuantity: '',
+      minOrderQuantity: '1',
+      unit: '',
+      productType: 'buyable',
+      category: '',
+      rentalPricePerDay: '',
+      rentalPricePerWeek: '',
+      rentalPricePerMonth: '',
+      minRentalDays: '1',
+      maxRentalDays: '',
+      requiresDeposit: false,
+      depositAmount: '',
+      images: [],
+      specifications: {
+        variety: '',
+        color: '',
+        size: '',
+        organic: false,
+        material: '',
+        weight: '',
+        dimensions: ''
+      }
+    })
+    setCurrentStep(1)
+    setError(null)
+    setSuccess(false)
   }
 
   const nextStep = () => setCurrentStep(prev => prev + 1)
@@ -533,6 +587,25 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                     />
                     <span className="text-sm text-gray-700">Organic Product</span>
                   </label>
+                </div>
+              </div>
+            )}
+
+            {/* Error and Success Messages */}
+            {error && (
+              <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center">
+                  <div className="text-red-600 text-sm font-medium">{error}</div>
+                </div>
+              </div>
+            )}
+
+            {success && (
+              <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center">
+                  <div className="text-green-600 text-sm font-medium">
+                    ✅ Product created successfully! 
+                  </div>
                 </div>
               </div>
             )}

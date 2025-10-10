@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { createClient, User } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -41,7 +42,6 @@ export class AuthService {
   // Sign up with email and password
   async signUp({ email, password, metadata }: SignUpData) {
     try {
-      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -51,13 +51,11 @@ export class AuthService {
       })
 
       if (error) {
-        console.error('❌ [AuthService] Sign up failed:', error.message)
         throw new Error(error.message)
       }
 
       return { data, error: null }
     } catch (error) {
-      console.error('❌ [AuthService] Sign up error:', error)
       throw error
     }
   }
@@ -65,20 +63,22 @@ export class AuthService {
   // Sign in with email and password
   async signIn({ email, password }: SignInData) {
     try {
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       })
 
       if (error) {
-        console.error('❌ [AuthService] Sign in failed:', error.message)
         throw new Error(error.message)
+      }
+
+      // Create provider profile if it doesn't exist
+      if (data.user) {
+        await this.ensureProviderProfile(data.user.id)
       }
 
       return { data, error: null }
     } catch (error) {
-      console.error('❌ [AuthService] Sign in error:', error)
       throw error
     }
   }
@@ -86,16 +86,53 @@ export class AuthService {
   // Sign out
   async signOut() {
     try {
-      
       const { error } = await supabase.auth.signOut()
       
       if (error) {
-        console.error('❌ [AuthService] Sign out failed:', error.message)
+        throw new Error(error.message)
+      }
+    } catch (error) {
+      throw error
+    }
+  }
+
+  // Clear all cached auth data
+  async clearAuthCache() {
+    try {
+      // Sign out from Supabase
+      await supabase.auth.signOut()
+
+      // Clear localStorage
+      if (typeof window !== 'undefined') {
+        // Clear Supabase auth storage
+        localStorage.removeItem('sb-' + supabaseUrl.split('//')[1].split('.')[0] + '-auth-token')
+
+        // Clear any other auth-related storage
+        Object.keys(localStorage).forEach(key => {
+          if (key.includes('supabase') || key.includes('auth')) {
+            localStorage.removeItem(key)
+          }
+        })
+      }
+    } catch (error) {
+      throw error
+    }
+  }
+
+  // Resend confirmation email
+  async resendConfirmation(email: string) {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email
+      })
+
+      if (error) {
         throw new Error(error.message)
       }
 
+      return { success: true }
     } catch (error) {
-      console.error('❌ [AuthService] Sign out error:', error)
       throw error
     }
   }
@@ -115,8 +152,7 @@ export class AuthService {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       return user !== null
-    } catch (error) {
-      console.error('❌ [AuthService] Error checking authentication:', error)
+    } catch {
       return false
     }
   }
@@ -132,18 +168,14 @@ export class AuthService {
   // Reset password
   async resetPassword(email: string) {
     try {
-      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`
       })
 
       if (error) {
-        console.error('❌ [AuthService] Password reset failed:', error.message)
         throw new Error(error.message)
       }
-
     } catch (error) {
-      console.error('❌ [AuthService] Password reset error:', error)
       throw error
     }
   }
@@ -151,19 +183,16 @@ export class AuthService {
   // Update user profile
   async updateProfile(updates: { full_name?: string; phone?: string }) {
     try {
-      
       const { data, error } = await supabase.auth.updateUser({
         data: updates
       })
 
       if (error) {
-        console.error('❌ [AuthService] Profile update failed:', error.message)
         throw new Error(error.message)
       }
 
       return { data, error: null }
     } catch (error) {
-      console.error('❌ [AuthService] Profile update error:', error)
       throw error
     }
   }
@@ -173,9 +202,60 @@ export class AuthService {
     try {
       const { error } = await supabase.from('crops').select('id').limit(1)
       return !error
-    } catch (error) {
-      console.error('❌ [AuthService] Connection check failed:', error)
+    } catch {
       return false
+    }
+  }
+
+  // Check if user exists in Supabase Auth
+  async checkUserExists(): Promise<boolean> {
+    // Note: This method requires service role key, not anon key
+    // For now, we'll return false and let the sign-in process handle it
+    return false
+  }
+
+  // Ensure provider profile exists for user
+  async ensureProviderProfile(userId: string): Promise<void> {
+    try {
+      // Check if provider profile already exists
+      const { data: existingProfile, error: checkError } = await supabase
+        .from('provider_profiles')
+        .select('id')
+        .eq('user_id', userId)
+        .single()
+
+      // If profile exists, no need to create
+      if (existingProfile && !checkError) {
+        return
+      }
+
+      // Create default provider profile
+      const profileData = {
+        user_id: userId,
+        business_name: 'My Business',
+        description: 'Default business profile',
+        business_type: 'individual',
+        address: 'Address not provided',
+        city: 'City not provided',
+        state: 'State not provided',
+        pincode: '000000',
+        phone: '0000000000',
+        rating_avg: 0,
+        total_orders: 0,
+        verification_status: 'pending'
+      }
+      
+      const { error: createError } = await supabase
+        .from('provider_profiles')
+        .insert(profileData)
+        .select('id')
+        .single()
+
+      if (createError) {
+        // Don't throw error - this shouldn't break the login process
+      }
+    } catch (error) {
+      // Don't throw error - this shouldn't break the login process
     }
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/ml_service.dart';
+import '../services/analysis_service.dart';
 import '../widgets/crop_analysis_result.dart';
 
 class CameraScreen extends StatefulWidget {
@@ -13,7 +14,9 @@ class CameraScreen extends StatefulWidget {
 class _CameraScreenState extends State<CameraScreen> {
   final ImagePicker _picker = ImagePicker();
   final MLService _mlService = MLService();
+  final AnalysisService _analysisService = AnalysisService();
   bool _isAnalyzing = false;
+  bool _isSaving = false;
   Map<String, dynamic>? _analysisResult;
 
   Future<void> _takePhoto() async {
@@ -103,6 +106,9 @@ class _CameraScreenState extends State<CameraScreen> {
         '📊 [CameraScreen] Analysis result received: ${result.keys.toList()}',
       );
 
+      // Save analysis result to Supabase
+      await _saveAnalysisResult(imageFile, result);
+
       // Show appropriate dialog based on model type
       _showAnalysisResultDialog(result);
     } catch (e) {
@@ -119,6 +125,55 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
+  Future<void> _saveAnalysisResult(
+    XFile imageFile,
+    Map<String, dynamic> result,
+  ) async {
+    try {
+      setState(() {
+        _isSaving = true;
+      });
+
+      debugPrint('💾 [CameraScreen] Saving analysis result to Supabase...');
+      final savedAnalysis = await _analysisService.saveAnalysisResult(
+        imageFile: imageFile,
+        analysisResult: result,
+      );
+
+      if (savedAnalysis != null) {
+        debugPrint(
+          '✅ [CameraScreen] Analysis saved successfully with ID: ${savedAnalysis.id}',
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Analysis saved successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        debugPrint('⚠️ [CameraScreen] Analysis save returned null');
+      }
+    } catch (e) {
+      debugPrint('❌ [CameraScreen] Error saving analysis result: $e');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save analysis: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setState(() {
+        _isSaving = false;
+      });
+    }
+  }
+
   void _showAnalysisResultDialog(Map<String, dynamic> result) {
     final modelType = result['model_type'] ?? 'unknown';
     final analysisMode = result['analysis_mode'] ?? 'unknown';
@@ -128,24 +183,43 @@ class _CameraScreenState extends State<CameraScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), // Rounded corners for dialog
-          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0), // Adjusted padding
-          contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0), // Adjusted padding
-          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16), // Adjusted padding
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ), // Rounded corners for dialog
+          titlePadding: const EdgeInsets.fromLTRB(
+            24,
+            24,
+            24,
+            0,
+          ), // Adjusted padding
+          contentPadding: const EdgeInsets.fromLTRB(
+            24,
+            16,
+            24,
+            0,
+          ), // Adjusted padding
+          actionsPadding: const EdgeInsets.fromLTRB(
+            16,
+            0,
+            16,
+            16,
+          ), // Adjusted padding
           title: Row(
             children: [
               Icon(
                 modelType == 'server' ? Icons.cloud : Icons.phone_android,
-                color: modelType == 'server' ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.primary, // Themed icons
+                color: modelType == 'server'
+                    ? Theme.of(context).colorScheme.secondary
+                    : Theme.of(context).colorScheme.primary, // Themed icons
                 size: 24,
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   modelType == 'server' ? 'Server Analysis' : 'Local Analysis',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ),
             ],
@@ -162,13 +236,23 @@ class _CameraScreenState extends State<CameraScreen> {
                     padding: const EdgeInsets.all(10), // Adjusted padding
                     decoration: BoxDecoration(
                       color: modelType == 'server'
-                          ? Theme.of(context).colorScheme.secondary.withOpacity(0.08)
-                          : Theme.of(context).colorScheme.primary.withOpacity(0.08), // Themed colors
-                      borderRadius: BorderRadius.circular(10), // Rounded corners
+                          ? Theme.of(
+                              context,
+                            ).colorScheme.secondary.withOpacity(0.08)
+                          : Theme.of(context).colorScheme.primary.withOpacity(
+                              0.08,
+                            ), // Themed colors
+                      borderRadius: BorderRadius.circular(
+                        10,
+                      ), // Rounded corners
                       border: Border.all(
                         color: modelType == 'server'
-                            ? Theme.of(context).colorScheme.secondary.withOpacity(0.3)
-                            : Theme.of(context).colorScheme.primary.withOpacity(0.3), // Subtle border
+                            ? Theme.of(
+                                context,
+                              ).colorScheme.secondary.withOpacity(0.3)
+                            : Theme.of(context).colorScheme.primary.withOpacity(
+                                0.3,
+                              ), // Subtle border
                         width: 1,
                       ),
                     ),
@@ -180,7 +264,9 @@ class _CameraScreenState extends State<CameraScreen> {
                               : Icons.phone_android,
                           color: modelType == 'server'
                               ? Theme.of(context).colorScheme.secondary
-                              : Theme.of(context).colorScheme.primary, // Themed icons
+                              : Theme.of(
+                                  context,
+                                ).colorScheme.primary, // Themed icons
                           size: 20,
                         ),
                         const SizedBox(width: 8),
@@ -189,12 +275,17 @@ class _CameraScreenState extends State<CameraScreen> {
                             modelType == 'server'
                                 ? '🌐 Professional AI Server Analysis'
                                 : '📱 Local Device Analysis',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: modelType == 'server'
-                                  ? Theme.of(context).colorScheme.secondary.withOpacity(0.9)
-                                  : Theme.of(context).colorScheme.primary.withOpacity(0.9),
-                              fontWeight: FontWeight.w500,
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: modelType == 'server'
+                                      ? Theme.of(
+                                          context,
+                                        ).colorScheme.secondary.withOpacity(0.9)
+                                      : Theme.of(
+                                          context,
+                                        ).colorScheme.primary.withOpacity(0.9),
+                                  fontWeight: FontWeight.w500,
+                                ),
                           ),
                         ),
                       ],
@@ -206,7 +297,9 @@ class _CameraScreenState extends State<CameraScreen> {
                   // Analysis details
                   Text(
                     'Analysis Mode: ${analysisMode.toUpperCase()}',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   Text(
                     'Processing Time: $processingTime',
@@ -223,17 +316,26 @@ class _CameraScreenState extends State<CameraScreen> {
                       padding: const EdgeInsets.all(10), // Adjusted padding
                       decoration: BoxDecoration(
                         color: Colors.orange.shade50,
-                        borderRadius: BorderRadius.circular(10), // Rounded corners
-                        border: Border.all(color: Colors.orange.shade300, width: 1), // Subtle border
+                        borderRadius: BorderRadius.circular(
+                          10,
+                        ), // Rounded corners
+                        border: Border.all(
+                          color: Colors.orange.shade300,
+                          width: 1,
+                        ), // Subtle border
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.info_outline, color: Colors.orange.shade700), // Themed icon
+                          Icon(
+                            Icons.info_outline,
+                            color: Colors.orange.shade700,
+                          ), // Themed icon
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               'Fallback: ${result['fallback_reason']}',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.orange.shade700),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: Colors.orange.shade700),
                             ),
                           ),
                         ],
@@ -246,14 +348,20 @@ class _CameraScreenState extends State<CameraScreen> {
                   // Health status
                   if (result['health_status'] != null) ...[
                     Container(
-                      padding: const EdgeInsets.all(14), // More generous padding
+                      padding: const EdgeInsets.all(
+                        14,
+                      ), // More generous padding
                       decoration: BoxDecoration(
                         color: _getHealthStatusColor(
                           result['health_status'],
                         ).withOpacity(0.1), // Subtle background
-                        borderRadius: BorderRadius.circular(10), // Rounded corners
+                        borderRadius: BorderRadius.circular(
+                          10,
+                        ), // Rounded corners
                         border: Border.all(
-                          color: _getHealthStatusColor(result['health_status']).withOpacity(0.5), // Subtle border
+                          color: _getHealthStatusColor(
+                            result['health_status'],
+                          ).withOpacity(0.5), // Subtle border
                           width: 1.5,
                         ),
                       ),
@@ -273,21 +381,23 @@ class _CameraScreenState extends State<CameraScreen> {
                               children: [
                                 Text(
                                   'Health Status: ${result['health_status'].toString().toUpperCase()}',
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: _getHealthStatusColor(
-                                      result['health_status'],
-                                    ),
-                                  ),
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: _getHealthStatusColor(
+                                          result['health_status'],
+                                        ),
+                                      ),
                                 ),
                                 if (result['confidence'] != null)
                                   Text(
                                     'Confidence: ${result['confidence']}%',
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: _getHealthStatusColor(
-                                        result['health_status'],
-                                      ).withOpacity(0.8),
-                                    ),
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: _getHealthStatusColor(
+                                            result['health_status'],
+                                          ).withOpacity(0.8),
+                                        ),
                                   ),
                               ],
                             ),
@@ -302,7 +412,9 @@ class _CameraScreenState extends State<CameraScreen> {
                     const SizedBox(height: 16),
                     Text(
                       'Prediction: ${result['prediction']}',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ],
@@ -345,9 +457,13 @@ class _CameraScreenState extends State<CameraScreen> {
   Color _getHealthStatusColor(String? status) {
     switch (status?.toLowerCase()) {
       case 'healthy':
-        return Theme.of(context).colorScheme.primary; // Use primary color for healthy
+        return Theme.of(
+          context,
+        ).colorScheme.primary; // Use primary color for healthy
       case 'unhealthy':
-        return Theme.of(context).colorScheme.error; // Use error color for unhealthy
+        return Theme.of(
+          context,
+        ).colorScheme.error; // Use error color for unhealthy
       default:
         return Colors.orange.shade700; // Keep orange for default/unknown
     }
@@ -370,19 +486,24 @@ class _CameraScreenState extends State<CameraScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
           contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
           actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           title: Row(
             children: [
-              Icon(Icons.bug_report, color: Theme.of(context).colorScheme.secondary), // Themed icon
+              Icon(
+                Icons.bug_report,
+                color: Theme.of(context).colorScheme.secondary,
+              ), // Themed icon
               const SizedBox(width: 10),
               Text(
                 'Local ML Debug Info',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -409,16 +530,20 @@ class _CameraScreenState extends State<CameraScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: (status['local_model_status']
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.error)
-                          .withOpacity(0.08), // Themed colors
-                      borderRadius: BorderRadius.circular(10), // Rounded corners
+                      color:
+                          (status['local_model_status']
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context).colorScheme.error)
+                              .withOpacity(0.08), // Themed colors
+                      borderRadius: BorderRadius.circular(
+                        10,
+                      ), // Rounded corners
                       border: Border.all(
-                        color: (status['local_model_status']
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.error)
-                            .withOpacity(0.3), // Subtle border
+                        color:
+                            (status['local_model_status']
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context).colorScheme.error)
+                                .withOpacity(0.3), // Subtle border
                       ),
                     ),
                     child: Text(
@@ -427,8 +552,12 @@ class _CameraScreenState extends State<CameraScreen> {
                           : '❌ Local ML Model Not Ready',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: status['local_model_status']
-                            ? Theme.of(context).colorScheme.primary.withOpacity(0.9)
-                            : Theme.of(context).colorScheme.error.withOpacity(0.9),
+                            ? Theme.of(
+                                context,
+                              ).colorScheme.primary.withOpacity(0.9)
+                            : Theme.of(
+                                context,
+                              ).colorScheme.error.withOpacity(0.9),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -466,11 +595,18 @@ class _CameraScreenState extends State<CameraScreen> {
             const Icon(Icons.error_outline, color: Colors.white),
             const SizedBox(width: 8),
             Expanded(
-              child: Text(message, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white)),
+              child: Text(
+                message,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.white),
+              ),
             ),
           ],
         ),
-        backgroundColor: Theme.of(context).colorScheme.error, // Themed error color
+        backgroundColor: Theme.of(
+          context,
+        ).colorScheme.error, // Themed error color
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 4),
         action: SnackBarAction(
@@ -515,7 +651,9 @@ class _CameraScreenState extends State<CameraScreen> {
                   icon: const Icon(Icons.photo_library),
                   label: const Text('Gallery'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.secondary, // Use secondary color for gallery
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.secondary, // Use secondary color for gallery
                     foregroundColor: Theme.of(context).colorScheme.onSecondary,
                   ),
                 ),
@@ -526,33 +664,67 @@ class _CameraScreenState extends State<CameraScreen> {
 
             // Debug button for testing local ML
             ElevatedButton.icon(
-                  onPressed: _testLocalML,
-                  icon: const Icon(Icons.bug_report),
-                  label: const Text('Test Local ML'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange.shade700, // Keep orange for debug
-                    foregroundColor: Colors.white,
-                  ),
-                ),
+              onPressed: _testLocalML,
+              icon: const Icon(Icons.bug_report),
+              label: const Text('Test Local ML'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    Colors.orange.shade700, // Keep orange for debug
+                foregroundColor: Colors.white,
+              ),
+            ),
 
             const SizedBox(height: 20),
 
             // Analysis status
             if (_isAnalyzing)
-              Column( // Removed const
+              Column(
+                // Removed const
                 children: [
                   CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary), // Themed progress indicator
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Theme.of(context).colorScheme.primary,
+                    ), // Themed progress indicator
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'Analyzing crop health...',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'This may take a few seconds',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+
+            // Saving status
+            if (_isSaving)
+              Column(
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Theme.of(context).colorScheme.secondary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Saving analysis...',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Uploading image and data',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey.shade600,
+                    ),
                   ),
                 ],
               ),
@@ -582,7 +754,9 @@ class _CameraScreenState extends State<CameraScreen> {
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface, // Use surface color
             borderRadius: BorderRadius.circular(12), // Rounded corners
-            border: Border.all(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1)), // Subtle border
+            border: Border.all(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+            ), // Subtle border
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -597,7 +771,9 @@ class _CameraScreenState extends State<CameraScreen> {
                   const SizedBox(width: 10), // Adjusted spacing
                   Text(
                     'ML Model Status',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
@@ -609,19 +785,30 @@ class _CameraScreenState extends State<CameraScreen> {
                     child: Row(
                       children: [
                         Icon(
-                          localReady ? Icons.check_circle_outline : Icons.error_outline, // More subtle icons
-                          color: localReady ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.error, // Themed colors
+                          localReady
+                              ? Icons.check_circle_outline
+                              : Icons.error_outline, // More subtle icons
+                          color: localReady
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(
+                                  context,
+                                ).colorScheme.error, // Themed colors
                           size: 18, // Adjusted size
                         ),
                         const SizedBox(width: 6), // Adjusted spacing
                         Text(
                           'Local: ${localReady ? "Ready" : "Not Ready"}',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: localReady
-                                ? Theme.of(context).colorScheme.primary.withOpacity(0.9)
-                                : Theme.of(context).colorScheme.error.withOpacity(0.9),
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: localReady
+                                    ? Theme.of(
+                                        context,
+                                      ).colorScheme.primary.withOpacity(0.9)
+                                    : Theme.of(
+                                        context,
+                                      ).colorScheme.error.withOpacity(0.9),
+                                fontWeight: FontWeight.w500,
+                              ),
                         ),
                       ],
                     ),
@@ -631,19 +818,30 @@ class _CameraScreenState extends State<CameraScreen> {
                     child: Row(
                       children: [
                         Icon(
-                          serverAvailable ? Icons.check_circle_outline : Icons.error_outline, // More subtle icons
-                          color: serverAvailable ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.error, // Themed colors
+                          serverAvailable
+                              ? Icons.check_circle_outline
+                              : Icons.error_outline, // More subtle icons
+                          color: serverAvailable
+                              ? Theme.of(context).colorScheme.secondary
+                              : Theme.of(
+                                  context,
+                                ).colorScheme.error, // Themed colors
                           size: 18, // Adjusted size
                         ),
                         const SizedBox(width: 6), // Adjusted spacing
                         Text(
                           'Server: ${serverAvailable ? "Online" : "Offline"}',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: serverAvailable
-                                ? Theme.of(context).colorScheme.secondary.withOpacity(0.9)
-                                : Theme.of(context).colorScheme.error.withOpacity(0.9),
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: serverAvailable
+                                    ? Theme.of(
+                                        context,
+                                      ).colorScheme.secondary.withOpacity(0.9)
+                                    : Theme.of(
+                                        context,
+                                      ).colorScheme.error.withOpacity(0.9),
+                                fontWeight: FontWeight.w500,
+                              ),
                         ),
                       ],
                     ),
@@ -654,7 +852,9 @@ class _CameraScreenState extends State<CameraScreen> {
               Text(
                 'Mode: ${preferredModel.toUpperCase()}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.6),
                   fontStyle: FontStyle.italic,
                 ),
               ),
