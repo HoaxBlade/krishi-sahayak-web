@@ -16,6 +16,7 @@ import 'services/image_storage_service.dart';
 import 'services/background_sync_service.dart';
 import 'services/push_notification_service.dart';
 import 'services/config_service.dart';
+import 'services/supabase_service.dart';
 import 'services/weather_service.dart';
 import 'services/ml_service.dart';
 import 'services/location_service.dart';
@@ -23,6 +24,7 @@ import 'screens/home_screen.dart';
 import 'screens/crop_screen.dart';
 import 'screens/weather_screen.dart';
 import 'screens/harvest_screen.dart';
+import 'screens/service_request_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,6 +46,9 @@ void main() async {
 
   // Initialize configuration service first
   await ConfigService().initialize();
+
+  // Initialize Supabase Service
+  await SupabaseService().initialize();
 
   // Initialize Location Service
   await LocationService().initialize();
@@ -322,6 +327,7 @@ class _MainScreenState extends State<MainScreen> {
     CropScreen(),
     HarvestScreen(),
     WeatherScreen(),
+    ServiceRequestScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -340,6 +346,7 @@ class _MainScreenState extends State<MainScreen> {
           CropScreen(),
           HarvestScreen(),
           WeatherScreen(),
+          ServiceRequestScreen(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -359,6 +366,10 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Harvest',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.wb_sunny), label: 'Weather'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_cart),
+            label: 'Marketplace',
+          ),
         ],
       ),
     );

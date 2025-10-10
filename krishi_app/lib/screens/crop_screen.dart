@@ -1,12 +1,8 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
-import '../services/crop_service.dart';
-import '../services/sync_service.dart';
-import '../services/error_handler_service.dart';
-import '../models/crop.dart';
-import '../widgets/add_crop_dialog.dart';
-import '../widgets/error_dialogs.dart';
+import '../services/analysis_service.dart';
+import '../models/crop_analysis.dart';
 import 'camera_screen.dart';
 
 class CropScreen extends StatefulWidget {
@@ -17,102 +13,245 @@ class CropScreen extends StatefulWidget {
 }
 
 class _CropScreenState extends State<CropScreen> {
-  final CropService _cropService = CropService();
-  final SyncService _syncService = SyncService();
-  final ErrorHandlerService _errorHandler = ErrorHandlerService();
-  List<Crop> _crops = [];
-  List<Crop> _filteredCrops = [];
+  final AnalysisService _analysisService = AnalysisService();
+  List<CropAnalysis> _analyses = [];
+  List<CropAnalysis> _filteredAnalyses = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadCrops();
+    _loadAnalyses();
   }
 
-  Future<void> _loadCrops() async {
+  Future<void> _loadAnalyses() async {
     setState(() => _isLoading = true);
     try {
-      final crops = await _cropService.getAllCrops();
+      final analyses = await _analysisService.getAllAnalyses();
       setState(() {
-        _crops = crops;
-        _filteredCrops = crops;
+        _analyses = analyses;
+        _filteredAnalyses = analyses;
         _isLoading = false;
       });
     } catch (e) {
       setState(() => _isLoading = false);
-
-      final error = _errorHandler.createDatabaseError(
-        'Failed to load crops',
-        details: e.toString(),
-        operationId: 'load_crops',
-      );
-      _errorHandler.handleError(error);
-
-      if (mounted) {
-        await ErrorDialogHelper.showErrorDialog(
-          context,
-          error,
-          onRetry: _loadCrops,
-        );
-      }
+      debugPrint('❌ [CropScreen] Error loading analyses: $e');
     }
   }
 
-  void _searchCrops(String query) {
+  void _searchAnalyses(String query) {
     setState(() {
       if (query.isEmpty) {
-        _filteredCrops = _crops;
+        _filteredAnalyses = _analyses;
       } else {
-        _filteredCrops = _crops
+        _filteredAnalyses = _analyses
             .where(
-              (crop) =>
-                  crop.name.toLowerCase().contains(query.toLowerCase()) ||
-                  (crop.variety?.toLowerCase().contains(query.toLowerCase()) ??
-                      false),
+              (analysis) =>
+                  analysis.cropType.toLowerCase().contains(
+                    query.toLowerCase(),
+                  ) ||
+                  analysis.diseaseType.toLowerCase().contains(
+                    query.toLowerCase(),
+                  ) ||
+                  analysis.healthStatus.toLowerCase().contains(
+                    query.toLowerCase(),
+                  ),
             )
             .toList();
       }
     });
   }
 
-  Future<void> _addNewCrop() async {
-    final result = await showDialog<Crop>(
-      context: context,
-      builder: (context) => const AddCropDialog(),
-    );
-
-    if (result != null) {
-      try {
-        final success = await _cropService.addCrop(result);
-        if (success) {
-          // Add to sync queue
-          await _syncService.addSyncOperation('add_crop', result.toMap());
-
-          _loadCrops();
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Crop added successfully!')),
-            );
-          }
-        }
-      } catch (e) {
-        final error = _errorHandler.createDatabaseError(
-          'Failed to add crop',
-          details: e.toString(),
-          operationId: 'add_crop',
-        );
-        _errorHandler.handleError(error);
-
-        if (mounted) {
-          await ErrorDialogHelper.showErrorDialog(
-            context,
-            error,
-            onRetry: () => _addNewCrop(),
-          );
-        }
-      }
+  Widget _buildAnalysesList() {
+    if (_filteredAnalyses.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.analytics_outlined,
+                size: 80,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'No crop analyses yet',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.7),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Start analyzing your crops by taking a photo',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.6),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CameraScreen(),
+                    ),
+                  ).then((_) {
+                    // Refresh analyses when returning from camera
+                    _loadAnalyses();
+                  });
+                },
+                icon: const Icon(Icons.camera_alt, size: 24),
+                label: const Text('Take Photo for Analysis'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CameraScreen(),
+                    ),
+                  ).then((_) {
+                    // Refresh analyses when returning from camera
+                    _loadAnalyses();
+                  });
+                },
+                icon: const Icon(Icons.photo_library, size: 20),
+                label: const Text('Choose from Gallery'),
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
+
+    return ListView.builder(
+      itemCount: _filteredAnalyses.length,
+      itemBuilder: (context, index) {
+        final analysis = _filteredAnalyses[index];
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          color: Colors.white,
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: analysis.isHealthy
+                  ? Colors.green.withOpacity(0.1)
+                  : Colors.red.withOpacity(0.1),
+              child: Icon(
+                analysis.isHealthy ? Icons.check_circle : Icons.warning,
+                color: analysis.isHealthy ? Colors.green : Colors.red,
+              ),
+            ),
+            title: Text(
+              '${analysis.cropType} - ${analysis.diseaseType}',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Health: ${analysis.healthStatus.toUpperCase()}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: analysis.isHealthy ? Colors.green : Colors.red,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  'Confidence: ${analysis.confidence.toStringAsFixed(1)}%',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.7),
+                  ),
+                ),
+                Text(
+                  'Analyzed: ${analysis.createdAt.toString().split(' ')[0]}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.7),
+                  ),
+                ),
+              ],
+            ),
+            trailing: Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+            ),
+            onTap: () {
+              // todo: Show detailed analysis view
+              _showAnalysisDetails(analysis);
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  void _showAnalysisDetails(CropAnalysis analysis) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Analysis Details'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Crop: ${analysis.cropType}'),
+            Text('Disease: ${analysis.diseaseType}'),
+            Text('Health: ${analysis.healthStatus}'),
+            Text('Confidence: ${analysis.confidence.toStringAsFixed(1)}%'),
+            Text('Model: ${analysis.modelType}'),
+            Text('Mode: ${analysis.analysisMode}'),
+            if (analysis.imageUrl.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: Image.network(
+                  analysis.imageUrl,
+                  height: 200,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: 200,
+                      color: Colors.grey[300],
+                      child: Icon(Icons.image_not_supported),
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -120,25 +259,32 @@ class _CropScreenState extends State<CropScreen> {
     return Scaffold(
       appBar: AppBar(
         // backgroundColor and foregroundColor are now handled by AppBarTheme in main.dart
-        title: Text('Crop Management'), // Removed const to allow theme styling
+        title: Text('Crop Analysis'), // Focus on analysis only
         actions: [
           IconButton(
             icon: Icon(
               Icons.camera_alt,
               color: Theme.of(context).colorScheme.onSurface,
-            ), // Themed icon color
+            ),
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const CameraScreen()),
-              );
+              ).then((_) {
+                // Refresh analyses when returning from camera
+                _loadAnalyses();
+              });
             },
             tooltip: 'Analyze Crop Health',
           ),
           IconButton(
-            icon: Icon(Icons.add, color: Theme.of(context).colorScheme.primary),
-            onPressed: _addNewCrop,
-          ), // Themed icon color
+            icon: Icon(
+              Icons.refresh,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+            onPressed: _loadAnalyses,
+            tooltip: 'Refresh Analyses',
+          ),
         ],
       ),
       body: Column(
@@ -147,22 +293,20 @@ class _CropScreenState extends State<CropScreen> {
             padding: const EdgeInsets.all(16),
             child: TextField(
               decoration: InputDecoration(
-                // Removed const to allow theme styling
-                hintText: 'Search crops...',
+                hintText: 'Search analyses...',
                 hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: Theme.of(
                     context,
                   ).colorScheme.onSurface.withOpacity(0.5),
-                ), // Themed hint style
+                ),
                 prefixIcon: Icon(
                   Icons.search,
                   color: Theme.of(
                     context,
                   ).colorScheme.onSurface.withOpacity(0.6),
-                ), // Themed icon color
-                // Border is now handled by InputDecorationTheme in main.dart
+                ),
               ),
-              onChanged: _searchCrops,
+              onChanged: _searchAnalyses,
             ),
           ),
           Expanded(
@@ -171,106 +315,8 @@ class _CropScreenState extends State<CropScreen> {
                     child: CircularProgressIndicator(
                       color: Theme.of(context).colorScheme.primary,
                     ),
-                  ) // Themed progress indicator
-                : _filteredCrops.isEmpty
-                ? Center(
-                    child: Text(
-                      'No crops found',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withOpacity(0.7),
-                      ),
-                    ),
-                  ) // Themed text style
-                : ListView.builder(
-                    itemCount: _filteredCrops.length,
-                    itemBuilder: (context, index) {
-                      final crop = _filteredCrops[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 6, // Adjusted vertical margin
-                        ),
-                        child: ListTile(
-                          leading: Icon(
-                            Icons.agriculture,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.primary, // Themed icon color
-                          ),
-                          title: Text(
-                            crop.name,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (crop.variety != null)
-                                Text(
-                                  'Variety: ${crop.variety}',
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface
-                                            .withOpacity(0.7),
-                                      ),
-                                ),
-                              if (crop.plantingDate != null)
-                                Text(
-                                  'Planted: ${crop.plantingDate.toString().split(' ')[0]}',
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface
-                                            .withOpacity(0.7),
-                                      ),
-                                ),
-                              if (crop.harvestDate != null)
-                                Text(
-                                  'Harvest: ${crop.harvestDate.toString().split(' ')[0]}',
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface
-                                            .withOpacity(0.7),
-                                      ),
-                                ),
-                            ],
-                          ),
-                          trailing: Chip(
-                            label: Text(
-                              crop.status,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: crop.status == 'active'
-                                        ? Theme.of(context).colorScheme.primary
-                                        : Theme.of(context)
-                                              .colorScheme
-                                              .onSurface
-                                              .withOpacity(0.7),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                            ),
-                            backgroundColor: crop.status == 'active'
-                                ? Theme.of(
-                                    context,
-                                  ).colorScheme.primary.withOpacity(0.1)
-                                : Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface.withOpacity(0.05),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              side: BorderSide.none,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                  )
+                : _buildAnalysesList(),
           ),
         ],
       ),

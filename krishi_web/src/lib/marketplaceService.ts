@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { supabase } from './supabase'
 
 const API_BASE_URL = '/api/marketplace'
 
@@ -170,6 +171,24 @@ export class MarketplaceService {
     return MarketplaceService.instance
   }
 
+  // Helper method to get auth headers
+  private async getAuthHeaders() {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.access_token) {
+        return {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    } catch (error) {
+      console.log('Could not get auth token:', error)
+    }
+    return {
+      'Content-Type': 'application/json'
+    }
+  }
+
   // Products
   async getProducts(params?: {
     category?: string
@@ -212,7 +231,8 @@ export class MarketplaceService {
 
   async createProduct(productData: Partial<Product>) {
     try {
-      const response = await axios.post(`${API_BASE_URL}/products`, productData)
+      const headers = await this.getAuthHeaders()
+      const response = await axios.post(`${API_BASE_URL}/products`, productData, { headers })
       return response.data
     } catch (error) {
       console.error('Error creating product:', error)
