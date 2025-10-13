@@ -328,15 +328,15 @@ export default function HomePage() {
       </section>
       {/* Floating Android Download Button */}
       <motion.a
-        href="/KrishiSahayak-release.apk"
-        download="KrishiSahayak-release.apk"
+        href="/KrishiSahayak-new-release.apk"
+        download="KrishiSahayak-new-release.apk"
         className="fixed bottom-8 right-8 bg-green-600 text-white p-4 rounded-full shadow-lg flex items-center justify-center z-50 cursor-pointer"
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, delay: 1 }}
         whileHover={{ scale: 1.1, boxShadow: "0 15px 30px rgba(0, 0, 0, 0.2)" }}
         whileTap={{ scale: 0.9 }}
-        title="Download Android App - Krishi Sahayak v1.0 (101.8MB)"
+        title="Download Android App - Krishi Sahayak v2.0"
       >
         <Download className="w-7 h-7" />
       </motion.a>
