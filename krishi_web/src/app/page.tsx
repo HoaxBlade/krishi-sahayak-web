@@ -328,8 +328,8 @@ export default function HomePage() {
       </section>
       {/* Floating Android Download Button */}
       <motion.a
-        href="/KrishiSahayak-new-release.apk"
-        download="KrishiSahayak-new-release.apk"
+        href="/KrishiSahayak-release.apk"
+        download="KrishiSahayak-release.apk"
         className="fixed bottom-8 right-8 bg-green-600 text-white p-4 rounded-full shadow-lg flex items-center justify-center z-50 cursor-pointer"
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
