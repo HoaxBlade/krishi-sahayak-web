@@ -336,7 +336,7 @@ export default function HomePage() {
         transition={{ duration: 0.5, delay: 1 }}
         whileHover={{ scale: 1.1, boxShadow: "0 15px 30px rgba(0, 0, 0, 0.2)" }}
         whileTap={{ scale: 0.9 }}
-        title="Download Android App - Krishi Sahayak v1.0 (101.8MB)"
+        title="Download Android App - Krishi Sahayak v2.0 "
       >
         <Download className="w-7 h-7" />
       </motion.a>
