@@ -225,7 +225,7 @@ export default function RequirementsPage() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search crops or regions..."
+                placeholder="Search services or regions..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
@@ -278,7 +278,7 @@ export default function RequirementsPage() {
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
             <Target className="w-6 h-6 mr-2 text-green-600" />
-            Crop Requirements by Region
+            Service Requirements by Region
           </h2>
           
           <div className="overflow-x-auto">
@@ -286,7 +286,7 @@ export default function RequirementsPage() {
               <thead>
                 <tr className="border-b border-gray-200">
                   <th className="text-left py-3 px-4 font-medium text-gray-700">Region</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">Crop</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-700">Services</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-700">Demand</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-700">Quantity</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-700">Season</th>
