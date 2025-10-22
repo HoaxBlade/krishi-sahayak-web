@@ -37,7 +37,7 @@ interface EquipmentRequirement {
 }
 
 export default function RequirementsPage() {
-  const [selectedSeason, setSelectedSeason] = useState('All')
+  const [selectedSeason, setSelectedSeason] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
 
   // Sample data for regional requirements
@@ -200,7 +200,7 @@ export default function RequirementsPage() {
   }
 
   const filteredRequirements = requirements.filter(req => {
-    const matchesSeason = selectedSeason === 'All' || req.season === selectedSeason
+    const matchesSeason = selectedSeason === '' || selectedSeason === 'All' || req.season === selectedSeason
     const matchesSearch = searchQuery === '' || 
       req.service.toLowerCase().includes(searchQuery.toLowerCase()) ||
       req.region.toLowerCase().includes(searchQuery.toLowerCase())
@@ -209,7 +209,7 @@ export default function RequirementsPage() {
   })
 
   const filteredEquipment = equipmentRequirements.filter(eq => {
-    const matchesSeason = selectedSeason === 'All' || eq.season === selectedSeason
+    const matchesSeason = selectedSeason === '' || selectedSeason === 'All' || eq.season === selectedSeason
     const matchesSearch = searchQuery === '' || 
       eq.equipment.toLowerCase().includes(searchQuery.toLowerCase()) ||
       eq.region.toLowerCase().includes(searchQuery.toLowerCase())
@@ -255,6 +255,7 @@ export default function RequirementsPage() {
               onChange={(e) => setSelectedSeason(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
             >
+              <option value="" disabled>Select Season</option>
               {seasons.map(season => (
                 <option key={season} value={season}>{season}</option>
               ))}
@@ -263,7 +264,7 @@ export default function RequirementsPage() {
             {/* Clear Filters */}
               <button
                 onClick={() => {
-                setSelectedSeason('All')
+                setSelectedSeason('')
                 setSearchQuery('')
               }}
               className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center"

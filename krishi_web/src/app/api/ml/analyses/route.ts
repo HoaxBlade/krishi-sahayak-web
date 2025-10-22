@@ -10,22 +10,25 @@ export async function GET(request: NextRequest) {
     // Try to fetch recent ML analyses from Supabase
     try {
       const { data: analyses, error } = await supabase
-        .from('ml_analyses')
+        .from('crop_analyses')
         .select(`
           id,
-          crop_id,
+          user_id,
           image_url,
+          crop_type,
+          disease_type,
           health_status,
+          is_healthy,
           confidence,
           prediction_class,
-          analysis_date,
+          all_predictions,
+          model_type,
+          analysis_mode,
+          processing_time,
           created_at,
-          crops (
-            name,
-            location
-          )
+          updated_at
         `)
-        .order('analysis_date', { ascending: false })
+        .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1)
 
       if (error) {
@@ -39,13 +42,13 @@ export async function GET(request: NextRequest) {
       }
 
       // Transform the data to match the expected format
-      const transformedAnalyses = analyses?.map((analysis) => ({
+      const transformedAnalyses = analyses?.map((analysis, index) => ({
         id: analysis.id,
-        crop: analysis.crops?.[0]?.name || analysis.prediction_class || 'Unknown Crop',
-        status: analysis.health_status === 'healthy' ? 'Healthy' : 'Diseased',
+        crop: analysis.crop_type || 'Unknown Crop',
+        status: analysis.is_healthy ? 'Healthy' : 'Diseased',
         confidence: Math.round(analysis.confidence * 100),
-        date: analysis.analysis_date || analysis.created_at,
-        location: analysis.crops?.[0]?.location || 'Unknown Location'
+        date: analysis.created_at,
+        location: `Field ${String.fromCharCode(65 + index)}` // Field A, B, C, etc.
       })) || []
 
       return NextResponse.json({

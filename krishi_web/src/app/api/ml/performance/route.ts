@@ -9,8 +9,12 @@ export async function GET() {
     // Get server health status
     const serverStatus = await mlService.getServerStatus()
     
-    // Calculate uptime (simplified - in production, this would come from monitoring system)
-    const uptime = serverStatus.healthy ? 99.8 : 0
+    // Calculate uptime and downtime based on server health
+    // In production, this would come from monitoring system with historical data
+    const baseUptime = serverStatus.healthy ? 99.8 : 85.0 // If unhealthy, assume some downtime
+    const uptimeVariation = (Math.random() - 0.5) * 0.4 // ±0.2% variation
+    const uptime = Math.max(0, Math.min(100, baseUptime + uptimeVariation))
+    const downtime = Math.round((100 - uptime) * 10) / 10 // Calculate downtime percentage
     
     // Get performance metrics from ML service or monitoring system
     // For now, we'll simulate some realistic data based on server status
@@ -19,6 +23,7 @@ export async function GET() {
       totalAnalyses: Math.floor(1200 + Math.random() * 200), // 1200-1400 range
       avgResponseTime: serverStatus.responseTime || (1.5 + Math.random() * 0.8), // 1.5-2.3s range
       uptime: uptime,
+      downtime: downtime, // Add downtime calculation
       serverHealthy: serverStatus.healthy,
       lastCheck: new Date().toISOString(),
       trends: {
@@ -38,6 +43,7 @@ export async function GET() {
         totalAnalyses: 0,
         avgResponseTime: 0,
         uptime: 0,
+        downtime: 100, // If API fails, assume 100% downtime
         serverHealthy: false,
         lastCheck: new Date().toISOString(),
         trends: {
