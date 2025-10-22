@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
         id: analysis.id,
         crop: analysis.crop_type || 'Unknown Crop',
         status: analysis.is_healthy ? 'Healthy' : 'Diseased',
-        confidence: Math.round(analysis.confidence * 100),
+        confidence: Math.round(analysis.confidence * 100) / 100, // Round to 2 decimal places
         date: analysis.created_at,
         location: `Field ${String.fromCharCode(65 + index)}` // Field A, B, C, etc.
       })) || []
