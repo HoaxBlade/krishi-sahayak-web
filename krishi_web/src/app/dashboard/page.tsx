@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -14,7 +15,8 @@ import {
   ArrowUpRight,
   Calendar,
   Clock,
-  Wrench
+  Wrench,
+  Drone
 } from 'lucide-react'
 import Link from 'next/link'
 import ProtectedRoute from '@/components/ProtectedRoute'
@@ -226,6 +228,12 @@ export default function DashboardPage() {
                 <Plus className="w-4 h-4" />
                 <span>Add Product</span>
               </button>
+              <Link href="/drone">
+                <button className='w-full sm:w-auto bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2'>
+                  <Drone className='w-4 h-4' />
+                  <span>Drone Marketplace</span>
+                </button>
+              </Link>
             </div>
           </div>
 

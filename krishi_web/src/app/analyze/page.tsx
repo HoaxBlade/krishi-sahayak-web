@@ -46,6 +46,15 @@ export default function AnalyzePage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isClient, setIsClient] = useState(false)
+  const [showAllAnalyses, setShowAllAnalyses] = useState(false)
+  const [allAnalyses, setAllAnalyses] = useState<Array<{
+    id: string
+    crop: string
+    status: string
+    confidence: number
+    date: string
+    location: string
+  }>>([])
   
   // NEW: ML Model Performance Functions
   const fetchModelStats = async () => {
@@ -115,6 +124,27 @@ export default function AnalyzePage() {
       ])
       setUsingSampleData(true)
     }
+  }
+
+  const fetchAllAnalyses = async () => {
+    try {
+      const response = await fetch('/api/ml/analyses?limit=50')
+      if (!response.ok) {
+        throw new Error(`Failed to fetch all analyses: ${response.status}`)
+      }
+      const data = await response.json()
+      setAllAnalyses(data.analyses || [])
+    } catch (error) {
+      console.error('Error fetching all analyses:', error)
+      setAllAnalyses([])
+    }
+  }
+
+  const handleViewAllAnalyses = async () => {
+    if (!showAllAnalyses) {
+      await fetchAllAnalyses()
+    }
+    setShowAllAnalyses(!showAllAnalyses)
   }
 
   const fetchModelPerformanceData = async () => {
@@ -368,7 +398,7 @@ export default function AnalyzePage() {
           </div>
           
           <div className="space-y-3">
-            {recentAnalyses.length > 0 ? recentAnalyses.map((analysis) => (
+            {(showAllAnalyses ? allAnalyses : recentAnalyses).length > 0 ? (showAllAnalyses ? allAnalyses : recentAnalyses).map((analysis) => (
               <motion.div
                 key={analysis.id}
                 className="flex items-center justify-between p-3.5 border border-gray-100 rounded-lg"
@@ -402,8 +432,11 @@ export default function AnalyzePage() {
           </div>
           
           <div className="mt-5">
-            <button className="inline-flex items-center text-green-600 hover:text-green-700 font-semibold text-sm transition-all hover:scale-[1.02]">
-              View All Analyses
+            <button 
+              onClick={handleViewAllAnalyses}
+              className="inline-flex items-center text-green-600 hover:text-green-700 font-semibold text-sm transition-all hover:scale-[1.02]"
+            >
+              {showAllAnalyses ? 'Show Recent Analyses' : 'View All Analyses'}
               <Activity className="w-3.5 h-3.5 ml-2" />
             </button>
           </div>
