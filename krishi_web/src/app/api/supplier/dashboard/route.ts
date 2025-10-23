@@ -4,45 +4,92 @@ import { supabase } from '@/lib/supabase'
 
 export async function GET() {
   try {
-    // TODO: Get supplier_id from authentication
-    const supplierId = 'placeholder-supplier-id' // Replace with actual auth
+    // For now, use a default supplier ID - in production, get from auth
+    const supplierId = 'default-supplier-123'
 
-    // Try to get dashboard stats, but handle missing tables gracefully
-    let stats = null
+    // Fetch real data from database
+
+    // Calculate stats dynamically from actual data
+    // eslint-disable-next-line prefer-const
+    let stats = {
+      total_orders: 0,
+      pending_orders: 0,
+      completed_orders: 0,
+      total_revenue: 0,
+      monthly_revenue: 0,
+      total_products: 0,
+      active_products: 0,
+      low_stock_products: 0,
+      total_customers: 0,
+      new_customers_this_month: 0,
+      average_order_value: 0
+    }
+
+    // Calculate order stats
     try {
-      const { data: statsData, error: statsError } = await supabase
-        .from('supplier_dashboard_stats')
-        .select('*')
-        .eq('supplier_id', supplierId)
-        .single()
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('status, total_amount, created_at')
+        .eq('provider_id', supplierId)
 
-      if (statsError && statsError.code !== 'PGRST116') {
-        console.error('Error fetching dashboard stats:', statsError)
-        // Continue with fallback data instead of failing
-      } else {
-        stats = statsData
+      if (!ordersError && ordersData) {
+        const now = new Date()
+        const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+        
+        stats.total_orders = ordersData.length
+        stats.pending_orders = ordersData.filter(o => o.status === 'pending').length
+        stats.completed_orders = ordersData.filter(o => o.status === 'delivered').length
+        stats.total_revenue = ordersData.reduce((sum, o) => sum + (o.total_amount || 0), 0)
+        stats.monthly_revenue = ordersData
+          .filter(o => new Date(o.created_at) >= thisMonth)
+          .reduce((sum, o) => sum + (o.total_amount || 0), 0)
+        stats.average_order_value = stats.total_orders > 0 ? stats.total_revenue / stats.total_orders : 0
       }
     } catch (error) {
-      console.error('Dashboard stats table may not exist:', error)
-      // Continue with fallback data
+      console.error('Error calculating order stats:', error)
     }
 
-    // If no stats exist or table doesn't exist, use empty data
-    if (!stats) {
-      stats = {
-        total_orders: 0,
-        pending_orders: 0,
-        completed_orders: 0,
-        total_revenue: 0,
-        monthly_revenue: 0,
-        total_products: 0,
-        active_products: 0,
-        low_stock_products: 0,
-        total_customers: 0,
-        new_customers_this_month: 0,
-        average_order_value: 0
+    // Calculate product stats
+    try {
+      const { data: productsData, error: productsError } = await supabase
+        .from('products')
+        .select('stock_quantity, status')
+        .eq('provider_id', supplierId)
+
+      if (!productsError && productsData) {
+        stats.total_products = productsData.length
+        stats.active_products = productsData.filter(p => p.status === 'active').length
+        stats.low_stock_products = productsData.filter(p => p.stock_quantity <= 10).length
       }
+    } catch (error) {
+      console.error('Error calculating product stats:', error)
     }
+
+    // Calculate customer stats
+    try {
+      const { data: customersData, error: customersError } = await supabase
+        .from('orders')
+        .select('farmer_id, created_at')
+        .eq('provider_id', supplierId)
+
+      if (!customersError && customersData) {
+        const uniqueCustomers = new Set(customersData.map(o => o.farmer_id))
+        stats.total_customers = uniqueCustomers.size
+        
+        const now = new Date()
+        const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+        const thisMonthCustomers = new Set(
+          customersData
+            .filter(o => new Date(o.created_at) >= thisMonth)
+            .map(o => o.farmer_id)
+        )
+        stats.new_customers_this_month = thisMonthCustomers.size
+      }
+    } catch (error) {
+      console.error('Error calculating customer stats:', error)
+    }
+
+    // Stats will remain as zeros if no real data found
 
     // Get recent orders with error handling
     let recentOrders: any[] = []
