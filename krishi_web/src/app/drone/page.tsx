@@ -176,8 +176,18 @@ export default function DronePage() {
   return (
     <ProtectedRoute>
       <style jsx>{`
-        input::placeholder,
-        textarea::placeholder {
+        input[type="text"]::placeholder,
+        input[type="email"]::placeholder,
+        input[type="tel"]::placeholder,
+        input[type="number"]::placeholder,
+        textarea::placeholder,
+        select option:first-child {
+          color: #6B7280 !important;
+        }
+        select {
+          color: #000000 !important;
+        }
+        input, textarea, select {
           color: #000000 !important;
         }
       `}</style>
