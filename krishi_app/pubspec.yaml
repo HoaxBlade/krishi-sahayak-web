@@ -1,4 +1,4 @@
-name: krishi_app
+name: krishi_sahayak
 description: "AI-powered crop health analysis & weather forecasting for farmers"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.

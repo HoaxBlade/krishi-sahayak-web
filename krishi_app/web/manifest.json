@@ -1,11 +1,11 @@
 {
-    "name": "krishi_app",
-    "short_name": "krishi_app",
+    "name": "Krishi Sahayak",
+    "short_name": "Krishi Sahayak",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "AI-powered crop health analysis & weather forecasting for farmers",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
