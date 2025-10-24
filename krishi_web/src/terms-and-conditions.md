@@ -20,7 +20,6 @@ Krishi Sahayak is on a mission to transform agriculture by equipping farmers wit
 **2. User Accounts and Registration**
 \
 \
-\
 To access certain features of the Service, you may be required to register for an account. When you register, you agree to:
 *   Provide accurate, current, and complete information as prompted by the registration form.
 *   Maintain and promptly update your account information to keep it accurate, current, and complete.
