@@ -15,7 +15,22 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 })
     }
 
-    return NextResponse.json({ categories: categories || [] })
+    // Add drone services category
+    const allCategories = [
+      ...(categories || []),
+      {
+        id: 'drone-services',
+        name: 'Drone Services',
+        description: 'Agricultural drone services for crop monitoring, spraying, and analysis',
+        parent_id: null,
+        image_url: null,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    ]
+
+    return NextResponse.json({ categories: allCategories })
   } catch (error) {
     console.error('Categories API error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

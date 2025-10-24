@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 import { 
   ShoppingCart, 
   Search, 
@@ -17,7 +18,8 @@ import {
   X,
   ChevronDown,
   Edit,
-  Trash2
+  Trash2,
+  Drone
 } from 'lucide-react'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { useAuth } from '@/contexts/AuthContext'
@@ -466,8 +468,8 @@ export default function MarketplacePage() {
                   className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
                 >
                   {/* Product Image */}
-                  <div className="h-48 bg-gray-200 relative">
-                    <div className="absolute top-3 right-3 flex gap-2">
+                  <div className="h-48 bg-gray-200 relative overflow-hidden">
+                    <div className="absolute top-3 right-3 flex gap-2 z-10">
                       <button className="p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors">
                         <Heart className="w-4 h-4 text-gray-600" />
                       </button>
@@ -475,9 +477,23 @@ export default function MarketplacePage() {
                         <Share2 className="w-4 h-4 text-gray-600" />
                       </button>
                     </div>
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      <ShoppingCart className="w-12 h-12" />
-                    </div>
+                    
+                    {/* Display actual product images */}
+                    {product.images && product.images.length > 0 ? (
+                      <div className="w-full h-full">
+                        <Image
+                          src={product.images[0]}
+                          alt={product.name}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400">
+                        <ShoppingCart className="w-12 h-12" />
+                      </div>
+                    )}
                     {/* Product Type Badge and Owner Badge */}
                     <div className="absolute top-3 left-3 flex gap-2">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -498,9 +514,17 @@ export default function MarketplacePage() {
                   {/* Product Info */}
                   <div className="p-5">
                     <div className="flex justify-between items-start mb-2">
-                      <h3 className="text-base font-semibold text-gray-900 line-clamp-2">
-                        {product.name}
-                      </h3>
+                      <div className="flex items-center space-x-2">
+                        <h3 className="text-base font-semibold text-gray-900 line-clamp-2">
+                          {product.name}
+                        </h3>
+                        {(product.specifications as Record<string, unknown>)?.is_drone_service === true && (
+                          <div className="flex items-center space-x-1 bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
+                            <Drone className="w-3 h-3" />
+                            <span>Drone</span>
+                          </div>
+                        )}
+                      </div>
                       <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
                         {product.stock_quantity} left
                       </span>
@@ -509,6 +533,15 @@ export default function MarketplacePage() {
                     <p className="text-gray-600 text-xs mb-3 line-clamp-2">
                       {product.description}
                     </p>
+
+                    {/* Service Type for Drone Services */}
+                    {(product.specifications as Record<string, unknown>)?.is_drone_service === true && (
+                      <div className="mb-2">
+                        <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                          {(product.specifications as Record<string, unknown>)?.service_type as string || 'Drone Service'}
+                        </span>
+                      </div>
+                    )}
 
                     <div className="flex items-center mb-3">
                       <div className="flex items-center">

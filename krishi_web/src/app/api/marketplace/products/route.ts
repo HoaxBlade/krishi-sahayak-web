@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { Product } from '@/lib/marketplaceService'
 
 // Helper function to get user ID from request
 async function getUserIdFromRequest(request: NextRequest): Promise<string> {
@@ -37,65 +38,255 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '12')
     const offset = (page - 1) * limit
 
-    let query = supabase
-      .from('products')
-      .select(`
-        *,
-        provider_profiles!inner(
-          id,
-          business_name,
-          city,
-          state,
-          rating_avg,
-          verification_status
-        ),
-        categories!inner(
-          id,
-          name
-        )
-      `)
-      .eq('is_active', true)
+    // Check if we're filtering for drone services or showing all products
+    const isDroneCategory = category === 'drone-services'
+    const isAllProducts = !category || category === 'all'
+    
+    let products: Product[] = []
+    let totalCount = 0
 
-    // Apply filters
-    if (category) {
-      query = query.eq('category_id', category)
-    }
+    if (isDroneCategory) {
+      // Query drone services instead of products
+      let droneQuery = supabase
+        .from('drone_services')
+        .select(`
+          *,
+          user_profile:user_id (
+            id,
+            name,
+            email,
+            phone,
+            location
+          )
+        `)
+        .eq('is_active', true)
 
-    if (search) {
-      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`)
-    }
+      // Apply search filter to drone services
+      if (search) {
+        droneQuery = droneQuery.or(`name.ilike.%${search}%,description.ilike.%${search}%,service_type.ilike.%${search}%`)
+      }
 
-    if (minPrice) {
-      query = query.gte('price', parseFloat(minPrice))
-    }
+      // Apply price filter to drone services
+      if (minPrice) {
+        droneQuery = droneQuery.gte('price_per_hour', parseFloat(minPrice))
+      }
+      if (maxPrice) {
+        droneQuery = droneQuery.lte('price_per_hour', parseFloat(maxPrice))
+      }
 
-    if (maxPrice) {
-      query = query.lte('price', parseFloat(maxPrice))
-    }
+      // Apply location filter to drone services
+      if (location) {
+        droneQuery = droneQuery.or(`location_city.ilike.%${location}%,location_state.ilike.%${location}%`)
+      }
 
-    if (location) {
-      query = query.or(`provider_profiles.city.ilike.%${location}%,provider_profiles.state.ilike.%${location}%`)
-    }
+      // Apply sorting
+      const sortField = sortBy === 'price' ? 'price_per_hour' : sortBy
+      droneQuery = droneQuery.order(sortField, { ascending: sortOrder === 'asc' })
 
-    // Apply sorting
-    query = query.order(sortBy, { ascending: sortOrder === 'asc' })
+      // Apply pagination
+      droneQuery = droneQuery.range(offset, offset + limit - 1)
 
-    // Apply pagination
-    query = query.range(offset, offset + limit - 1)
+      const { data: droneServices, error: droneError, count: droneCount } = await droneQuery
 
-    const { data: products, error, count } = await query
+      if (droneError) {
+        console.error('Error fetching drone services:', droneError)
+        return NextResponse.json({ error: 'Failed to fetch drone services' }, { status: 500 })
+      }
 
-    if (error) {
-      return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
+      // Transform drone services to match product format
+      products = (droneServices || []).map(service => ({
+        id: service.id,
+        name: service.name,
+        description: service.description,
+        price: service.price_per_hour,
+        stock_quantity: 1, // Drone services are always available
+        min_order_quantity: 1,
+        unit: 'hour',
+        images: service.images || [],
+        specifications: {
+          service_type: service.service_type,
+          coverage_area: service.coverage_area,
+          availability: service.availability,
+          features: service.features,
+          is_drone_service: true
+        },
+        is_active: service.is_active,
+        is_featured: false,
+        rating_avg: 0,
+        review_count: 0,
+        product_type: 'rentable',
+        rental_price_per_day: service.price_per_hour * 8, // Approximate daily rate
+        created_at: service.created_at,
+        updated_at: service.updated_at,
+        provider_profiles: {
+          id: service.user_profile?.id || service.user_id,
+          business_name: service.user_profile?.name || 'Drone Service Provider',
+          city: service.location_city || 'Unknown',
+          state: service.location_state || 'Unknown',
+          rating_avg: 0,
+          verification_status: 'verified'
+        },
+        categories: {
+          id: 'drone-services',
+          name: 'Drone Services'
+        }
+      }))
+
+      totalCount = droneCount || 0
+    } else {
+      // Query regular products
+      let query = supabase
+        .from('products')
+        .select(`
+          *,
+          provider_profiles!inner(
+            id,
+            business_name,
+            city,
+            state,
+            rating_avg,
+            verification_status
+          ),
+          categories!inner(
+            id,
+            name
+          )
+        `)
+        .eq('is_active', true)
+
+      // Apply filters
+      if (category) {
+        query = query.eq('category_id', category)
+      }
+
+      if (search) {
+        query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`)
+      }
+
+      if (minPrice) {
+        query = query.gte('price', parseFloat(minPrice))
+      }
+
+      if (maxPrice) {
+        query = query.lte('price', parseFloat(maxPrice))
+      }
+
+      if (location) {
+        query = query.or(`provider_profiles.city.ilike.%${location}%,provider_profiles.state.ilike.%${location}%`)
+      }
+
+      // Apply sorting
+      query = query.order(sortBy, { ascending: sortOrder === 'asc' })
+
+      // Apply pagination
+      query = query.range(offset, offset + limit - 1)
+
+      const { data: regularProducts, error, count } = await query
+
+      if (error) {
+        return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
+      }
+
+      products = regularProducts || []
+      totalCount = count || 0
+
+      // If showing all products, also include drone services
+      if (isAllProducts) {
+        let droneQuery = supabase
+          .from('drone_services')
+          .select(`
+            *,
+            user_profile:user_id (
+              id,
+              name,
+              email,
+              phone,
+              location
+            )
+          `)
+          .eq('is_active', true)
+
+        // Apply search filter to drone services
+        if (search) {
+          droneQuery = droneQuery.or(`name.ilike.%${search}%,description.ilike.%${search}%,service_type.ilike.%${search}%`)
+        }
+
+        // Apply price filter to drone services
+        if (minPrice) {
+          droneQuery = droneQuery.gte('price_per_hour', parseFloat(minPrice))
+        }
+        if (maxPrice) {
+          droneQuery = droneQuery.lte('price_per_hour', parseFloat(maxPrice))
+        }
+
+        // Apply location filter to drone services
+        if (location) {
+          droneQuery = droneQuery.or(`location_city.ilike.%${location}%,location_state.ilike.%${location}%`)
+        }
+
+        // Apply sorting
+        const sortField = sortBy === 'price' ? 'price_per_hour' : sortBy
+        droneQuery = droneQuery.order(sortField, { ascending: sortOrder === 'asc' })
+
+        // Apply pagination
+        droneQuery = droneQuery.range(offset, offset + limit - 1)
+
+        const { data: droneServices, error: droneError, count: droneCount } = await droneQuery
+
+        if (!droneError && droneServices) {
+          // Transform drone services to match product format
+          const transformedDroneServices = droneServices.map(service => ({
+            id: service.id,
+            name: service.name,
+            description: service.description,
+            price: service.price_per_hour,
+            stock_quantity: 1, // Drone services are always available
+            min_order_quantity: 1,
+            unit: 'hour',
+            images: service.images || [],
+            specifications: {
+              service_type: service.service_type,
+              coverage_area: service.coverage_area,
+              availability: service.availability,
+              features: service.features,
+              is_drone_service: true
+            },
+            is_active: service.is_active,
+            is_featured: false,
+            rating_avg: 0,
+            review_count: 0,
+            product_type: 'rentable',
+            rental_price_per_day: service.price_per_hour * 8, // Approximate daily rate
+            created_at: service.created_at,
+            updated_at: service.updated_at,
+            provider_profiles: {
+              id: service.user_profile?.id || service.user_id,
+              business_name: service.user_profile?.name || 'Drone Service Provider',
+              city: service.location_city || 'Unknown',
+              state: service.location_state || 'Unknown',
+              rating_avg: 0,
+              verification_status: 'verified'
+            },
+            categories: {
+              id: 'drone-services',
+              name: 'Drone Services'
+            }
+          }))
+
+          // Combine regular products and drone services
+          products = [...products, ...transformedDroneServices as Product[]]
+          totalCount += droneCount || 0
+        }
+      }
     }
 
     return NextResponse.json({
-      products: products || [],
+      products: products,
       pagination: {
         page,
         limit,
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit)
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limit)
       }
     })
   } catch (error) {
