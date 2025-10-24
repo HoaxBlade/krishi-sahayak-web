@@ -469,7 +469,7 @@ export default function DronePage() {
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
                   <Camera className="w-6 h-6 mr-2 text-indigo-600" />
-                  Service Images
+                  Drone Images
                 </h2>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
                   <div className="text-center">

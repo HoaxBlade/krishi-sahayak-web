@@ -1,11 +1,32 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-export async function GET() {
+// Helper function to get user ID from request
+async function getUserIdFromRequest(request: NextRequest): Promise<string> {
   try {
-    // For now, use a default supplier ID - in production, get from auth
-    const supplierId = 'default-supplier-123'
+    // Try to get user from Authorization header
+    const authHeader = request.headers.get('authorization')
+    if (authHeader) {
+      const token = authHeader.replace('Bearer ', '')
+      const { data: { user }, error } = await supabase.auth.getUser(token)
+      if (user && !error) {
+        return user.id
+      }
+    }
+  } catch (error) {
+    console.error('Error getting user from request:', error)
+  }
+  
+  // Fallback to placeholder for now
+  return '00000000-0000-0000-0000-000000000001'
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    // Get actual user ID from request
+    const userId = await getUserIdFromRequest(request)
+    console.log('Dashboard API - User ID:', userId)
 
     // Fetch real data from database
 
@@ -30,7 +51,7 @@ export async function GET() {
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('status, total_amount, created_at')
-        .eq('provider_id', supplierId)
+        .eq('provider_id', userId)
 
       if (!ordersError && ordersData) {
         const now = new Date()
@@ -49,18 +70,45 @@ export async function GET() {
       console.error('Error calculating order stats:', error)
     }
 
-    // Calculate product stats
+    // Calculate product stats (including both products and drone services)
     try {
+      // Get regular products
       const { data: productsData, error: productsError } = await supabase
         .from('products')
         .select('stock_quantity, status')
-        .eq('provider_id', supplierId)
+        .eq('provider_id', userId)
 
+      // Get drone services for this user
+      const { data: droneServicesData, error: droneServicesError } = await supabase
+        .from('drone_services')
+        .select('is_active')
+        .eq('user_id', userId)
+
+      let totalProducts = 0
+      let activeProducts = 0
+      let lowStockProducts = 0
+
+      // Count regular products
       if (!productsError && productsData) {
-        stats.total_products = productsData.length
-        stats.active_products = productsData.filter(p => p.status === 'active').length
-        stats.low_stock_products = productsData.filter(p => p.stock_quantity <= 10).length
+        console.log('Regular products found:', productsData.length)
+        totalProducts += productsData.length
+        activeProducts += productsData.filter(p => p.status === 'active').length
+        lowStockProducts += productsData.filter(p => p.stock_quantity <= 10).length
       }
+
+      // Count drone services
+      if (!droneServicesError && droneServicesData) {
+        console.log('Drone services found:', droneServicesData.length)
+        totalProducts += droneServicesData.length
+        activeProducts += droneServicesData.filter(d => d.is_active === true).length
+        // Drone services don't have stock, so no low stock count
+      }
+
+      console.log('Total products count:', totalProducts)
+
+      stats.total_products = totalProducts
+      stats.active_products = activeProducts
+      stats.low_stock_products = lowStockProducts
     } catch (error) {
       console.error('Error calculating product stats:', error)
     }
@@ -70,7 +118,7 @@ export async function GET() {
       const { data: customersData, error: customersError } = await supabase
         .from('orders')
         .select('farmer_id, created_at')
-        .eq('provider_id', supplierId)
+        .eq('provider_id', userId)
 
       if (!customersError && customersData) {
         const uniqueCustomers = new Set(customersData.map(o => o.farmer_id))
@@ -114,7 +162,7 @@ export async function GET() {
             )
           )
         `)
-        .eq('provider_id', supplierId)
+        .eq('provider_id', userId)
         .order('created_at', { ascending: false })
         .limit(5)
 
@@ -143,7 +191,7 @@ export async function GET() {
           created_at,
           farmer_id
         `)
-        .eq('supplier_id', supplierId)
+        .eq('supplier_id', userId)
         .eq('status', 'pending')
         .order('created_at', { ascending: false })
         .limit(5)
@@ -165,7 +213,7 @@ export async function GET() {
       const { data: notificationsData, error: notificationsError } = await supabase
         .from('supplier_notifications')
         .select('*')
-        .eq('supplier_id', supplierId)
+        .eq('supplier_id', userId)
         .eq('is_read', false)
         .order('created_at', { ascending: false })
         .limit(10)
@@ -181,13 +229,14 @@ export async function GET() {
 
     // notifications will be empty array if no data found
 
-    // Get low stock products with error handling
+    // Get low stock products (including both products and drone services)
     let lowStockProducts: any[] = []
     try {
+      // Get low stock regular products
       const { data: lowStockData, error: lowStockError } = await supabase
         .from('products')
         .select('id, name, stock_quantity, images')
-        .eq('provider_id', supplierId)
+        .eq('provider_id', userId)
         .lte('stock_quantity', 10)
         .order('stock_quantity', { ascending: true })
         .limit(5)
@@ -197,6 +246,8 @@ export async function GET() {
       } else {
         lowStockProducts = lowStockData || []
       }
+
+      // Note: Drone services don't have stock quantities, so they don't appear in low stock alerts
     } catch (error) {
       console.error('Products table may not exist:', error)
     }
@@ -224,7 +275,7 @@ export async function GET() {
             images
           )
         `)
-        .eq('provider_id', supplierId)
+        .eq('provider_id', userId)
         .order('created_at', { ascending: false })
         .limit(5)
 
@@ -235,6 +286,33 @@ export async function GET() {
       }
     } catch (error) {
       console.error('Rental bookings table may not exist:', error)
+    }
+
+    // Get recent drone services
+    let recentDroneServices: any[] = []
+    try {
+      const { data: droneServicesData, error: droneServicesError } = await supabase
+        .from('drone_services')
+        .select(`
+          id,
+          name,
+          service_type,
+          price_per_hour,
+          availability,
+          is_active,
+          created_at
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(5)
+
+      if (droneServicesError) {
+        console.error('Error fetching recent drone services:', droneServicesError)
+      } else {
+        recentDroneServices = droneServicesData || []
+      }
+    } catch (error) {
+      console.error('Drone services table may not exist:', error)
     }
 
     // Get rental stats
@@ -251,7 +329,7 @@ export async function GET() {
       const { data: rentalStatsData, error: rentalStatsError } = await supabase
         .from('rental_bookings')
         .select('status, total_amount, created_at')
-        .eq('provider_id', supplierId)
+        .eq('provider_id', userId)
 
       if (!rentalStatsError && rentalStatsData) {
         const now = new Date()
@@ -281,7 +359,8 @@ export async function GET() {
       pendingRequests,
       notifications,
       lowStockProducts,
-      rentalBookings
+      rentalBookings,
+      recentDroneServices
     })
 
   } catch (error) {
