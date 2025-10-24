@@ -193,8 +193,8 @@ const LearnMorePage: React.FC = () => {
                   <Image
                     src={founder.imgSrc}
                     alt={founder.name}
-                    layout="fill"
-                    objectFit="cover"
+                    fill
+                    style={{ objectFit: 'cover' }}
                     className="rounded-full"
                   />
                 </div>
