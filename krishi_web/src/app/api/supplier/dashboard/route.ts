@@ -1,48 +1,143 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-export async function GET() {
+// Helper function to get user ID from request
+async function getUserIdFromRequest(request: NextRequest): Promise<string> {
   try {
-    // TODO: Get supplier_id from authentication
-    const supplierId = 'placeholder-supplier-id' // Replace with actual auth
+    // Try to get user from Authorization header
+    const authHeader = request.headers.get('authorization')
+    if (authHeader) {
+      const token = authHeader.replace('Bearer ', '')
+      const { data: { user }, error } = await supabase.auth.getUser(token)
+      if (user && !error) {
+        return user.id
+      }
+    }
+  } catch (error) {
+    console.error('Error getting user from request:', error)
+  }
+  
+  // Fallback to placeholder for now
+  return '00000000-0000-0000-0000-000000000001'
+}
 
-    // Try to get dashboard stats, but handle missing tables gracefully
-    let stats = null
+export async function GET(request: NextRequest) {
+  try {
+    // Get actual user ID from request
+    const userId = await getUserIdFromRequest(request)
+    console.log('Dashboard API - User ID:', userId)
+
+    // Fetch real data from database
+
+    // Calculate stats dynamically from actual data
+    // eslint-disable-next-line prefer-const
+    let stats = {
+      total_orders: 0,
+      pending_orders: 0,
+      completed_orders: 0,
+      total_revenue: 0,
+      monthly_revenue: 0,
+      total_products: 0,
+      active_products: 0,
+      low_stock_products: 0,
+      total_customers: 0,
+      new_customers_this_month: 0,
+      average_order_value: 0
+    }
+
+    // Calculate order stats
     try {
-      const { data: statsData, error: statsError } = await supabase
-        .from('supplier_dashboard_stats')
-        .select('*')
-        .eq('supplier_id', supplierId)
-        .single()
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('status, total_amount, created_at')
+        .eq('provider_id', userId)
 
-      if (statsError && statsError.code !== 'PGRST116') {
-        console.error('Error fetching dashboard stats:', statsError)
-        // Continue with fallback data instead of failing
-      } else {
-        stats = statsData
+      if (!ordersError && ordersData) {
+        const now = new Date()
+        const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+        
+        stats.total_orders = ordersData.length
+        stats.pending_orders = ordersData.filter(o => o.status === 'pending').length
+        stats.completed_orders = ordersData.filter(o => o.status === 'delivered').length
+        stats.total_revenue = ordersData.reduce((sum, o) => sum + (o.total_amount || 0), 0)
+        stats.monthly_revenue = ordersData
+          .filter(o => new Date(o.created_at) >= thisMonth)
+          .reduce((sum, o) => sum + (o.total_amount || 0), 0)
+        stats.average_order_value = stats.total_orders > 0 ? stats.total_revenue / stats.total_orders : 0
       }
     } catch (error) {
-      console.error('Dashboard stats table may not exist:', error)
-      // Continue with fallback data
+      console.error('Error calculating order stats:', error)
     }
 
-    // If no stats exist or table doesn't exist, use empty data
-    if (!stats) {
-      stats = {
-        total_orders: 0,
-        pending_orders: 0,
-        completed_orders: 0,
-        total_revenue: 0,
-        monthly_revenue: 0,
-        total_products: 0,
-        active_products: 0,
-        low_stock_products: 0,
-        total_customers: 0,
-        new_customers_this_month: 0,
-        average_order_value: 0
+    // Calculate product stats (including both products and drone services)
+    try {
+      // Get regular products
+      const { data: productsData, error: productsError } = await supabase
+        .from('products')
+        .select('stock_quantity, status')
+        .eq('provider_id', userId)
+
+      // Get drone services for this user
+      const { data: droneServicesData, error: droneServicesError } = await supabase
+        .from('drone_services')
+        .select('is_active')
+        .eq('user_id', userId)
+
+      let totalProducts = 0
+      let activeProducts = 0
+      let lowStockProducts = 0
+
+      // Count regular products
+      if (!productsError && productsData) {
+        console.log('Regular products found:', productsData.length)
+        totalProducts += productsData.length
+        activeProducts += productsData.filter(p => p.status === 'active').length
+        lowStockProducts += productsData.filter(p => p.stock_quantity <= 10).length
       }
+
+      // Count drone services
+      if (!droneServicesError && droneServicesData) {
+        console.log('Drone services found:', droneServicesData.length)
+        totalProducts += droneServicesData.length
+        activeProducts += droneServicesData.filter(d => d.is_active === true).length
+        // Drone services don't have stock, so no low stock count
+      }
+
+      console.log('Total products count:', totalProducts)
+
+      stats.total_products = totalProducts
+      stats.active_products = activeProducts
+      stats.low_stock_products = lowStockProducts
+    } catch (error) {
+      console.error('Error calculating product stats:', error)
     }
+
+    // Calculate customer stats
+    try {
+      const { data: customersData, error: customersError } = await supabase
+        .from('orders')
+        .select('farmer_id, created_at')
+        .eq('provider_id', userId)
+
+      if (!customersError && customersData) {
+        const uniqueCustomers = new Set(customersData.map(o => o.farmer_id))
+        stats.total_customers = uniqueCustomers.size
+        
+        const now = new Date()
+        const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+        const thisMonthCustomers = new Set(
+          customersData
+            .filter(o => new Date(o.created_at) >= thisMonth)
+            .map(o => o.farmer_id)
+        )
+        stats.new_customers_this_month = thisMonthCustomers.size
+      }
+    } catch (error) {
+      console.error('Error calculating customer stats:', error)
+    }
+
+    // Stats will remain as zeros if no real data found
 
     // Get recent orders with error handling
     let recentOrders: any[] = []
@@ -67,7 +162,7 @@ export async function GET() {
             )
           )
         `)
-        .eq('provider_id', supplierId)
+        .eq('provider_id', userId)
         .order('created_at', { ascending: false })
         .limit(5)
 
@@ -96,7 +191,7 @@ export async function GET() {
           created_at,
           farmer_id
         `)
-        .eq('supplier_id', supplierId)
+        .eq('supplier_id', userId)
         .eq('status', 'pending')
         .order('created_at', { ascending: false })
         .limit(5)
@@ -118,7 +213,7 @@ export async function GET() {
       const { data: notificationsData, error: notificationsError } = await supabase
         .from('supplier_notifications')
         .select('*')
-        .eq('supplier_id', supplierId)
+        .eq('supplier_id', userId)
         .eq('is_read', false)
         .order('created_at', { ascending: false })
         .limit(10)
@@ -134,13 +229,14 @@ export async function GET() {
 
     // notifications will be empty array if no data found
 
-    // Get low stock products with error handling
+    // Get low stock products (including both products and drone services)
     let lowStockProducts: any[] = []
     try {
+      // Get low stock regular products
       const { data: lowStockData, error: lowStockError } = await supabase
         .from('products')
         .select('id, name, stock_quantity, images')
-        .eq('provider_id', supplierId)
+        .eq('provider_id', userId)
         .lte('stock_quantity', 10)
         .order('stock_quantity', { ascending: true })
         .limit(5)
@@ -150,6 +246,8 @@ export async function GET() {
       } else {
         lowStockProducts = lowStockData || []
       }
+
+      // Note: Drone services don't have stock quantities, so they don't appear in low stock alerts
     } catch (error) {
       console.error('Products table may not exist:', error)
     }
@@ -177,7 +275,7 @@ export async function GET() {
             images
           )
         `)
-        .eq('provider_id', supplierId)
+        .eq('provider_id', userId)
         .order('created_at', { ascending: false })
         .limit(5)
 
@@ -188,6 +286,33 @@ export async function GET() {
       }
     } catch (error) {
       console.error('Rental bookings table may not exist:', error)
+    }
+
+    // Get recent drone services
+    let recentDroneServices: any[] = []
+    try {
+      const { data: droneServicesData, error: droneServicesError } = await supabase
+        .from('drone_services')
+        .select(`
+          id,
+          name,
+          service_type,
+          price_per_hour,
+          availability,
+          is_active,
+          created_at
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(5)
+
+      if (droneServicesError) {
+        console.error('Error fetching recent drone services:', droneServicesError)
+      } else {
+        recentDroneServices = droneServicesData || []
+      }
+    } catch (error) {
+      console.error('Drone services table may not exist:', error)
     }
 
     // Get rental stats
@@ -204,7 +329,7 @@ export async function GET() {
       const { data: rentalStatsData, error: rentalStatsError } = await supabase
         .from('rental_bookings')
         .select('status, total_amount, created_at')
-        .eq('provider_id', supplierId)
+        .eq('provider_id', userId)
 
       if (!rentalStatsError && rentalStatsData) {
         const now = new Date()
@@ -234,7 +359,8 @@ export async function GET() {
       pendingRequests,
       notifications,
       lowStockProducts,
-      rentalBookings
+      rentalBookings,
+      recentDroneServices
     })
 
   } catch (error) {

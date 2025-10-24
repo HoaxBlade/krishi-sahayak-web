@@ -17,7 +17,6 @@ const LearnMorePage: React.FC = () => {
 
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref });
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
 
   return (
     <motion.div
@@ -34,7 +33,7 @@ const LearnMorePage: React.FC = () => {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.8 }}
       >
-        <Link href="/" className="flex items-center space-x-2 text-gray-700 hover:text-green-700 transition-all duration-300 ease-in-out transform hover:-translate-x-1">
+        <Link href="/" className="flex items-center space-x-2 text-white hover:text-green-700 transition-all duration-300 ease-in-out transform hover:-translate-x-1">
           <ArrowLeft className="w-6 h-6" />
         </Link>
       </motion.div>

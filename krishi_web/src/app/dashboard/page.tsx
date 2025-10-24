@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -14,12 +15,14 @@ import {
   ArrowUpRight,
   Calendar,
   Clock,
-  Wrench
+  Wrench,
+  Drone
 } from 'lucide-react'
 import Link from 'next/link'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { useAuth } from '@/contexts/AuthContext'
 import AddProductModal from '@/components/AddProductModal'
+import { supabase } from '@/lib/supabase'
 
 interface DashboardStats {
   total_orders: number
@@ -101,6 +104,16 @@ interface RentalBooking {
   }
 }
 
+interface DroneService {
+  id: string
+  name: string
+  service_type: string
+  price_per_hour: number
+  availability: string
+  is_active: boolean
+  created_at: string
+}
+
 export default function DashboardPage() {
   const { user } = useAuth()
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -109,6 +122,7 @@ export default function DashboardPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [lowStockProducts, setLowStockProducts] = useState<LowStockProduct[]>([]);
   const [rentalBookings, setRentalBookings] = useState<RentalBooking[]>([]);
+  const [recentDroneServices, setRecentDroneServices] = useState<DroneService[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddProductModal, setShowAddProductModal] = useState(false);
 
@@ -134,13 +148,26 @@ export default function DashboardPage() {
         setNotifications(data.notifications);
         setLowStockProducts(data.lowStockProducts);
         setRentalBookings(data.rentalBookings);
+        setRecentDroneServices(data.recentDroneServices);
         setLoading(false);
         return;
       }
     }
 
     try {
-      const response = await fetch('/api/supplier/dashboard');
+      // Get auth headers
+      const { data: { session } } = await supabase.auth.getSession()
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json'
+      }
+      
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`
+      }
+
+      const response = await fetch('/api/supplier/dashboard', {
+        headers
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch dashboard data');
       }
@@ -152,6 +179,7 @@ export default function DashboardPage() {
       setNotifications(data.notifications);
       setLowStockProducts(data.lowStockProducts);
       setRentalBookings(data.rentalBookings);
+      setRecentDroneServices(data.recentDroneServices);
 
       localStorage.setItem(dashboardCacheKey, JSON.stringify({ data, timestamp: now }));
     } catch (error) {
@@ -226,6 +254,12 @@ export default function DashboardPage() {
                 <Plus className="w-4 h-4" />
                 <span>Add Product</span>
               </button>
+              <Link href="/drone">
+                <button className='w-full sm:w-auto bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2'>
+                  <Drone className='w-4 h-4' />
+                  <span>Drone Marketplace</span>
+                </button>
+              </Link>
             </div>
           </div>
 
@@ -528,6 +562,44 @@ export default function DashboardPage() {
                     </div>
                   )) : (
                     <p className="text-sm text-gray-500">No recent rentals</p>
+                  )}
+                </div>
+              </motion.div>
+
+              {/* Recent Drone Services */}
+              <motion.div
+                className="bg-white rounded-xl shadow-lg p-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.9 }}
+              >
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <Drone className="w-5 h-5 mr-2 text-green-600" />
+                  Recent Drone Services
+                </h3>
+                
+                <div className="space-y-3">
+                  {recentDroneServices.length > 0 ? recentDroneServices.map((service) => (
+                    <div key={service.id} className="p-3 border border-gray-100 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-900">{service.name}</span>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          service.is_active ? 'text-green-600 bg-green-100' : 'text-gray-600 bg-gray-100'
+                        }`}>
+                          {service.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>{service.service_type}</span>
+                        <span>₹{service.price_per_hour}/hour</span>
+                      </div>
+                      <div className="flex items-center text-xs text-gray-500 mt-1">
+                        <Clock className="w-3 h-3 mr-1" />
+                        <span>{service.availability}</span>
+                      </div>
+                    </div>
+                  )) : (
+                    <p className="text-sm text-gray-500">No drone services yet</p>
                   )}
                 </div>
               </motion.div>

@@ -13,7 +13,7 @@ import {
   Home,
   LogIn,
   User,
-  Plane
+  Store
 } from 'lucide-react'
 import Image from 'next/image'
 import { useAuth } from '@/contexts/AuthContext'
@@ -26,7 +26,7 @@ export default function Navigation() {
   const navItems = [
     { name: 'Home', href: '/', icon: Home },
     { name: 'Stats', href: '/analyze', icon: Activity },
-    { name: 'Drone Marketplace', href: '/marketplace', icon: Plane },
+    { name: 'Marketplace', href: '/marketplace', icon: Store },
     { name: 'Requirements', href: '/weather', icon: MapPin },
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
   ]

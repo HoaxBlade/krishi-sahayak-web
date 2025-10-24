@@ -17,12 +17,11 @@ interface RegionalRequirement {
   id: string
   region: string
   state: string
-  cropType: string
+  service: string
   demandLevel: 'High' | 'Medium' | 'Low'
   quantity: number
   unit: string
   season: string
-  priority: 'Urgent' | 'Normal' | 'Low'
   lastUpdated: string
   farmerCount: number
 }
@@ -38,8 +37,7 @@ interface EquipmentRequirement {
 }
 
 export default function RequirementsPage() {
-  const [selectedRegion, setSelectedRegion] = useState('All')
-  const [selectedSeason, setSelectedSeason] = useState('All')
+  const [selectedSeason, setSelectedSeason] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
 
   // Sample data for regional requirements
@@ -48,12 +46,11 @@ export default function RequirementsPage() {
       id: '1',
       region: 'Punjab',
       state: 'Punjab',
-      cropType: 'Wheat',
+      service: 'Tractor Rental',
       demandLevel: 'High',
-      quantity: 1500,
-      unit: 'quintals',
+      quantity: 150,
+      unit: 'units',
       season: 'Rabi',
-      priority: 'Urgent',
       lastUpdated: new Date().toISOString(),
       farmerCount: 245
     },
@@ -61,12 +58,11 @@ export default function RequirementsPage() {
       id: '2',
       region: 'Haryana',
       state: 'Haryana',
-      cropType: 'Rice',
+      service: 'Drone Spraying',
       demandLevel: 'High',
-      quantity: 1200,
-      unit: 'quintals',
+      quantity: 120,
+      unit: 'services',
       season: 'Kharif',
-      priority: 'Urgent',
       lastUpdated: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
       farmerCount: 189
     },
@@ -74,12 +70,11 @@ export default function RequirementsPage() {
       id: '3',
       region: 'Uttar Pradesh',
       state: 'Uttar Pradesh',
-      cropType: 'Sugarcane',
+      service: 'Harvester Rental',
       demandLevel: 'Medium',
-      quantity: 800,
-      unit: 'tons',
+      quantity: 80,
+      unit: 'units',
       season: 'Kharif',
-      priority: 'Normal',
       lastUpdated: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
       farmerCount: 156
     },
@@ -87,12 +82,11 @@ export default function RequirementsPage() {
       id: '4',
       region: 'Maharashtra',
       state: 'Maharashtra',
-      cropType: 'Cotton',
+      service: 'Irrigation Pump Rental',
       demandLevel: 'High',
-      quantity: 900,
-      unit: 'bales',
+      quantity: 90,
+      unit: 'units',
       season: 'Kharif',
-      priority: 'Urgent',
       lastUpdated: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
       farmerCount: 203
     },
@@ -100,14 +94,49 @@ export default function RequirementsPage() {
       id: '5',
       region: 'Karnataka',
       state: 'Karnataka',
-      cropType: 'Coffee',
+      service: 'Seed Drill Rental',
       demandLevel: 'Medium',
-      quantity: 600,
-      unit: 'kg',
+      quantity: 60,
+      unit: 'units',
       season: 'Rabi',
-      priority: 'Normal',
       lastUpdated: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
       farmerCount: 98
+    },
+    {
+      id: '6',
+      region: 'Tamil Nadu',
+      state: 'Tamil Nadu',
+      service: 'Sprayer Rental',
+      demandLevel: 'High',
+      quantity: 75,
+      unit: 'units',
+      season: 'Kharif',
+      lastUpdated: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+      farmerCount: 167
+    },
+    {
+      id: '7',
+      region: 'Gujarat',
+      state: 'Gujarat',
+      service: 'Cultivator Rental',
+      demandLevel: 'Medium',
+      quantity: 45,
+      unit: 'units',
+      season: 'Rabi',
+      lastUpdated: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+      farmerCount: 134
+    },
+    {
+      id: '8',
+      region: 'Rajasthan',
+      state: 'Rajasthan',
+      service: 'Thresher Rental',
+      demandLevel: 'High',
+      quantity: 55,
+      unit: 'units',
+      season: 'Rabi',
+      lastUpdated: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+      farmerCount: 89
     }
   ]
 
@@ -150,7 +179,6 @@ export default function RequirementsPage() {
     }
   ]
 
-  const regions = ['All', 'Punjab', 'Haryana', 'Uttar Pradesh', 'Maharashtra', 'Karnataka', 'Tamil Nadu', 'Gujarat']
   const seasons = ['All', 'Kharif', 'Rabi', 'Zaid']
 
   const getDemandColor = (level: string) => {
@@ -158,15 +186,6 @@ export default function RequirementsPage() {
       case 'High': return 'text-red-600 bg-red-100'
       case 'Medium': return 'text-yellow-600 bg-yellow-100'
       case 'Low': return 'text-green-600 bg-green-100'
-      default: return 'text-gray-600 bg-gray-100'
-    }
-  }
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'Urgent': return 'text-red-600 bg-red-100'
-      case 'Normal': return 'text-blue-600 bg-blue-100'
-      case 'Low': return 'text-gray-600 bg-gray-100'
       default: return 'text-gray-600 bg-gray-100'
     }
   }
@@ -181,23 +200,21 @@ export default function RequirementsPage() {
   }
 
   const filteredRequirements = requirements.filter(req => {
-    const matchesRegion = selectedRegion === 'All' || req.region === selectedRegion
-    const matchesSeason = selectedSeason === 'All' || req.season === selectedSeason
+    const matchesSeason = selectedSeason === '' || selectedSeason === 'All' || req.season === selectedSeason
     const matchesSearch = searchQuery === '' || 
-      req.cropType.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      req.service.toLowerCase().includes(searchQuery.toLowerCase()) ||
       req.region.toLowerCase().includes(searchQuery.toLowerCase())
     
-    return matchesRegion && matchesSeason && matchesSearch
+    return matchesSeason && matchesSearch
   })
 
   const filteredEquipment = equipmentRequirements.filter(eq => {
-    const matchesRegion = selectedRegion === 'All' || eq.region === selectedRegion
-    const matchesSeason = selectedSeason === 'All' || eq.season === selectedSeason
+    const matchesSeason = selectedSeason === '' || selectedSeason === 'All' || eq.season === selectedSeason
     const matchesSearch = searchQuery === '' || 
       eq.equipment.toLowerCase().includes(searchQuery.toLowerCase()) ||
       eq.region.toLowerCase().includes(searchQuery.toLowerCase())
     
-    return matchesRegion && matchesSeason && matchesSearch
+    return matchesSeason && matchesSearch
   })
 
   return (
@@ -219,29 +236,18 @@ export default function RequirementsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search crops or regions..."
+                placeholder="Search services or regions..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
               />
             </div>
-
-            {/* Region Filter */}
-            <select
-              value={selectedRegion}
-              onChange={(e) => setSelectedRegion(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
-            >
-              {regions.map(region => (
-                <option key={region} value={region}>{region}</option>
-              ))}
-            </select>
 
             {/* Season Filter */}
             <select
@@ -249,6 +255,7 @@ export default function RequirementsPage() {
               onChange={(e) => setSelectedSeason(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
             >
+              <option value="" disabled>Select Season</option>
               {seasons.map(season => (
                 <option key={season} value={season}>{season}</option>
               ))}
@@ -257,8 +264,7 @@ export default function RequirementsPage() {
             {/* Clear Filters */}
               <button
                 onClick={() => {
-                setSelectedRegion('All')
-                setSelectedSeason('All')
+                setSelectedSeason('')
                 setSearchQuery('')
               }}
               className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center"
@@ -269,7 +275,7 @@ export default function RequirementsPage() {
           </div>
         </motion.div>
 
-        {/* Crop Requirements */}
+        {/* Service Requirements */}
         <motion.div
           className="bg-white rounded-xl shadow-lg p-6 mb-8"
           initial={{ opacity: 0, y: 20 }}
@@ -278,7 +284,7 @@ export default function RequirementsPage() {
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
             <Target className="w-6 h-6 mr-2 text-green-600" />
-            Crop Requirements by Region
+            Service Requirements by Region
           </h2>
           
           <div className="overflow-x-auto">
@@ -286,11 +292,10 @@ export default function RequirementsPage() {
               <thead>
                 <tr className="border-b border-gray-200">
                   <th className="text-left py-3 px-4 font-medium text-gray-700">Region</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">Crop</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-700">Services</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-700">Demand</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-700">Quantity</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-700">Season</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">Priority</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-700">Farmers</th>
                 </tr>
               </thead>
@@ -309,7 +314,7 @@ export default function RequirementsPage() {
         </div>
                     </td>
                     <td className="py-4 px-4">
-                      <span className="text-gray-900">{req.cropType}</span>
+                      <span className="text-gray-900">{req.service}</span>
                     </td>
                     <td className="py-4 px-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getDemandColor(req.demandLevel)}`}>
@@ -321,11 +326,6 @@ export default function RequirementsPage() {
                     </td>
                     <td className="py-4 px-4">
                       <span className="text-gray-600">{req.season}</span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(req.priority)}`}>
-                        {req.priority}
-                      </span>
                     </td>
                     <td className="py-4 px-4">
                       <div className="flex items-center">
@@ -384,7 +384,7 @@ export default function RequirementsPage() {
                 </div>
 
                   <div className="flex items-center text-sm">
-                    <span className="mr-2">Availability:</span>
+                    <span className="mr-2 text-black">Availability:</span>
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getAvailabilityColor(equipment.availability)}`}>
                       {equipment.availability}
                     </span>
