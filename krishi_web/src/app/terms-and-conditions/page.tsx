@@ -32,13 +32,19 @@ export default async function TermsAndConditionsPage() {
   }
 
   return (
-    <div className="container mx-auto p-4 bg-white text-gray-900 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6">Legal Information</h1> {/* Changed heading */}
-      <TermsAndConditions
-        termsContent={termsContent}
-        privacyContent={privacyContent}
-        cookieContent={cookieContent}
-      />
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 text-gray-900 text-center sm:text-left">
+            Legal Information
+          </h1>
+          <TermsAndConditions
+            termsContent={termsContent}
+            privacyContent={privacyContent}
+            cookieContent={cookieContent}
+          />
+        </div>
+      </div>
     </div>
   );
 }
