@@ -18,28 +18,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { useAuth } from '@/contexts/AuthContext'
+import DroneServiceAPI, { DroneService } from '@/lib/droneServiceAPI'
 
-interface DroneService {
-  id?: string
-  name: string
-  description: string
-  serviceType: string
-  pricePerHour: number
-  coverageArea: string
-  availability: string
-  features: string[]
-  images: File[]
-  contactInfo: {
-    phone: string
-    email: string
-  }
-  location: {
-    address: string
-    city: string
-    state: string
-    pincode: string
-  }
-}
 
 const serviceTypes = [
   'Crop Monitoring',
@@ -66,6 +46,7 @@ const features = [
 
 export default function DronePage() {
   const { user } = useAuth()
+  const droneServiceAPI = DroneServiceAPI.getInstance()
   const [formData, setFormData] = useState<DroneService>({
     name: '',
     description: '',
@@ -74,7 +55,7 @@ export default function DronePage() {
     coverageArea: '',
     availability: '',
     features: [],
-    images: [],
+    images: [] as File[],
     contactInfo: {
       phone: '',
       email: user?.email || ''
@@ -89,6 +70,7 @@ export default function DronePage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [errorMessage, setErrorMessage] = useState('')
 
   const handleInputChange = (field: string, value: string | number) => {
     if (field.includes('.')) {
@@ -121,14 +103,14 @@ export default function DronePage() {
     const files = Array.from(event.target.files || [])
     setFormData(prev => ({
       ...prev,
-      images: [...prev.images, ...files]
+      images: [...(prev.images as File[]), ...files]
     }))
   }
 
   const removeImage = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      images: prev.images.filter((_, i) => i !== index)
+      images: (prev.images as File[]).filter((_, i) => i !== index)
     }))
   }
 
@@ -138,10 +120,33 @@ export default function DronePage() {
     setSubmitStatus('idle')
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // Validate required fields
+      if (!formData.name || !formData.description || !formData.serviceType || !formData.pricePerHour || !formData.coverageArea || !formData.availability) {
+        setErrorMessage('Please fill in all required fields')
+        setSubmitStatus('error')
+        return
+      }
+
+      // Convert File objects to base64 strings for storage
+      const imagePromises = (formData.images as File[]).map(file => {
+        return new Promise<string>((resolve) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result as string)
+          reader.readAsDataURL(file)
+        })
+      })
       
-      console.log('Drone service data:', formData)
+      const imageUrls = await Promise.all(imagePromises)
+
+      // Prepare data for API
+      const serviceData: DroneService = {
+        ...formData,
+        images: imageUrls
+      }
+
+      // Submit to Supabase
+      await droneServiceAPI.createService(serviceData)
+      
       setSubmitStatus('success')
       
       // Reset form
@@ -153,7 +158,7 @@ export default function DronePage() {
         coverageArea: '',
         availability: '',
         features: [],
-        images: [],
+        images: [] as File[],
         contactInfo: {
           phone: '',
           email: user?.email || ''
@@ -167,6 +172,7 @@ export default function DronePage() {
       })
     } catch (error) {
       console.error('Error submitting drone service:', error)
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to submit drone service')
       setSubmitStatus('error')
     } finally {
       setIsSubmitting(false)
@@ -290,11 +296,14 @@ export default function DronePage() {
                       Price per Hour (₹) *
                     </label>
                     <input
-                      type="number"
+                      type="text"
                       required
-                      min="0"
-                      value={formData.pricePerHour}
-                      onChange={(e) => handleInputChange('pricePerHour', parseFloat(e.target.value))}
+                      pattern="[0-9]*"
+                      value={formData.pricePerHour === 0 ? '' : formData.pricePerHour.toString()}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9]/g, '')
+                        handleInputChange('pricePerHour', value === '' ? 0 : parseFloat(value))
+                      }}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder:text-gray-900"
                       placeholder="1500"
                     />
@@ -306,8 +315,12 @@ export default function DronePage() {
                     <input
                       type="text"
                       required
+                      pattern="[0-9]*"
                       value={formData.coverageArea}
-                      onChange={(e) => handleInputChange('coverageArea', e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9]/g, '')
+                        handleInputChange('coverageArea', value)
+                      }}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder:text-gray-900"
                       placeholder="50"
                     />
@@ -483,11 +496,12 @@ export default function DronePage() {
                       {formData.images.map((image, index) => (
                         <div key={index} className="relative">
                           <Image
-                            src={URL.createObjectURL(image)}
+                            src={typeof image === 'string' ? image : URL.createObjectURL(image)}
                             alt={`Upload ${index + 1}`}
                             width={96}
                             height={96}
                             className="w-full h-24 object-cover rounded-lg"
+                            style={{ width: 'auto', height: 'auto' }}
                           />
                           <button
                             type="button"
@@ -543,7 +557,7 @@ export default function DronePage() {
                   animate={{ opacity: 1, scale: 1 }}
                 >
                   <AlertTriangle className="w-5 h-5 text-red-600 mr-3" />
-                  <p className="text-red-800">Failed to register drone service. Please try again.</p>
+                  <p className="text-red-800">{errorMessage || 'Failed to register drone service. Please try again.'}</p>
                 </motion.div>
               )}
             </form>
