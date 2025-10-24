@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function Footer() {
   return (
@@ -28,7 +29,22 @@ export default function Footer() {
           </div>
         </div>
         <p className="text-gray-400 mb-3 text-sm">Empowering farmers with AI-driven agricultural solutions</p>
-        <p className="text-gray-500 text-xs">© {new Date().getFullYear()} Krishi Sahayak. All rights reserved.</p>
+        <div className="mt-8 border-t border-gray-700 pt-8">
+          <div className="flex justify-center space-x-6 text-sm">
+            <Link href="/terms-and-conditions?section=terms" className="text-gray-400 hover:text-green-500 transition-colors duration-200">
+              Terms & Conditions
+            </Link>
+            <Link href="/terms-and-conditions?section=privacy" className="text-gray-400 hover:text-green-500 transition-colors duration-200">
+              Privacy Notice
+            </Link>
+            <Link href="/terms-and-conditions?section=cookie" className="text-gray-400 hover:text-green-500 transition-colors duration-200">
+              Cookie Management
+            </Link>
+          </div>
+          <p className="mt-4 text-gray-500 text-xs">
+            &copy; {new Date().getFullYear()} Krishi Sahayak. All rights reserved.
+          </p>
+        </div>
       </div>
     </footer>
   );

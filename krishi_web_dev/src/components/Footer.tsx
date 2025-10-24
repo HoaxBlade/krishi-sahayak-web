@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function Footer() {
   return (
@@ -29,8 +30,10 @@ export default function Footer() {
         </div>
         <p className="text-gray-400 mb-3 text-sm">Empowering farmers with AI-driven agricultural solutions</p>
         <div className="mb-3">
-          <Link href="/terms-and-conditions" className="text-gray-400 hover:text-white text-sm">
-            Terms and Conditions
+          <Link href="/terms-and-conditions" passHref>
+            <button className="text-gray-400 hover:text-white text-sm bg-transparent border-none p-0 cursor-pointer">
+              Terms and Conditions
+            </button>
           </Link>
         </div>
         <p className="text-gray-500 text-xs">© {new Date().getFullYear()} Krishi Sahayak. All rights reserved.</p>
