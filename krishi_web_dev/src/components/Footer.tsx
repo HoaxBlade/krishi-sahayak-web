@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import Image from 'next/image';
 
 export default function Footer() {
@@ -29,6 +28,11 @@ export default function Footer() {
           </div>
         </div>
         <p className="text-gray-400 mb-3 text-sm">Empowering farmers with AI-driven agricultural solutions</p>
+        <div className="mb-3">
+          <Link href="/terms-and-conditions" className="text-gray-400 hover:text-white text-sm">
+            Terms and Conditions
+          </Link>
+        </div>
         <p className="text-gray-500 text-xs">© {new Date().getFullYear()} Krishi Sahayak. All rights reserved.</p>
       </div>
     </footer>
