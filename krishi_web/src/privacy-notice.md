@@ -1,4 +1,4 @@
-# Privacy Notice for Krishi Sahayak
+# Privacy Notice
 
 **Effective Date:** October 24, 2025
 
