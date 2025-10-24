@@ -3,6 +3,7 @@ import LegalPagesHeader from '@/components/LegalPagesHeader';
 
 const TermsAndConditionsPage = () => {
   return (
+<<<<<<< HEAD
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
       <div className="max-w-4xl w-full bg-white p-8 rounded-lg shadow-md">
         <LegalPagesHeader activeTab="terms-and-conditions" />
@@ -158,6 +159,20 @@ const TermsAndConditionsPage = () => {
             If you have any questions about this Terms & Conditions, please contact us at krishi.sahayak2025@gmail.com
           </p>
         </section>
+=======
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 text-gray-900 text-center sm:text-left">
+            Legal Information
+          </h1>
+          <TermsAndConditions
+            termsContent={termsContent}
+            privacyContent={privacyContent}
+            cookieContent={cookieContent}
+          />
+        </div>
+>>>>>>> a7e902ea7ac93716cd89216f29ae333f80b149fc
       </div>
     </div>
   );
