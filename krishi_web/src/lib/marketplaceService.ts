@@ -181,8 +181,8 @@ export class MarketplaceService {
           'Content-Type': 'application/json'
         }
       }
-    } catch (error) {
-      console.log('Could not get auth token:', error)
+    } catch {
+      // Could not get auth token
     }
     return {
       'Content-Type': 'application/json'

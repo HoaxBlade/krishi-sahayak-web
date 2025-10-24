@@ -26,7 +26,6 @@ export async function GET(request: NextRequest) {
   try {
     // Get actual user ID from request
     const userId = await getUserIdFromRequest(request)
-    console.log('Dashboard API - User ID:', userId)
 
     // Fetch real data from database
 
@@ -90,7 +89,6 @@ export async function GET(request: NextRequest) {
 
       // Count regular products
       if (!productsError && productsData) {
-        console.log('Regular products found:', productsData.length)
         totalProducts += productsData.length
         activeProducts += productsData.filter(p => p.status === 'active').length
         lowStockProducts += productsData.filter(p => p.stock_quantity <= 10).length
@@ -98,13 +96,10 @@ export async function GET(request: NextRequest) {
 
       // Count drone services
       if (!droneServicesError && droneServicesData) {
-        console.log('Drone services found:', droneServicesData.length)
         totalProducts += droneServicesData.length
         activeProducts += droneServicesData.filter(d => d.is_active === true).length
         // Drone services don't have stock, so no low stock count
       }
-
-      console.log('Total products count:', totalProducts)
 
       stats.total_products = totalProducts
       stats.active_products = activeProducts

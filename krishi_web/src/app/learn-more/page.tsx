@@ -9,10 +9,10 @@ import { useRef } from 'react';
 
 const LearnMorePage: React.FC = () => {
   const founders = [
-    { name: 'Piyush', imgSrc: '/Piyush.jpg' },
-    { name: 'Ayush', imgSrc: '/Ayush.jpg' },
-    { name: 'Divyanshu', imgSrc: '/Divyanshu.jpg' },
-    { name: 'Devansh', imgSrc: '/Devansh.jpg' },
+    { name: 'Piyush', imgSrc: '/Piyush 1.svg' },
+    { name: 'Ayush', imgSrc: '/Ayush.svg' },
+    { name: 'Divyanshu', imgSrc: '/Divyanshu.svg' },
+    { name: 'Devansh', imgSrc: '/Devansh.svg' },
   ];
 
   const ref = useRef(null);
@@ -158,7 +158,7 @@ const LearnMorePage: React.FC = () => {
         >
           <div className="flex flex-col md:flex-row items-center gap-12">
             <div className="md:w-1/3 flex justify-center">
-              <Image src="/NIELIT.png" alt="NIELIT Odisha" width={350} height={350} className="rounded-lg" />
+              <Image src="/NIELIT 1.svg" alt="NIELIT Odisha" width={350} height={350} className="rounded-lg" />
             </div>
             <div className="md:w-2/3">
               <div className="hidden md:inline-block bg-gradient-to-br from-green-600 to-blue-600 text-white p-6 rounded-full mb-8 shadow-xl">
