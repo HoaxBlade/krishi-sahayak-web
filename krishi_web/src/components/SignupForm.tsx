@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, Mail, Lock, User, Phone, Loader2 } from 'lucide-react'
 import { AuthService } from '@/lib/authService'
+import RegionSelector from './RegionSelector'
 
 interface SignupFormProps {
   onSuccess?: () => void
@@ -16,7 +17,10 @@ export default function SignupForm({ onSuccess, onSwitchToLogin }: SignupFormPro
     email: '',
     phone: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    state: '',
+    district: '',
+    region: ''
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -41,6 +45,14 @@ export default function SignupForm({ onSuccess, onSwitchToLogin }: SignupFormPro
 
     if (formData.phone && !/^\+?[0-9]{10,15}$/.test(formData.phone)) {
       errors.phone = 'Phone number is invalid.'
+    }
+
+    if (!formData.state.trim()) {
+      errors.state = 'State is required.'
+    }
+
+    if (!formData.district.trim()) {
+      errors.district = 'District is required.'
     }
 
     if (!formData.password) {
@@ -85,7 +97,10 @@ export default function SignupForm({ onSuccess, onSwitchToLogin }: SignupFormPro
         password: formData.password,
         metadata: {
           full_name: formData.fullName,
-          phone: formData.phone
+          phone: formData.phone,
+          state: formData.state,
+          district: formData.district,
+          region: formData.region
         }
       })
       onSuccess?.()
@@ -185,6 +200,23 @@ export default function SignupForm({ onSuccess, onSwitchToLogin }: SignupFormPro
             </div>
             {validationErrors.phone && <p className="mt-2 text-sm text-red-600">{validationErrors.phone}</p>}
           </div>
+
+          {/* Region Selection */}
+          <RegionSelector
+            selectedState={formData.state}
+            selectedDistrict={formData.district}
+            onStateChange={(state) => setFormData(prev => ({ ...prev, state }))}
+            onDistrictChange={(district) => setFormData(prev => ({ ...prev, district }))}
+            onRegionChange={(region) => setFormData(prev => ({ ...prev, region }))}
+            required={true}
+            label="Location"
+          />
+          {(validationErrors.state || validationErrors.district) && (
+            <div className="space-y-1">
+              {validationErrors.state && <p className="text-sm text-red-600">{validationErrors.state}</p>}
+              {validationErrors.district && <p className="text-sm text-red-600">{validationErrors.district}</p>}
+            </div>
+          )}
 
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">

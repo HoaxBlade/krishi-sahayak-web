@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../models/product.dart';
+import '../models/drone_service.dart';
 import '../services/marketplace_service.dart';
 import '../widgets/product_card.dart';
 import '../widgets/buy_product_dialog.dart';
+import '../widgets/drone_service_booking_dialog.dart';
 
 class ServiceRequestScreen extends StatefulWidget {
   const ServiceRequestScreen({super.key});
@@ -100,10 +102,43 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
   }
 
   void _onBuyPressed(Product product) {
-    showDialog(
-      context: context,
-      builder: (context) => BuyProductDialog(product: product),
-    );
+    // Check if it's a drone service
+    if (product.specifications['is_drone_service'] == true) {
+      // Convert product to drone service format for the booking dialog
+      final droneService = DroneService(
+        id: product.id,
+        name: product.name,
+        description: product.description,
+        serviceType: product.specifications['service_type']?.toString() ?? '',
+        pricePerHour: product.price,
+        coverageArea: product.specifications['coverage_area']?.toString() ?? '',
+        availability: product.specifications['availability']?.toString() ?? '',
+        features: List<String>.from(product.specifications['features'] ?? []),
+        images: product.images,
+        contactPhone: product.specifications['contact_phone']?.toString() ?? '',
+        contactEmail: product.specifications['contact_email']?.toString() ?? '',
+        locationAddress:
+            product.specifications['location_address']?.toString() ?? '',
+        locationCity: product.specifications['location_city']?.toString() ?? '',
+        locationState:
+            product.specifications['location_state']?.toString() ?? '',
+        locationPincode:
+            product.specifications['location_pincode']?.toString() ?? '',
+        isActive: product.isActive,
+        createdAt: product.createdAt,
+        updatedAt: product.updatedAt,
+      );
+
+      showDialog(
+        context: context,
+        builder: (context) => DroneServiceBookingDialog(service: droneService),
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => BuyProductDialog(product: product),
+      );
+    }
   }
 
   void _onCallPressed(Product product) {
@@ -211,7 +246,7 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
             ),
           ),
 
-          // Products List
+          // Content List
           Expanded(
             child: _isLoading
                 ? const Center(
@@ -219,56 +254,7 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
                     ),
                   )
-                : _products.isEmpty
-                ? const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.shopping_cart_outlined,
-                          size: 80,
-                          color: Colors.grey,
-                        ),
-                        SizedBox(height: 16),
-                        Text(
-                          'No products found',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'Try adjusting your search or filters',
-                          style: TextStyle(fontSize: 14, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  )
-                : RefreshIndicator(
-                    onRefresh: _loadProducts,
-                    color: Colors.green,
-                    child: GridView.builder(
-                      padding: const EdgeInsets.all(8),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 0.75,
-                            crossAxisSpacing: 6,
-                            mainAxisSpacing: 6,
-                          ),
-                      itemCount: _products.length,
-                      itemBuilder: (context, index) {
-                        final product = _products[index];
-                        return ProductCard(
-                          product: product,
-                          onBuyPressed: () => _onBuyPressed(product),
-                          onCallPressed: () => _onCallPressed(product),
-                        );
-                      },
-                    ),
-                  ),
+                : _buildProductsList(),
           ),
         ],
       ),
@@ -300,6 +286,56 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
         width: 1,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    );
+  }
+
+  Widget _buildProductsList() {
+    if (_products.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.shopping_cart_outlined, size: 80, color: Colors.grey),
+            SizedBox(height: 16),
+            Text(
+              'No products found',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Try adjusting your search or filters',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadProducts,
+      color: Colors.green,
+      child: GridView.builder(
+        padding: const EdgeInsets.all(8),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 0.75,
+          crossAxisSpacing: 6,
+          mainAxisSpacing: 6,
+        ),
+        itemCount: _products.length,
+        itemBuilder: (context, index) {
+          final product = _products[index];
+          return ProductCard(
+            product: product,
+            onBuyPressed: () => _onBuyPressed(product),
+            onCallPressed: () => _onCallPressed(product),
+          );
+        },
+      ),
     );
   }
 }

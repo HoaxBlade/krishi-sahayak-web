@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import '../services/weather_service.dart';
 import '../services/connectivity_service.dart';
+import '../services/gemini_crop_recommendation_service.dart';
+import '../models/crop_recommendation.dart';
+import '../widgets/crop_details_dialog.dart';
 
 class WeatherScreen extends StatefulWidget {
   const WeatherScreen({super.key});
@@ -15,7 +18,8 @@ class _WeatherScreenState extends State<WeatherScreen> {
   final ConnectivityService _connectivityService = ConnectivityService();
 
   WeatherData? _currentWeather;
-  List<WeatherData> _forecast = [];
+  List<CropRecommendation> _cropRecommendations =
+      GeminiCropRecommendationService.getDefaultCropRecommendations();
   Map<String, dynamic> _stats = {};
   bool _isLoading = true;
   bool _isConnected = true;
@@ -27,6 +31,10 @@ class _WeatherScreenState extends State<WeatherScreen> {
     super.initState();
     _initializeWeather();
     _setupConnectivityListener();
+
+    debugPrint(
+      '🌾 [WeatherScreen] Initialized with ${_cropRecommendations.length} default crop recommendations',
+    );
   }
 
   Future<void> _initializeWeather() async {
@@ -43,23 +51,99 @@ class _WeatherScreenState extends State<WeatherScreen> {
       final weather = await _weatherService.getWeatherWithLocationPermission(
         context,
       );
-      final forecast = await _weatherService.getWeatherForecast();
       final stats = await _weatherService.getWeatherStats();
       final isConnected = _connectivityService.isConnected;
 
+      // Show default recommendations immediately
       setState(() {
         _currentWeather = weather;
-        _forecast = forecast;
         _stats = stats;
         _isConnected = isConnected;
         _isLoading = false;
       });
+
+      // Load AI recommendations in background and update if successful
+      debugPrint('🤖 [WeatherScreen] Calling background AI loading...');
+      _loadAIRecommendationsInBackground();
 
       debugPrint('✅ [WeatherScreen] Weather data loaded successfully');
     } catch (e) {
       debugPrint('❌ [WeatherScreen] Error loading weather data: $e');
       setState(() => _isLoading = false);
     }
+  }
+
+  Future<List<CropRecommendation>> _getCropRecommendations() async {
+    try {
+      // Determine location, climate, and season based on current weather
+      final location = 'India'; // You can get this from location service
+      final climate = _getClimateFromWeather();
+      final season = _getCurrentSeason();
+      final soilType =
+          'Alluvial'; // Default, can be enhanced with location data
+
+      debugPrint('🌾 [WeatherScreen] Getting crop recommendations with:');
+      debugPrint('   Location: $location');
+      debugPrint('   Climate: $climate');
+      debugPrint('   Season: $season');
+      debugPrint('   Soil Type: $soilType');
+      debugPrint('   Current Weather: ${_currentWeather?.temperature}°C');
+
+      final recommendations =
+          await GeminiCropRecommendationService.getCropRecommendations(
+            location: location,
+            climate: climate,
+            season: season,
+            soilType: soilType,
+          );
+
+      debugPrint(
+        '🌾 [WeatherScreen] Received ${recommendations.length} crop recommendations',
+      );
+      return recommendations;
+    } catch (e) {
+      debugPrint('❌ [WeatherScreen] Error getting crop recommendations: $e');
+      return [];
+    }
+  }
+
+  String _getClimateFromWeather() {
+    if (_currentWeather?.temperature != null) {
+      final temp = _currentWeather!.temperature!;
+      if (temp > 30) return 'Tropical';
+      if (temp > 20) return 'Subtropical';
+      if (temp > 10) return 'Temperate';
+      return 'Cold';
+    }
+    return 'Tropical'; // Default for India
+  }
+
+  Future<void> _loadAIRecommendationsInBackground() async {
+    try {
+      debugPrint(
+        '🤖 [WeatherScreen] Loading AI recommendations in background...',
+      );
+      debugPrint(
+        '🤖 [WeatherScreen] Current crop count: ${_cropRecommendations.length}',
+      );
+      final aiRecommendations = await _getCropRecommendations();
+
+      if (aiRecommendations.isNotEmpty && mounted) {
+        setState(() {
+          _cropRecommendations = aiRecommendations;
+        });
+        debugPrint('✅ [WeatherScreen] AI recommendations loaded successfully');
+      }
+    } catch (e) {
+      debugPrint('❌ [WeatherScreen] Error loading AI recommendations: $e');
+    }
+  }
+
+  String _getCurrentSeason() {
+    final month = DateTime.now().month;
+    if (month >= 6 && month <= 10) return 'Kharif';
+    if (month >= 11 || month <= 3) return 'Rabi';
+    return 'Summer';
   }
 
   Future<void> _refreshWeather() async {
@@ -72,13 +156,11 @@ class _WeatherScreenState extends State<WeatherScreen> {
       final weather = await _weatherService.getWeatherWithLocationPermission(
         context,
       );
-      final forecast = await _weatherService.getWeatherForecast();
       final stats = await _weatherService.getWeatherStats();
       final isConnected = _connectivityService.isConnected;
 
       setState(() {
         _currentWeather = weather;
-        _forecast = forecast;
         _stats = stats;
         _isConnected = isConnected;
       });
@@ -115,6 +197,9 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint(
+      '🌾 [WeatherScreen] Building with ${_cropRecommendations.length} crop recommendations',
+    );
     return Scaffold(
       appBar: AppBar(
         title: const Text('Weather'),
@@ -145,7 +230,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                     const SizedBox(height: 16),
                     _buildWeatherStats(),
                     const SizedBox(height: 16),
-                    _buildForecast(),
+                    _buildCropRecommendations(),
                     const SizedBox(height: 16),
                     _buildLocationInfo(),
                   ],
@@ -158,6 +243,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
   Widget _buildCurrentWeather() {
     if (_currentWeather == null) {
       return Card(
+        color: Colors.white,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -192,7 +278,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                 icon: const Icon(Icons.refresh),
                 label: const Text('Try Again'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
+                  backgroundColor: const Color(0xFF16A34A),
                   foregroundColor: Colors.white,
                 ),
               ),
@@ -203,6 +289,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     }
 
     return Card(
+      color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -285,6 +372,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
   Widget _buildWeatherStats() {
     return Card(
+      color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -343,9 +431,10 @@ class _WeatherScreenState extends State<WeatherScreen> {
     );
   }
 
-  Widget _buildForecast() {
-    if (_forecast.isEmpty) {
+  Widget _buildCropRecommendations() {
+    if (_cropRecommendations.isEmpty) {
       return Card(
+        color: Colors.white,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -353,10 +442,10 @@ class _WeatherScreenState extends State<WeatherScreen> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.cloud_queue, size: 24, color: Colors.grey[600]),
+                  Icon(Icons.agriculture, size: 24, color: Colors.grey[600]),
                   const SizedBox(width: 8),
                   Text(
-                    'Weather Forecast',
+                    'Crop Recommendations',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ],
@@ -365,8 +454,9 @@ class _WeatherScreenState extends State<WeatherScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade300),
                 ),
                 child: Row(
                   children: [
@@ -374,7 +464,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                     const SizedBox(width: 8),
                     const Expanded(
                       child: Text(
-                        'Forecast data will appear here when available. Pull down to refresh.',
+                        'Crop recommendations will appear here based on your location and weather conditions.',
                         style: TextStyle(color: Colors.grey),
                       ),
                     ),
@@ -388,31 +478,137 @@ class _WeatherScreenState extends State<WeatherScreen> {
     }
 
     return Card(
+      color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Weather Forecast',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            ..._forecast
-                .take(7)
-                .map(
-                  (weather) => ListTile(
-                    leading: const Icon(Icons.wb_sunny),
-                    title: Text(weather.date.toString().split(' ')[0]),
-                    subtitle: Text(weather.description ?? 'No description'),
-                    trailing: Text(
-                      '${weather.temperature?.toStringAsFixed(1) ?? 'N/A'}°C',
-                    ),
-                  ),
+            Row(
+              children: [
+                Icon(
+                  Icons.agriculture,
+                  size: 24,
+                  color: const Color(0xFF16A34A),
                 ),
+                const SizedBox(width: 8),
+                Text(
+                  'Recommended Crops',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ..._cropRecommendations.map((crop) => _buildCropCard(crop)),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildCropCard(CropRecommendation crop) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        onTap: () => _showCropDetails(crop),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF16A34A).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.agriculture,
+                  color: Color(0xFF16A34A),
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      crop.name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      crop.description,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF6B7280),
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        _buildCropInfoChip('Season', crop.season),
+                        _buildCropInfoChip('Water', crop.waterRequirement),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: Color(0xFF6B7280),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCropInfoChip(String label, String value) {
+    // Truncate long values to prevent overflow
+    final truncatedValue = value.length > 15
+        ? '${value.substring(0, 15)}...'
+        : value;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFF16A34A).withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        '$label: $truncatedValue',
+        style: const TextStyle(
+          fontSize: 12,
+          color: Color(0xFF16A34A),
+          fontWeight: FontWeight.w500,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+
+  void _showCropDetails(CropRecommendation crop) {
+    showDialog(
+      context: context,
+      builder: (context) => CropDetailsDialog(crop: crop),
     );
   }
 
@@ -420,6 +616,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     final position = _weatherService.currentPosition;
     if (position == null) {
       return Card(
+        color: Colors.white,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -448,6 +645,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     }
 
     return Card(
+      color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

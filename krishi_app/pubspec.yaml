@@ -66,6 +66,8 @@ dependencies:
   # Maps and offline capabilities
   flutter_map: ^7.0.0
   geocoding: ^3.0.0
+  maps_toolkit: ^2.0.1
+  url_launcher: ^6.2.2
 
   # Local notifications
   flutter_local_notifications: ^17.0.0

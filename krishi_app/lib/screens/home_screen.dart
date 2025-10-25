@@ -7,6 +7,7 @@ import '../services/connectivity_service.dart';
 import '../services/firebase_analytics_service.dart';
 import '../models/crop.dart';
 import 'profile_screen.dart';
+import 'land_area_calculator_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -92,6 +93,19 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 0,
         actions: [
           IconButton(
+            icon: Icon(Icons.calculate, color: Colors.black, size: 28),
+            onPressed: () {
+              // Navigate to land area calculator screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LandAreaCalculatorScreen(),
+                ),
+              );
+            },
+            tooltip: 'Land Area Calculator',
+          ),
+          IconButton(
             icon: Icon(Icons.person, color: Colors.black, size: 28),
             onPressed: () {
               // Navigate to profile screen
@@ -100,6 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 MaterialPageRoute(builder: (context) => ProfileScreen()),
               );
             },
+            tooltip: 'Profile',
           ),
         ],
       ),

@@ -19,6 +19,9 @@ export interface SignUpData {
   metadata?: {
     full_name?: string
     phone?: string
+    state?: string
+    district?: string
+    region?: string
   }
 }
 

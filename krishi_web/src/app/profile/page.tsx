@@ -10,10 +10,12 @@ import {
   Edit3, 
   LogOut, 
   Save,
-  X
+  X,
+  MapPin
 } from 'lucide-react'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { useAuth } from '@/contexts/AuthContext'
+import RegionSelector from '@/components/RegionSelector'
 
 export default function ProfilePage() {
   const { user, signOut, updateProfile } = useAuth()
@@ -21,14 +23,20 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(false)
   const [editData, setEditData] = useState({
     full_name: user?.user_metadata?.full_name || '',
-    phone: user?.user_metadata?.phone || ''
+    phone: user?.user_metadata?.phone || '',
+    state: user?.user_metadata?.state || '',
+    district: user?.user_metadata?.district || '',
+    region: user?.user_metadata?.region || ''
   })
 
   const handleEdit = () => {
     setIsEditing(true)
     setEditData({
       full_name: user?.user_metadata?.full_name || '',
-      phone: user?.user_metadata?.phone || ''
+      phone: user?.user_metadata?.phone || '',
+      state: user?.user_metadata?.state || '',
+      district: user?.user_metadata?.district || '',
+      region: user?.user_metadata?.region || ''
     })
   }
 
@@ -48,7 +56,10 @@ export default function ProfilePage() {
     setIsEditing(false)
     setEditData({
       full_name: user?.user_metadata?.full_name || '',
-      phone: user?.user_metadata?.phone || ''
+      phone: user?.user_metadata?.phone || '',
+      state: user?.user_metadata?.state || '',
+      district: user?.user_metadata?.district || '',
+      region: user?.user_metadata?.region || ''
     })
   }
 
@@ -136,6 +147,47 @@ export default function ProfilePage() {
                       <p className="text-gray-900">
                         {user?.user_metadata?.phone || 'Not provided'}
                       </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Location */}
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center space-x-3 mb-4">
+                  <MapPin className="w-5 h-5 text-black" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Location</p>
+                    {!isEditing ? (
+                      <div className="mt-1">
+                        {user?.user_metadata?.state && user?.user_metadata?.district ? (
+                          <div className="space-y-1">
+                            <p className="text-gray-900 font-medium">
+                              {user.user_metadata.district}, {user.user_metadata.state}
+                            </p>
+                            {user.user_metadata.region && (
+                              <p className="text-sm text-gray-600">
+                                {user.user_metadata.region} India
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-gray-500">Not provided</p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="mt-2">
+                        <RegionSelector
+                          selectedState={editData.state}
+                          selectedDistrict={editData.district}
+                          onStateChange={(state) => setEditData(prev => ({ ...prev, state }))}
+                          onDistrictChange={(district) => setEditData(prev => ({ ...prev, district }))}
+                          onRegionChange={(region) => setEditData(prev => ({ ...prev, region }))}
+                          required={false}
+                          label=""
+                          className="mt-2"
+                        />
+                      </div>
                     )}
                   </div>
                 </div>

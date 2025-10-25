@@ -26,13 +26,13 @@ class ProductCard extends StatelessWidget {
 
     // Dynamic sizing
     final imageHeight = isSmallScreen
-        ? 60.0
+        ? 50.0
         : isMediumScreen
-        ? 80.0
-        : 90.0;
-    final cardPadding = isSmallScreen ? 4.0 : 6.0;
-    final spacing = isSmallScreen ? 1.0 : 2.0;
-    final fontSizeMultiplier = isSmallScreen ? 1.0 : 1.2;
+        ? 60.0
+        : 70.0;
+    final cardPadding = isSmallScreen ? 3.0 : 4.0;
+    final spacing = isSmallScreen ? 0.5 : 1.0;
+    final fontSizeMultiplier = isSmallScreen ? 0.9 : 1.0;
 
     return Card(
       margin: EdgeInsets.all(isSmallScreen ? 2.0 : 4.0),
@@ -83,9 +83,9 @@ class ProductCard extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          'Product: ',
+                          _isDroneService() ? 'Service: ' : 'Product: ',
                           style: TextStyle(
-                            fontSize: (16 * fontSizeMultiplier)
+                            fontSize: (14 * fontSizeMultiplier)
                                 .round()
                                 .toDouble(),
                             fontWeight: FontWeight.w600,
@@ -96,7 +96,7 @@ class ProductCard extends StatelessWidget {
                           child: Text(
                             product.name,
                             style: TextStyle(
-                              fontSize: (18 * fontSizeMultiplier)
+                              fontSize: (16 * fontSizeMultiplier)
                                   .round()
                                   .toDouble(),
                               fontWeight: FontWeight.bold,
@@ -106,6 +106,36 @@ class ProductCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        if (_isDroneService())
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.flight,
+                                  size: 12,
+                                  color: Colors.green[700],
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  'Drone',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.green[700],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                       ],
                     ),
                     SizedBox(height: spacing),
@@ -116,7 +146,7 @@ class ProductCard extends StatelessWidget {
                         Text(
                           'Details: ',
                           style: TextStyle(
-                            fontSize: (15 * fontSizeMultiplier)
+                            fontSize: (13 * fontSizeMultiplier)
                                 .round()
                                 .toDouble(),
                             fontWeight: FontWeight.w600,
@@ -127,7 +157,7 @@ class ProductCard extends StatelessWidget {
                           child: Text(
                             product.description,
                             style: TextStyle(
-                              fontSize: (16 * fontSizeMultiplier)
+                              fontSize: (14 * fontSizeMultiplier)
                                   .round()
                                   .toDouble(),
                               color: Colors.grey[600],
@@ -140,13 +170,52 @@ class ProductCard extends StatelessWidget {
                     ),
                     SizedBox(height: spacing),
 
+                    // Service Type for Drone Services
+                    if (_isDroneService() && _getServiceType().isNotEmpty)
+                      Row(
+                        children: [
+                          Text(
+                            'Type: ',
+                            style: TextStyle(
+                              fontSize: (15 * fontSizeMultiplier)
+                                  .round()
+                                  .toDouble(),
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              _getServiceType(),
+                              style: TextStyle(
+                                fontSize: (14 * fontSizeMultiplier)
+                                    .round()
+                                    .toDouble(),
+                                fontWeight: FontWeight.w600,
+                                color: Colors.blue[700],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    if (_isDroneService() && _getServiceType().isNotEmpty)
+                      SizedBox(height: spacing),
+
                     // Price with label
                     Row(
                       children: [
                         Text(
                           'Price: ',
                           style: TextStyle(
-                            fontSize: (16 * fontSizeMultiplier)
+                            fontSize: (14 * fontSizeMultiplier)
                                 .round()
                                 .toDouble(),
                             fontWeight: FontWeight.w600,
@@ -155,9 +224,11 @@ class ProductCard extends StatelessWidget {
                         ),
                         Expanded(
                           child: Text(
-                            product.displayPrice,
+                            _isDroneService()
+                                ? '₹${product.price.toStringAsFixed(0)}/hour'
+                                : product.displayPrice,
                             style: TextStyle(
-                              fontSize: (20 * fontSizeMultiplier)
+                              fontSize: (18 * fontSizeMultiplier)
                                   .round()
                                   .toDouble(),
                               fontWeight: FontWeight.bold,
@@ -254,10 +325,12 @@ class ProductCard extends StatelessWidget {
                               ),
                             ),
                             child: Text(
-                              product.isRentable ? 'Rent' : 'Buy',
+                              _isDroneService()
+                                  ? 'Book Service'
+                                  : (product.isRentable ? 'Rent' : 'Buy'),
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
-                                fontSize: (16 * fontSizeMultiplier)
+                                fontSize: (14 * fontSizeMultiplier)
                                     .round()
                                     .toDouble(),
                               ),
@@ -321,5 +394,13 @@ class ProductCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  bool _isDroneService() {
+    return product.specifications['is_drone_service'] == true;
+  }
+
+  String _getServiceType() {
+    return product.specifications['service_type']?.toString() ?? '';
   }
 }

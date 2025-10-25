@@ -409,6 +409,163 @@ class SupabaseService {
     }
   }
 
+  /// Drone Service Operations
+
+  // Get all drone services with optional filters
+  Future<List<Map<String, dynamic>>> getDroneServices({
+    String? serviceType,
+    String? search,
+    double? minPrice,
+    double? maxPrice,
+    String? location,
+    String? sortBy,
+    bool ascending = false,
+    int? page,
+    int? limit,
+  }) async {
+    try {
+      debugPrint('🚁 [SupabaseService] Fetching drone services...');
+
+      final query = client
+          .from('drone_services')
+          .select('''
+        *,
+        user_profile:user_id (
+          id,
+          name,
+          email,
+          phone,
+          location
+        )
+      ''')
+          .eq('is_active', true);
+
+      // Apply filters
+      var filteredQuery = query;
+      if (serviceType != null &&
+          serviceType.isNotEmpty &&
+          serviceType != 'all') {
+        filteredQuery = filteredQuery.eq('service_type', serviceType);
+      }
+
+      if (search != null && search.isNotEmpty) {
+        filteredQuery = filteredQuery.or(
+          'name.ilike.%$search%,description.ilike.%$search%,service_type.ilike.%$search%',
+        );
+      }
+
+      if (minPrice != null) {
+        filteredQuery = filteredQuery.gte('price_per_hour', minPrice);
+      }
+
+      if (maxPrice != null) {
+        filteredQuery = filteredQuery.lte('price_per_hour', maxPrice);
+      }
+
+      if (location != null && location.isNotEmpty) {
+        filteredQuery = filteredQuery.or(
+          'location_city.ilike.%$location%,location_state.ilike.%$location%',
+        );
+      }
+
+      // Apply sorting and pagination
+      final sortField = sortBy ?? 'created_at';
+      final response = await filteredQuery
+          .order(sortField, ascending: ascending)
+          .range(
+            page != null && limit != null ? (page - 1) * limit : 0,
+            page != null && limit != null
+                ? (page - 1) * limit + limit - 1
+                : 1000,
+          );
+      debugPrint(
+        '✅ [SupabaseService] Retrieved ${response.length} drone services',
+      );
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      debugPrint('❌ [SupabaseService] Error getting drone services: $e');
+      rethrow;
+    }
+  }
+
+  // Create drone service
+  Future<Map<String, dynamic>> createDroneService(
+    Map<String, dynamic> serviceData,
+  ) async {
+    try {
+      debugPrint('🚁 [SupabaseService] Creating drone service...');
+
+      if (!isAuthenticated) {
+        throw Exception('User must be authenticated to create drone services');
+      }
+
+      // Add user_id
+      serviceData['user_id'] = currentUser!.id;
+
+      final response = await client
+          .from('drone_services')
+          .insert(serviceData)
+          .select()
+          .single();
+
+      debugPrint('✅ [SupabaseService] Drone service created successfully');
+      return response;
+    } catch (e) {
+      debugPrint('❌ [SupabaseService] Error creating drone service: $e');
+      rethrow;
+    }
+  }
+
+  // Update drone service
+  Future<Map<String, dynamic>> updateDroneService(
+    String serviceId,
+    Map<String, dynamic> serviceData,
+  ) async {
+    try {
+      debugPrint('🚁 [SupabaseService] Updating drone service: $serviceId');
+
+      if (!isAuthenticated) {
+        throw Exception('User must be authenticated to update drone services');
+      }
+
+      final response = await client
+          .from('drone_services')
+          .update(serviceData)
+          .eq('id', serviceId)
+          .eq('user_id', currentUser!.id) // Ensure user owns the service
+          .select()
+          .single();
+
+      debugPrint('✅ [SupabaseService] Drone service updated successfully');
+      return response;
+    } catch (e) {
+      debugPrint('❌ [SupabaseService] Error updating drone service: $e');
+      rethrow;
+    }
+  }
+
+  // Delete drone service (soft delete)
+  Future<void> deleteDroneService(String serviceId) async {
+    try {
+      debugPrint('🚁 [SupabaseService] Deleting drone service: $serviceId');
+
+      if (!isAuthenticated) {
+        throw Exception('User must be authenticated to delete drone services');
+      }
+
+      await client
+          .from('drone_services')
+          .update({'is_active': false})
+          .eq('id', serviceId)
+          .eq('user_id', currentUser!.id); // Ensure user owns the service
+
+      debugPrint('✅ [SupabaseService] Drone service deleted successfully');
+    } catch (e) {
+      debugPrint('❌ [SupabaseService] Error deleting drone service: $e');
+      rethrow;
+    }
+  }
+
   /// Analysis Operations
 
   // Get all crop analyses
