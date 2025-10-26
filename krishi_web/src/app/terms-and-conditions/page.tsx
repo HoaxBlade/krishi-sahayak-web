@@ -3,13 +3,13 @@ import LegalPagesHeader from '@/components/LegalPagesHeader';
 
 const TermsAndConditionsPage = () => {
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
-      <div className="max-w-4xl w-full bg-white p-8 rounded-lg shadow-md">
+    <div className="min-h-screen bg-gray-50 py-8 sm:py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
+      <div className="max-w-4xl w-full bg-white p-4 sm:p-6 lg:p-8 rounded-lg shadow-md">
         <LegalPagesHeader activeTab="terms-and-conditions" />
-        <h1 className="text-4xl font-bold mb-6 text-green-700">Terms and Conditions</h1>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 text-green-700">Terms and Conditions</h1>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4 text-green-600">1. Introduction</h2>
+        <section className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">1. Introduction</h2>
           <p className="text-gray-700 leading-relaxed">
             Welcome to Krishi Sahayak. These terms and conditions outline the rules and regulations for the use of Krishi Sahayak&apos;s Website and Mobile Application.
           </p>
@@ -18,8 +18,8 @@ const TermsAndConditionsPage = () => {
           </p>
         </section>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4 text-green-600">2. License</h2>
+        <section className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">2. License</h2>
           <p className="text-gray-700 leading-relaxed">
             Unless otherwise stated, Krishi Sahayak and/or its licensors own the intellectual property rights for all material on Krishi Sahayak. All intellectual property rights are reserved. You may access this from Krishi Sahayak for your own personal use subjected to restrictions set in these terms and conditions.
           </p>
@@ -34,8 +34,8 @@ const TermsAndConditionsPage = () => {
           </ul>
         </section>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4 text-green-600">3. User Comments</h2>
+        <section className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">3. User Comments</h2>
           <p className="text-gray-700 leading-relaxed">
             This Agreement shall begin on the date hereof.
             Parts of this website/app offer an opportunity for users to post and exchange opinions and information in certain areas of the website/app. Krishi Sahayak does not filter, edit, publish or review Comments prior to their presence on the website/app. Comments do not reflect the views and opinions of Krishi Sahayak,its agents and/or affiliates. Comments reflect the views and opinions of the person who post their views and opinions. To the extent permitted by applicable laws, Krishi Sahayak shall not be liable for the Comments or for any liability, damages or expenses caused and/or suffered as a result of any use of and/or posting of and/or appearance of the Comments on this website/app.
@@ -57,8 +57,8 @@ const TermsAndConditionsPage = () => {
           </p>
         </section>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4 text-green-600">4. Hyperlinking to our Content</h2>
+        <section className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">4. Hyperlinking to our Content</h2>
           <p className="text-gray-700 leading-relaxed">
             The following organizations may link to our Website/App without prior written approval:
           </p>
@@ -95,36 +95,36 @@ const TermsAndConditionsPage = () => {
           </p>
         </section>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4 text-green-600">5. iFrames</h2>
+        <section className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">5. iFrames</h2>
           <p className="text-gray-700 leading-relaxed">
             Without prior approval and written permission, you may not create frames around our Webpages that alter in any way the visual presentation or appearance of our Website/App.
           </p>
         </section>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4 text-green-600">6. Content Liability</h2>
+        <section className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">6. Content Liability</h2>
           <p className="text-gray-700 leading-relaxed">
             We shall not be hold responsible for any content that appears on your Website/App. You agree to protect and defend us against all claims that is rising on your Website/App. No link(s) should appear on any Website/App that may be interpreted as libelous, obscene or criminal, or which infringes, otherwise violates, or advocates the infringement or other violation of, any third party rights.
           </p>
         </section>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4 text-green-600">7. Your Privacy</h2>
+        <section className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">7. Your Privacy</h2>
           <p className="text-gray-700 leading-relaxed">
             Please read Privacy Policy
           </p>
         </section>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4 text-green-600">8. Reservation of Rights</h2>
+        <section className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">8. Reservation of Rights</h2>
           <p className="text-gray-700 leading-relaxed">
             We reserve the right to request that you remove all links or any particular link to our Website/App. You approve to immediately remove all links to our Website/App upon request. We also reserve the right to amen these terms and conditions and it’s linking policy at any time. By continuously linking to our Website/App, you agree to be bound to and follow these linking terms and conditions.
           </p>
         </section>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4 text-green-600">9. Removal of links from our website/app</h2>
+        <section className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">9. Removal of links from our website/app</h2>
           <p className="text-gray-700 leading-relaxed">
             If you find any link on our Website/App that is offensive for any reason, you are free to contact and inform us any moment. We will consider requests to remove links but we are not obligated to or so or to respond to you directly.
           </p>
@@ -133,8 +133,8 @@ const TermsAndConditionsPage = () => {
           </p>
         </section>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4 text-green-600">10. Disclaimer</h2>
+        <section className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">10. Disclaimer</h2>
           <p className="text-gray-700 leading-relaxed">
             To the maximum extent permitted by applicable law, we exclude all representations, warranties and conditions relating to our website/app and the use of this website/app. Nothing in this disclaimer will:
           </p>
@@ -153,7 +153,7 @@ const TermsAndConditionsPage = () => {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold mb-4 text-green-600">11. Contact Us</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">11. Contact Us</h2>
           <p className="text-gray-700 leading-relaxed">
             If you have any questions about this Terms & Conditions, please contact us at krishi.sahayak2025@gmail.com
           </p>

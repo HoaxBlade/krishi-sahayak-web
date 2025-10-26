@@ -191,17 +191,17 @@ export default function HomePage() {
       />
       
       {/* Hero with animated background */}
-      <section className="relative py-24 overflow-hidden text-center z-10">
+      <section className="relative py-12 sm:py-16 md:py-20 lg:py-24 overflow-hidden text-center z-10">
         <div className="relative">
           <motion.h1
-            className="text-5xl md:text-6xl font-extrabold text-gray-900 mb-8 leading-tight" /* Adjusted text size and margin */
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-6xl font-extrabold text-gray-900 mb-6 sm:mb-8 leading-tight" /* Adjusted text size and margin */
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
             Smart Farming with{" "}
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-blue-600"> AI</span>
           </motion.h1>
-          <p className="text-lg text-gray-600 mb-10 max-w-2xl mx-auto"> {/* Adjusted text size and margin */}
+          <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-10 max-w-2xl mx-auto"> {/* Adjusted text size and margin */}
             Revolutionize your farming with advanced drone technology, AI-powered crop analysis, weather insights, and smart tools.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4">
@@ -229,23 +229,23 @@ export default function HomePage() {
     
       {/* Weather */}
       {weather && (
-        <section className="relative py-4 z-10">
+        <section className="relative py-4 z-10 px-4">
           <motion.div
-            className="backdrop-blur-xl bg-white/60 border border-gray-100 rounded-2xl shadow-subtle p-7 max-w-sm mx-auto"
+            className="backdrop-blur-xl bg-white/60 border border-gray-100 rounded-2xl shadow-subtle p-5 sm:p-6 md:p-7 max-w-sm mx-auto w-full"
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.08)" }}
             transition={{ duration: 0.8, type: "spring", stiffness: 100 }}
           >
-            <div className="flex items-center justify-between mb-5"> {/* Adjusted margin */}
-              <div>
-                <h3 className="text-xl font-bold text-gray-900">{weather.location}</h3> {/* Adjusted text size */}
-                <p className="text-gray-500">{weather.description}</p> {/* Adjusted text color */}
+            <div className="flex items-center justify-between mb-4 sm:mb-5"> {/* Adjusted margin */}
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 truncate">{weather.location}</h3> {/* Adjusted text size */}
+                <p className="text-sm text-gray-500 truncate">{weather.description}</p> {/* Adjusted text color */}
                 {userLocation && (
                   <p className="text-xs text-green-600 mt-1">📍 Your current location</p>
                 )}
               </div>
-              <div className="text-5xl animate-pulse"> {/* Adjusted text size */}
+              <div className="text-4xl sm:text-5xl animate-pulse flex-shrink-0 ml-2"> {/* Adjusted text size */}
                 {WeatherService.getInstance().getWeatherIcon(weather.description)}
               </div>
             </div>
@@ -261,20 +261,20 @@ export default function HomePage() {
       )}
 
       {/* Incubated By Section */}
-      <section className="relative py-8 pt-16 pb-8 z-10 bg-gradient-to-br from-green-50 via-blue-50 to-white">
+      <section className="relative py-6 sm:py-8 pt-12 sm:pt-16 pb-6 sm:pb-8 z-10 bg-gradient-to-br from-green-50 via-blue-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-lg text-gray-600 font-medium mb-1">Incubated By:</p>
-          <img src="/NIELIT.png" alt="NIELIT Logo" className="mx-auto h-16" />
-          <p className="text-sm text-gray-500 mt-1">An initiative by NIELIT</p>
+          <p className="text-base sm:text-lg text-gray-600 font-medium mb-1">Incubated By:</p>
+          <img src="/NIELIT.png" alt="NIELIT Logo" className="mx-auto h-12 sm:h-16" />
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">An initiative by NIELIT</p>
         </div>
       </section>
 
       {/* System Status Section */}
-      <section className="relative py-5 bg-gray-50 z-10">
+      <section className="relative py-4 sm:py-5 bg-gray-50 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-gray-900 mb-3">System Status</h2>
-            <p className="text-lg text-gray-600">Real-time monitoring of our AI services</p>
+          <div className="text-center mb-8 sm:mb-10">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 sm:mb-3">System Status</h2>
+            <p className="text-base sm:text-lg text-gray-600">Real-time monitoring of our AI services</p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-7">
@@ -302,25 +302,25 @@ export default function HomePage() {
       </section>
 
       {/* Features */}
-      <section className="relative py-12 bg-gradient-to-b from-white to-green-50 z-10">
+      <section className="relative py-8 sm:py-10 md:py-12 bg-gradient-to-b from-white to-green-50 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900 mb-3">Powerful Features for Modern Farming</h2>
-          <p className="text-base text-gray-600 mb-14">Everything you need to optimize your agricultural operations</p>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-2 sm:mb-3">Powerful Features for Modern Farming</h2>
+          <p className="text-sm sm:text-base text-gray-600 mb-10 sm:mb-12 md:mb-14">Everything you need to optimize your agricultural operations</p>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             {features.map((f, i) => (
               <motion.div
                 key={i}
-                className="text-center p-6 rounded-xl bg-white/70 backdrop-blur-md shadow-subtle"
+                className="text-center p-5 sm:p-6 rounded-xl bg-white/70 backdrop-blur-md shadow-subtle"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.08)" }}
                 transition={{ delay: i * 0.15, type: "spring", stiffness: 100 }}
               >
-                <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-green-100 to-blue-100 text-green-600 rounded-full mb-3 shadow-inner">
+                <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-green-100 to-blue-100 text-green-600 rounded-full mb-3 shadow-inner">
                   {f.icon}
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-1.5">{f.title}</h3>
-                <p className="text-gray-600 text-sm">{f.desc}</p>
+                <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-1.5">{f.title}</h3>
+                <p className="text-gray-600 text-xs sm:text-sm">{f.desc}</p>
               </motion.div>
             ))}
           </div>

@@ -3,29 +3,29 @@ import LegalPagesHeader from '../../components/LegalPagesHeader';
 
 const CookieManagementPage = () => {
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
-      <div className="max-w-4xl w-full bg-white p-8 rounded-lg shadow-md">
+    <div className="min-h-screen bg-gray-50 py-8 sm:py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
+      <div className="max-w-4xl w-full bg-white p-4 sm:p-6 lg:p-8 rounded-lg shadow-md">
       <LegalPagesHeader />
-      <h1 className="text-4xl font-bold mb-6 text-green-700">Cookie Management Policy</h1>
+      <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 text-green-700">Cookie Management Policy</h1>
 
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4 text-green-600">1. Introduction</h2>
+      <section className="mb-6 sm:mb-8">
+        <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">1. Introduction</h2>
         <p className="text-gray-700 leading-relaxed">
           Welcome to Krishi Sahayak. This Cookie Management Policy explains how we use cookies and similar technologies
           on our website and services. By using our website, you consent to the use of cookies in accordance with this policy.
         </p>
       </section>
 
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4 text-green-600">2. What are Cookies?</h2>
+      <section className="mb-6 sm:mb-8">
+        <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">2. What are Cookies?</h2>
         <p className="text-gray-700 leading-relaxed">
           Cookies are small text files that are placed on your device (computer, tablet, mobile phone) when you visit a website.
           They are widely used to make websites work more efficiently, as well as to provide information to the owners of the site.
         </p>
       </section>
 
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4 text-green-600">3. How We Use Cookies</h2>
+      <section className="mb-6 sm:mb-8">
+        <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">3. How We Use Cookies</h2>
         <p className="text-gray-700 leading-relaxed mb-2">
           We use cookies for various purposes, including:
         </p>
@@ -37,16 +37,16 @@ const CookieManagementPage = () => {
         </ul>
       </section>
 
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4 text-green-600">4. Third-Party Cookies</h2>
+      <section className="mb-6 sm:mb-8">
+        <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">4. Third-Party Cookies</h2>
         <p className="text-gray-700 leading-relaxed">
           In addition to our own cookies, we may also use various third-parties cookies to report usage statistics of the Service,
           deliver advertisements on and through the Service, and so on.
         </p>
       </section>
 
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4 text-green-600">5. Your Cookie Choices</h2>
+      <section className="mb-6 sm:mb-8">
+        <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">5. Your Cookie Choices</h2>
         <p className="text-gray-700 leading-relaxed mb-2">
           You have the right to decide whether to accept or reject cookies. You can exercise your cookie preferences by:
         </p>
@@ -59,8 +59,8 @@ const CookieManagementPage = () => {
         </p>
       </section>
 
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4 text-green-600">6. Changes to This Policy</h2>
+      <section className="mb-6 sm:mb-8">
+        <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">6. Changes to This Policy</h2>
         <p className="text-gray-700 leading-relaxed">
           We may update our Cookie Management Policy from time to time. We will notify you of any changes by posting the new
           Cookie Management Policy on this page. You are advised to review this Cookie Management Policy periodically for any changes.
@@ -68,7 +68,7 @@ const CookieManagementPage = () => {
       </section>
 
       <section>
-        <h2 className="text-2xl font-semibold mb-4 text-green-600">7. Contact Us</h2>
+        <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">7. Contact Us</h2>
         <p className="text-gray-700 leading-relaxed">
           If you have any questions about this Cookie Management Policy, please contact us at krishi.sahayak2025@gmail.com.
         </p>

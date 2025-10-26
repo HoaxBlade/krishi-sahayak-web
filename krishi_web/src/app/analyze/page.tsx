@@ -210,12 +210,12 @@ export default function AnalyzePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-12">
+        <div className="text-center mb-8 sm:mb-10">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 sm:mb-3">
             Advanced Agricultural Analytics
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-base sm:text-lg text-gray-600 px-2">
             Real-time monitoring of AI models and drone data for comprehensive crop health analysis
           </p>
           {loading && (
@@ -233,25 +233,26 @@ export default function AnalyzePage() {
 
         {/* Server Health Status */}
           <motion.div
-          className={`bg-white rounded-xl shadow-lg p-6 mb-8 ${serverHealth.status === 'healthy' ? 'glow-green' : 'glow-red'}`}
+          className={`bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8 ${serverHealth.status === 'healthy' ? 'glow-green' : 'glow-red'}`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-              <Server className="w-6 h-6 mr-2 text-blue-600" />
-              Server Health Status
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center">
+              <Server className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-blue-600" />
+              <span className="hidden sm:inline">Server Health Status</span>
+              <span className="sm:hidden">Health Status</span>
             </h2>
-            <div className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full ${getStatusColor(serverHealth.status)}`}>
+            <div className={`inline-flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1 rounded-full ${getStatusColor(serverHealth.status)}`}>
               {getStatusIcon(serverHealth.status)}
-              <span className="font-medium capitalize text-sm">
+              <span className="font-medium capitalize text-xs sm:text-sm">
                 {serverHealth.status}
               </span>
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Response Time</span>
@@ -285,39 +286,40 @@ export default function AnalyzePage() {
         </motion.div>
         {/* Drone Data Integration */}
         <motion.div
-          className="bg-white rounded-xl shadow-lg p-6 mb-8"
+          className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.05 }}
         >
-          <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-            <Zap className="w-6 h-6 mr-2 text-yellow-600" />
-            Drone Data Integration
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center">
+            <Zap className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-yellow-600" />
+            <span className="hidden sm:inline">Drone Data Integration</span>
+            <span className="sm:hidden">Drone Integration</span>
           </h2>
-          <p className="text-gray-600 mb-4">
+          <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
             Seamlessly integrate and analyze data from your agricultural drones for enhanced insights.
           </p>
-          <div className="h-32 bg-gray-50 rounded-lg flex items-center justify-center">
-            <p className="text-gray-500">Drone data visualization coming soon</p>
+          <div className="h-24 sm:h-32 bg-gray-50 rounded-lg flex items-center justify-center px-2">
+            <p className="text-xs sm:text-sm text-gray-500 text-center">Drone data visualization coming soon</p>
           </div>
         </motion.div>
 
         {/* Performance Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
               <motion.div
-            className="bg-white rounded-xl shadow-lg p-6"
+            className="bg-white rounded-xl shadow-lg p-4 sm:p-6"
             initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <User className="w-6 h-6 text-blue-600" />
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <div className="p-2 sm:p-3 bg-blue-100 rounded-lg">
+                <User className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
               </div>
-              <TrendingUp className="w-5 h-5 text-blue-500" />
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
             </div>
-            <h3 className="text-sm font-medium text-gray-600 mb-1">Number of Active Users</h3>
-            <p className="text-3xl font-bold text-gray-900">
+            <h3 className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Number of Active Users</h3>
+            <p className="text-2xl sm:text-3xl font-bold text-gray-900">
               {loading ? '...' : modelStats.activeUsers.toLocaleString()}
             </p>
             <p className={`text-xs mt-1 ${
@@ -331,19 +333,19 @@ export default function AnalyzePage() {
               </motion.div>
 
           <motion.div
-            className="bg-white rounded-xl shadow-lg p-6"
+            className="bg-white rounded-xl shadow-lg p-4 sm:p-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <Clock className="w-6 h-6 text-purple-600" />
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <div className="p-2 sm:p-3 bg-purple-100 rounded-lg">
+                <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
               </div>
-              <TrendingUp className="w-5 h-5 text-purple-500" />
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500" />
             </div>
-            <h3 className="text-sm font-medium text-gray-600 mb-1">Avg Response Time</h3>
-            <p className="text-3xl font-bold text-gray-900">
+            <h3 className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Avg Response Time</h3>
+            <p className="text-2xl sm:text-3xl font-bold text-gray-900">
               {loading ? '...' : `${modelStats.avgResponseTime}s`}
             </p>
             <p className={`text-xs mt-1 ${
@@ -357,19 +359,19 @@ export default function AnalyzePage() {
           </motion.div>
 
           <motion.div
-            className="bg-white rounded-xl shadow-lg p-6"
+            className="bg-white rounded-xl shadow-lg p-4 sm:p-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-orange-100 rounded-lg">
-                <Shield className="w-6 h-6 text-orange-600" />
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <div className="p-2 sm:p-3 bg-orange-100 rounded-lg">
+                <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
               </div>
-              <TrendingUp className="w-5 h-5 text-orange-500" />
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
                    </div>
-            <h3 className="text-sm font-medium text-gray-600 mb-1">Downtime</h3>
-            <p className="text-3xl font-bold text-gray-900">
+            <h3 className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Downtime</h3>
+            <p className="text-2xl sm:text-3xl font-bold text-gray-900">
               {loading ? '...' : `${modelStats.downtime}%`}
             </p>
             <p className="text-xs text-gray-500 mt-1">
@@ -380,15 +382,16 @@ export default function AnalyzePage() {
 
         {/* Recent Crop Analyses */}
         <motion.div
-          className="bg-white rounded-xl shadow-lg p-6 mb-8"
+          className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.5 }}
         >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-              <Activity className="w-6 h-6 mr-2 text-green-600" />
-              Latest Crop Analyses
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center">
+              <Activity className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-green-600" />
+              <span className="hidden sm:inline">Latest Crop Analyses</span>
+              <span className="sm:hidden">Crop Analyses</span>
             </h2>
             {usingSampleData && (
               <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
@@ -397,60 +400,60 @@ export default function AnalyzePage() {
             )}
           </div>
           
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {(showAllAnalyses ? allAnalyses : recentAnalyses).length > 0 ? (showAllAnalyses ? allAnalyses : recentAnalyses).map((analysis) => (
               <motion.div
                 key={analysis.id}
-                className="flex items-center justify-between p-3.5 border border-gray-100 rounded-lg"
+                className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-3.5 border border-gray-100 rounded-lg gap-2 sm:gap-0"
                 whileHover={{ scale: 1.01, backgroundColor: "#f0f0f0", boxShadow: "0 5px 10px rgba(0, 0, 0, 0.05)" }}
                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
               >
-                <div className="flex items-center space-x-4">
-                  <div className={`w-2.5 h-2.5 rounded-full ${
+                <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
+                  <div className={`w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full flex-shrink-0 ${
                     analysis.status === 'Healthy' ? 'bg-green-500' : 'bg-red-500'
                   }`} />
-                  <div>
-                    <p className="font-medium text-gray-800">{analysis.crop}</p>
-                    <p className="text-xs text-gray-500">{analysis.location}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-gray-800 text-sm sm:text-base truncate">{analysis.crop}</p>
+                    <p className="text-xs text-gray-500 truncate">{analysis.location}</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-medium text-gray-800">{analysis.status}</p>
-                  <p className="text-xs text-gray-500">{analysis.confidence}% confidence</p>
+                <div className="flex items-center justify-between sm:flex-col sm:items-end gap-1 sm:gap-0 sm:ml-4">
+                  <p className={`font-medium text-xs sm:text-sm ${analysis.status === 'Healthy' ? 'text-green-600' : 'text-red-600'}`}>{analysis.status}</p>
+                  <p className="text-xs text-gray-500 whitespace-nowrap">{analysis.confidence}%</p>
                 </div>
-                <div className="text-xs text-gray-400">
+                <div className="text-xs text-gray-400 ml-auto sm:ml-0 whitespace-nowrap">
                   {new Date(analysis.date).toLocaleDateString()}
                 </div>
               </motion.div>
             )) : (
-              <div className="text-center py-8 text-gray-500">
-                <Activity className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p>No recent analyses found</p>
-                <p className="text-sm text-gray-400 mt-1">Analyses will appear here once crops are analyzed</p>
+              <div className="text-center py-6 sm:py-8 text-gray-500">
+                <Activity className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 text-gray-300" />
+                <p className="text-sm sm:text-base">No recent analyses found</p>
+                <p className="text-xs sm:text-sm text-gray-400 mt-1">Analyses will appear here once crops are analyzed</p>
               </div>
             )}
           </div>
           
-          <div className="mt-5">
+          <div className="mt-4 sm:mt-5">
             <button 
               onClick={handleViewAllAnalyses}
-              className="inline-flex items-center text-green-600 hover:text-green-700 font-semibold text-sm transition-all hover:scale-[1.02]"
+              className="inline-flex items-center text-green-600 hover:text-green-700 font-semibold text-xs sm:text-sm transition-all hover:scale-[1.02]"
             >
-              {showAllAnalyses ? 'Show Recent Analyses' : 'View All Analyses'}
-              <Activity className="w-3.5 h-3.5 ml-2" />
+              {showAllAnalyses ? 'Show Recent' : 'View All'}
+              <Activity className="w-3 h-3 sm:w-3.5 sm:h-3.5 ml-1 sm:ml-2" />
             </button>
           </div>
         </motion.div>
 
         {/* System Status */}
         <motion.div
-          className="bg-white rounded-xl shadow-lg p-6 mb-8"
+          className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.6 }}
         >
-          <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-            <Server className="w-6 h-6 mr-2 text-blue-600" />
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center">
+            <Server className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-blue-600" />
             System Status
           </h2>
           
@@ -481,34 +484,34 @@ export default function AnalyzePage() {
 
         {/* Model Performance Chart Placeholder */}
         <motion.div
-          className="bg-white rounded-xl shadow-lg p-6 mb-8"
+          className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.7 }}
         >
-          <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-            <BarChart3 className="w-6 h-6 mr-2 text-blue-600" />
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center">
+            <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-blue-600" />
             Performance Trends
           </h2>
           
-          <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
+          <div className="h-48 sm:h-64 bg-gray-50 rounded-lg flex items-center justify-center px-2">
             <div className="text-center">
-              <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-              <p className="text-gray-500">Performance chart will be displayed here</p>
-              <p className="text-sm text-gray-400 mt-1">Integration with monitoring dashboard coming soon</p>
+              <BarChart3 className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-2" />
+              <p className="text-xs sm:text-sm text-gray-500">Performance chart will be displayed here</p>
+              <p className="text-xs text-gray-400 mt-1">Integration with monitoring dashboard coming soon</p>
                     </div>
                   </div>
         </motion.div>
 
         {/* Recent Activity */}
         <motion.div
-          className="bg-white rounded-xl shadow-lg p-6"
+          className="bg-white rounded-xl shadow-lg p-4 sm:p-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.8 }}
         >
-          <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-            <Activity className="w-6 h-6 mr-2 text-green-600" />
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center">
+            <Activity className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-green-600" />
             Recent Activity
           </h2>
           

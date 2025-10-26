@@ -3,20 +3,20 @@ import LegalPagesHeader from '@/components/LegalPagesHeader';
 
 const PrivacyNoticePage = () => {
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
-      <div className="max-w-4xl w-full bg-white p-8 rounded-lg shadow-md">
+    <div className="min-h-screen bg-gray-50 py-8 sm:py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
+      <div className="max-w-4xl w-full bg-white p-4 sm:p-6 lg:p-8 rounded-lg shadow-md">
         <LegalPagesHeader activeTab="privacy-notice" />
-        <h1 className="text-4xl font-bold mb-6 text-green-700">Privacy Notice</h1>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 text-green-700">Privacy Notice</h1>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4 text-green-600">1. Introduction</h2>
+        <section className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">1. Introduction</h2>
           <p className="text-gray-700 leading-relaxed">
             This Privacy Notice explains how Krishi Sahayak collects, uses, and discloses information about you when you use our mobile application and website (collectively, the &quot;Service&quot;).
           </p>
         </section>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4 text-green-600">2. Information We Collect</h2>
+        <section className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">2. Information We Collect</h2>
           <p className="text-gray-700 leading-relaxed mb-2">
             We collect information you provide directly to us, such as when you create an account, use the Service, or communicate with us. This may include:
           </p>
@@ -28,8 +28,8 @@ const PrivacyNoticePage = () => {
           </ul>
         </section>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4 text-green-600">3. How We Use Your Information</h2>
+        <section className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">3. How We Use Your Information</h2>
           <p className="text-gray-700 leading-relaxed mb-2">
             We use the information we collect to:
           </p>
@@ -43,8 +43,8 @@ const PrivacyNoticePage = () => {
           </ul>
         </section>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4 text-green-600">4. Sharing of Information</h2>
+        <section className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">4. Sharing of Information</h2>
           <p className="text-gray-700 leading-relaxed mb-2">
             We may share information about you as follows or as otherwise described in this Privacy Notice:
           </p>
@@ -57,29 +57,29 @@ const PrivacyNoticePage = () => {
           </ul>
         </section>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4 text-green-600">5. Data Security</h2>
+        <section className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">5. Data Security</h2>
           <p className="text-gray-700 leading-relaxed">
             We take reasonable measures to help protect information about you from loss, theft, misuse, and unauthorized access, disclosure, alteration, and destruction.
           </p>
         </section>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4 text-green-600">6. Your Choices</h2>
+        <section className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">6. Your Choices</h2>
           <p className="text-gray-700 leading-relaxed">
             You may update, correct, or delete information about you at any time by logging into your account. You may also opt out of receiving promotional communications from us by following the instructions in those communications.
           </p>
         </section>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4 text-green-600">7. Changes to This Privacy Notice</h2>
+        <section className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">7. Changes to This Privacy Notice</h2>
           <p className="text-gray-700 leading-relaxed">
             We may change this Privacy Notice from time to time. If we make changes, we will notify you by revising the date at the top of the notice and, in some cases, we may provide you with additional notice (such as adding a statement to our homepage or sending you a notification).
           </p>
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold mb-4 text-green-600">8. Contact Us</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-green-600">8. Contact Us</h2>
           <p className="text-gray-700 leading-relaxed">
             If you have any questions about this Privacy Notice, please contact us at krishi.sahayak2025@gmail.com
           </p>
